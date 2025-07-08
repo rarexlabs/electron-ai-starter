@@ -10,10 +10,22 @@ let sqlite: Database.Database | null = null
 
 export function getDatabase(): ReturnType<typeof drizzle> {
   if (!db) {
-    const dbPath =
-      process.env.DB_PATH ||
-      import.meta.env.MAIN_VITE_DB_PATH ||
-      path.join(app.getPath('userData'), 'electron-starter.db')
+    let dbFolder = process.env.DB_FOLDER || import.meta.env.MAIN_VITE_DB_FOLDER
+
+    // In development, require explicit DB folder. In production, fallback to userData
+    const isDevelopment = process.env.NODE_ENV === 'development' || import.meta.env.DEV
+
+    if (!dbFolder) {
+      if (isDevelopment) {
+        throw new Error(
+          'Database folder is required in development. Please set either DB_FOLDER or MAIN_VITE_DB_FOLDER environment variable.'
+        )
+      }
+      // Production fallback to userData directory
+      dbFolder = app.getPath('userData')
+    }
+
+    const dbPath = path.join(dbFolder, 'app.db')
 
     // Ensure directory exists
     const dbDir = path.dirname(dbPath)

@@ -1,10 +1,15 @@
 import { defineConfig } from 'drizzle-kit'
 import { config } from 'dotenv'
+import * as path from 'path'
 
 // Load .env file for drizzle-kit CLI
 config()
 
-const dbPath = process.env.MAIN_VITE_DB_PATH || './tmp/electron-starter.db'
+const dbFolder = process.env.MAIN_VITE_DB_FOLDER
+if (!dbFolder) {
+  throw new Error('MAIN_VITE_DB_FOLDER environment variable is required for Drizzle Kit operations')
+}
+const dbPath = path.join(dbFolder, 'app.db')
 console.log('🔧 Drizzle Kit using database path:', dbPath)
 
 export default defineConfig({

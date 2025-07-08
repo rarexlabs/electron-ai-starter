@@ -10,14 +10,14 @@ export default defineConfig({
     pool: 'forks',
     poolOptions: {
       forks: {
-        singleFork: true, // Run all tests in single process for shared context
+        singleFork: true // Run all tests in single process for shared context
       }
     },
     // Timeouts appropriate for database/file operations
     testTimeout: 10000,
-    hookTimeout: 10000,
+    hookTimeout: 10000
   },
   esbuild: {
-    target: 'node18',
-  },
+    target: 'node18'
+  }
 })

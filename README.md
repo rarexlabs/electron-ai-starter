@@ -15,17 +15,20 @@ A modern, full-featured Electron application template with React, TypeScript, an
 ## Tech Stack
 
 ### Frontend
+
 - **React 19** with TypeScript
 - **Tailwind CSS 4** for styling
 - **Shadcn/ui** component library
 - **Lucide React** for icons
 
 ### Backend
+
 - **Electron** with electron-vite bundler
 - **SQLite** database with Drizzle ORM
 - **better-sqlite3** for database operations
 
 ### Development Tools
+
 - **TypeScript** with separate configs for Node.js and web
 - **ESLint** for code linting
 - **Prettier** for code formatting

@@ -4,8 +4,18 @@ import Database from 'better-sqlite3'
 import * as path from 'path'
 import * as fs from 'fs'
 import { afterEach, beforeEach } from 'vitest'
+import { config } from 'dotenv'
 
-const TEST_DB_PATH = './tmp/test-electron-starter.db'
+// Load .env file for test environment
+config()
+
+const TEST_DB_FOLDER = process.env.TEST_DB_FOLDER || process.env.MAIN_VITE_DB_FOLDER
+if (!TEST_DB_FOLDER) {
+  throw new Error(
+    'Database folder is required for tests. Please set either TEST_DB_FOLDER or MAIN_VITE_DB_FOLDER environment variable.'
+  )
+}
+const TEST_DB_PATH = path.join(TEST_DB_FOLDER, 'test.db')
 const MIGRATIONS_PATH = path.join(process.cwd(), 'src', 'main', 'db', 'migrations')
 
 let testSqlite: Database.Database | null = null
@@ -26,7 +36,7 @@ export function createTestDatabase(): ReturnType<typeof drizzle> {
   // Create SQLite connection with WAL mode (same as production)
   testSqlite = new Database(TEST_DB_PATH)
   testSqlite.pragma('journal_mode = WAL')
-  
+
   // Create Drizzle instance and apply migrations
   const testDb = drizzle({ client: testSqlite })
   if (fs.existsSync(MIGRATIONS_PATH)) {
@@ -55,7 +65,7 @@ export function cleanupTestDatabase(): void {
  */
 export function setupDatabaseTest() {
   let testDb: ReturnType<typeof drizzle>
-  
+
   beforeEach(() => {
     testDb = createTestDatabase()
   })

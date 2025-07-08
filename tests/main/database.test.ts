@@ -80,12 +80,15 @@ describe('Database Operations', () => {
         .where(eq(settings.namespace, 'ui'))
 
       expect(result).toHaveLength(3)
-      
+
       // Convert to object for easier testing
-      const settingsMap = result.reduce((acc, row) => {
-        acc[row.key] = row.value
-        return acc
-      }, {} as Record<string, string>)
+      const settingsMap = result.reduce(
+        (acc, row) => {
+          acc[row.key] = row.value
+          return acc
+        },
+        {} as Record<string, string>
+      )
 
       expect(settingsMap).toEqual({
         theme: 'dark',
@@ -193,9 +196,9 @@ describe('Database Operations', () => {
     it('should have settings table with correct schema', async () => {
       const db = getTestDatabase()
       const tableInfo = await db.all(`PRAGMA table_info(settings)`)
-      
+
       expect(tableInfo).toHaveLength(3)
-      const columnNames = tableInfo.map((col: any) => col.name)
+      const columnNames = tableInfo.map((col: { name: string }) => col.name)
       expect(columnNames).toEqual(['namespace', 'key', 'value'])
     })
 
@@ -214,7 +217,7 @@ describe('Settings Service Pattern', () => {
     const db = getTestDatabase()
 
     // Helper functions mimicking service layer
-    const getSetting = async (namespace: string, key: string) => {
+    const getSetting = async (namespace: string, key: string): Promise<string | null> => {
       const result = await db
         .select({ value: settings.value })
         .from(settings)
@@ -223,7 +226,7 @@ describe('Settings Service Pattern', () => {
       return result[0]?.value || null
     }
 
-    const setSetting = async (namespace: string, key: string, value: string) => {
+    const setSetting = async (namespace: string, key: string, value: string): Promise<void> => {
       await db
         .insert(settings)
         .values({ namespace, key, value })
