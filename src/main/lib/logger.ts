@@ -9,7 +9,7 @@ function getLogFolder(): string {
     if (!import.meta.env.MAIN_VITE_LOG_PATH) {
       throw new Error('MAIN_VITE_LOG_PATH environment variable is required in development')
     }
-    return import.meta.env.MAIN_VITE_LOG_PATH
+    return path.join(import.meta.env.MAIN_VITE_LOG_PATH, 'logs')
   }
   return path.join(app.getPath('userData'), 'logs')
 }
