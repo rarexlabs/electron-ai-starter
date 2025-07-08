@@ -148,7 +148,7 @@ export function closeDatabase(): void {
 }
 
 function getDatabasePath(): string {
-  let dbPath = process.env.DB_PATH || import.meta.env.MAIN_VITE_DB_PATH
+  let dbPath = process.env.DB_PATH || import.meta.env.MAIN_VITE_USER_DATA_PATH
 
   // In development, require explicit DB path. In production, fallback to userData
   const isDevelopment = process.env.NODE_ENV === 'development' || import.meta.env.DEV
@@ -156,7 +156,7 @@ function getDatabasePath(): string {
   if (!dbPath) {
     if (isDevelopment) {
       throw new Error(
-        'Database path is required in development. Please set either DB_PATH or MAIN_VITE_DB_PATH environment variable.'
+        'Database path is required in development. Please set either DB_PATH or MAIN_VITE_USER_DATA_PATH environment variable.'
       )
     }
     // Production fallback to userData directory

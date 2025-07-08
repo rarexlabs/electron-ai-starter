@@ -9,10 +9,10 @@ import { config } from 'dotenv'
 // Load .env file for test environment
 config()
 
-const TEST_DB_PATH_BASE = process.env.TEST_DB_PATH || process.env.MAIN_VITE_DB_PATH
+const TEST_DB_PATH_BASE = process.env.TEST_DB_PATH || process.env.MAIN_VITE_USER_DATA_PATH
 if (!TEST_DB_PATH_BASE) {
   throw new Error(
-    'Database path is required for tests. Please set either TEST_DB_PATH or MAIN_VITE_DB_PATH environment variable.'
+    'Database path is required for tests. Please set either TEST_DB_PATH or MAIN_VITE_USER_DATA_PATH environment variable.'
   )
 }
 const TEST_DB_PATH = path.join(TEST_DB_PATH_BASE, 'db', 'test.db')

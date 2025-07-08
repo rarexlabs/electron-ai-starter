@@ -6,10 +6,10 @@ const isDev = process.env.NODE_ENV === 'development'
 
 function getLogFolder(): string {
   if (isDev) {
-    if (!import.meta.env.MAIN_VITE_LOG_PATH) {
-      throw new Error('MAIN_VITE_LOG_PATH environment variable is required in development')
+    if (!import.meta.env.MAIN_VITE_USER_DATA_PATH) {
+      throw new Error('MAIN_VITE_USER_DATA_PATH environment variable is required in development')
     }
-    return path.join(import.meta.env.MAIN_VITE_LOG_PATH, 'logs')
+    return path.join(import.meta.env.MAIN_VITE_USER_DATA_PATH, 'logs')
   }
   return path.join(app.getPath('userData'), 'logs')
 }
