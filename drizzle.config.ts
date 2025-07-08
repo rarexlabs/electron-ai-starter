@@ -5,12 +5,12 @@ import * as path from 'path'
 // Load .env file for drizzle-kit CLI
 config()
 
-const dbFolder = process.env.MAIN_VITE_DB_FOLDER
-if (!dbFolder) {
-  throw new Error('MAIN_VITE_DB_FOLDER environment variable is required for Drizzle Kit operations')
+const dbPath = process.env.MAIN_VITE_DB_PATH
+if (!dbPath) {
+  throw new Error('MAIN_VITE_DB_PATH environment variable is required for Drizzle Kit operations')
 }
-const dbPath = path.join(dbFolder, 'app.db')
-console.log('🔧 Drizzle Kit using database path:', dbPath)
+const fullDbPath = path.join(dbPath, 'db', 'app.db')
+console.log('🔧 Drizzle Kit using database path:', fullDbPath)
 
 export default defineConfig({
   out: './src/main/db/migrations',
@@ -19,7 +19,7 @@ export default defineConfig({
   dbCredentials: {
     // This is only used by Drizzle Kit CLI commands (generate, push, studio)
     // The actual runtime connection uses better-sqlite3 client passed to drizzle()
-    url: dbPath
+    url: fullDbPath
   },
   verbose: true,
   strict: true

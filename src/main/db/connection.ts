@@ -148,22 +148,23 @@ export function closeDatabase(): void {
 }
 
 function getDatabasePath(): string {
-  let dbFolder = process.env.DB_FOLDER || import.meta.env.MAIN_VITE_DB_FOLDER
+  let dbPath = process.env.DB_PATH || import.meta.env.MAIN_VITE_DB_PATH
 
-  // In development, require explicit DB folder. In production, fallback to userData
+  // In development, require explicit DB path. In production, fallback to userData
   const isDevelopment = process.env.NODE_ENV === 'development' || import.meta.env.DEV
 
-  if (!dbFolder) {
+  if (!dbPath) {
     if (isDevelopment) {
       throw new Error(
-        'Database folder is required in development. Please set either DB_FOLDER or MAIN_VITE_DB_FOLDER environment variable.'
+        'Database path is required in development. Please set either DB_PATH or MAIN_VITE_DB_PATH environment variable.'
       )
     }
     // Production fallback to userData directory
-    dbFolder = app.getPath('userData')
+    dbPath = app.getPath('userData')
   }
 
-  return path.join(dbFolder, 'app.db')
+  // Always append hardcoded 'db' folder and database file name
+  return path.join(dbPath, 'db', 'app.db')
 }
 
 export function removeDatabaseFile(): void {
