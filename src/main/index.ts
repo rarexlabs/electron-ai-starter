@@ -11,6 +11,13 @@ import {
 } from './db/services/settings'
 import { initializeLogging, mainLogger } from './lib/logger'
 
+// Initialize logging immediately
+initializeLogging()
+
+// Log app startup as early as possible
+mainLogger.info('🚀 App starting...')
+mainLogger.info('🔧 Main process started')
+
 function initializeDatabase(): void {
   try {
     mainLogger.info('🔧 Initializing database...')
@@ -79,8 +86,7 @@ app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.worthyfiles')
 
-  // Initialize logging
-  initializeLogging()
+  // Logging already initialized at module load
 
   // Initialize database
   initializeDatabase()
