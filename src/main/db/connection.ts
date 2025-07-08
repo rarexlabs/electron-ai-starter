@@ -4,6 +4,7 @@ import Database from 'better-sqlite3'
 import * as path from 'path'
 import { app } from 'electron'
 import * as fs from 'fs'
+import { sql } from 'drizzle-orm'
 
 let db: ReturnType<typeof drizzle> | null = null
 let sqlite: Database.Database | null = null
@@ -137,6 +138,21 @@ export function runMigrations(): void {
     }
 
     throw new Error(`Database migration failed: ${errorMessage}`)
+  }
+}
+
+export function testDatabaseConnection(): boolean {
+  try {
+    const database = getDatabase()
+    
+    // Test that we can execute a simple query without requiring any tables
+    database.run(sql`SELECT 1 as test`)
+    console.log('✅ Database connection successful')
+    
+    return true
+  } catch (error) {
+    console.error('❌ Database connection failed:', error)
+    return false
   }
 }
 
