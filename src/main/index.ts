@@ -20,8 +20,6 @@ mainLogger.info('🔧 Main process started')
 
 function initializeDatabase(): void {
   try {
-    mainLogger.info('🔧 Initializing database...')
-
     // Initialize Drizzle database connection
     getDatabase()
 
@@ -31,7 +29,7 @@ function initializeDatabase(): void {
     // Test the connection
     testDatabaseConnection()
 
-    mainLogger.info('✅ Database initialization completed successfully')
+    mainLogger.info('✅ Database ready')
   } catch (error) {
     mainLogger.error('❌ Failed to initialize database:', error)
 

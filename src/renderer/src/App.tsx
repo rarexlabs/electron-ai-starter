@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Settings as SettingsIcon } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -9,9 +9,6 @@ import { logger } from '@/lib/logger'
 function App(): React.JSX.Element {
   const [currentPage, setCurrentPage] = useState<'home' | 'settings'>('home')
 
-  useEffect(() => {
-    logger.info('App component mounted')
-  }, [])
 
   const handleSettingsClick = (): void => {
     logger.info('Settings page opened')

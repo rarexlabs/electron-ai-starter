@@ -13,6 +13,7 @@ let sqlite: Database.Database | null = null
 export function getDatabase(): ReturnType<typeof drizzle> {
   if (!db) {
     const dbPath = getDatabasePath()
+    mainLogger.info(`🗄️ Database: ${path.resolve(path.dirname(dbPath))}`)
 
     // Ensure directory exists
     const dbDir = path.dirname(dbPath)
@@ -60,17 +61,15 @@ export function runMigrations(): void {
     return
   }
 
-  mainLogger.info('🚀 Running database migrations...')
-  mainLogger.debug('📂 Migrations folder:', migrationsFolder)
+  mainLogger.info('🚀 Running migrations...')
 
   try {
     // Verify migrations folder structure
     const files = fs.readdirSync(migrationsFolder)
     const sqlFiles = files.filter((file) => file.endsWith('.sql'))
-    mainLogger.debug(`📋 Found ${sqlFiles.length} migration files in folder`)
 
     if (sqlFiles.length === 0) {
-      mainLogger.info('📦 No migration files found, skipping migrations')
+      mainLogger.info('📦 No migration files found')
       return
     }
 
@@ -88,8 +87,6 @@ export function runMigrations(): void {
       ? sqlite?.prepare('SELECT hash FROM __drizzle_migrations').all() || []
       : []
 
-    mainLogger.debug(`📊 Previously applied migrations: ${appliedMigrations.length}`)
-
     // Run migrations and capture any changes
     const beforeCount = appliedMigrations.length
     migrate(db, { migrationsFolder })
@@ -99,9 +96,9 @@ export function runMigrations(): void {
     const newMigrations = afterMigrations.length - beforeCount
 
     if (newMigrations > 0) {
-      mainLogger.info(`✅ Applied ${newMigrations} new migration(s) successfully`)
+      mainLogger.info(`✅ Applied ${newMigrations} new migration(s)`)
     } else {
-      mainLogger.info('✅ All migrations are up to date - no new migrations to apply')
+      mainLogger.info('✅ Migrations up to date')
     }
   } catch (error) {
     mainLogger.error('❌ Migration failed:', error)
@@ -133,7 +130,7 @@ export function testDatabaseConnection(): boolean {
 
     // Test that we can execute a simple query without requiring any tables
     database.run(sql`SELECT 1 as test`)
-    mainLogger.info('✅ Database connection successful')
+    mainLogger.info('✅ Database connected')
 
     return true
   } catch (error) {

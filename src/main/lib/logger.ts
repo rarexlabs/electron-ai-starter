@@ -42,11 +42,7 @@ export function initializeLogging(): void {
 
   log.eventLogger.startLogging({ level: 'warn' })
 
-  log.info('📝 Logging initialized')
-  log.info(`📁 Log folder: ${logFolder}`)
-  log.info(`🔧 Development mode: ${isDev}`)
-  log.info(`📄 Main log path: ${path.join(logFolder, 'main.log')}`)
-  log.info(`🎨 Renderer log path: ${path.join(logFolder, 'renderer.log')}`)
+  log.info(`📝 Logging initialized - ${path.resolve(logFolder)}`)
 }
 
 export const mainLogger = log
