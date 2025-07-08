@@ -87,7 +87,7 @@ TS_NODE_PROJECT=tsconfig.web.json npx shadcn@latest add [component-name]
 
 ## Development Notes
 
-- The application uses a three-process architecture: main (Node.js), preload (IPC bridge), and renderer (React)
+- The application uses a two-process architecture: main (Node.js) and renderer (React), with preload scripts providing secure IPC communication
 - TypeScript is configured with separate configs for Node.js and web environments
 - Tailwind CSS 4 is used with CSS variables for theming
 - The build process includes TypeScript checking before bundling

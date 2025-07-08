@@ -14,14 +14,15 @@
     "start": "electron-vite preview",
     "dev": "electron-vite dev",
     "build": "npm run typecheck && electron-vite build",
-    "dk": "ELECTRON_RUN_AS_NODE=1 electron ./node_modules/drizzle-kit/bin.cjs",
+    "drizzle-kit": "ELECTRON_RUN_AS_NODE=1 electron ./node_modules/drizzle-kit/bin.cjs",
     "db:reset": "rm -f ./tmp/electron-starter.db",
     "test:main": "ELECTRON_RUN_AS_NODE=1 electron ./node_modules/vitest/vitest.mjs run --config vitest.config.main.ts",
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
     "build:mac": "electron-vite build && electron-builder --mac",
-    "build:linux": "electron-vite build && electron-builder --linux"
+    "build:linux": "electron-vite build && electron-builder --linux",
+    "shadcn": "TS_NODE_PROJECT=tsconfig.web.json npx shadcn@latest"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.1",

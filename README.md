@@ -4,7 +4,7 @@ A modern, full-featured Electron application template with React, TypeScript, an
 
 ## Features
 
-- **Modern Electron Architecture** - Three-process architecture with secure IPC communication
+- **Modern Electron Architecture** - Two-process architecture with secure IPC communication
 - **React 19** - Latest React with TypeScript for the renderer process
 - **Tailwind CSS 4** - Modern styling with CSS variables and theming
 - **Shadcn/ui Components** - Beautiful, accessible UI components (New York style)
@@ -51,17 +51,17 @@ $ npm run dev
 ### Add Shadcn Components
 
 ```bash
-$ TS_NODE_PROJECT=tsconfig.web.json npx shadcn@latest add [component-name]
+$ npm run shadcn add [component-name]
 ```
 
 ### Database Operations
 
 ```bash
 # Generate database migrations
-$ npm run dk generate
+$ npm run drizzle-kit generate
 
 # Run database migrations
-$ npm run dk migrate
+$ npm run drizzle-kit migrate
 
 # Reset development database
 $ npm run db:reset
@@ -94,11 +94,11 @@ $ npm run build:linux  # Linux
 
 ## Architecture
 
-This template uses Electron's three-process architecture:
+This template uses Electron's two-process architecture:
 
 - **Main Process** (`src/main/`) - Node.js backend with system access
-- **Preload Scripts** (`src/preload/`) - Secure IPC bridge between main and renderer
 - **Renderer Process** (`src/renderer/`) - React frontend application
+- **Preload Scripts** (`src/preload/`) - Secure IPC bridge between processes
 
 ### Path Aliases
 
@@ -112,7 +112,7 @@ Pre-configured path aliases for cleaner imports:
 
 ### Database Configuration
 
-- **Development**: `./tmp/worthyfiles.db`
+- **Development**: `./tmp/app.db`
 - **Production**: Electron's userData directory
 - **WAL mode** enabled for performance
 - **Auto-migration** on application startup
@@ -124,6 +124,3 @@ Pre-configured path aliases for cleaner imports:
 3. Start development with `npm run dev`
 4. Begin building your Electron app!
 
-## License
-
-MIT
