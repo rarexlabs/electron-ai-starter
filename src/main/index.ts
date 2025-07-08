@@ -9,10 +9,11 @@ import {
   getSettingsByNamespace,
   clearDatabase
 } from './db/services/settings'
+import { initializeLogging, mainLogger } from './lib/logger'
 
 function initializeDatabase(): void {
   try {
-    console.log('🔧 Initializing database...')
+    mainLogger.info('🔧 Initializing database...')
 
     // Initialize Drizzle database connection
     getDatabase()
@@ -23,9 +24,9 @@ function initializeDatabase(): void {
     // Test the connection
     testDatabaseConnection()
 
-    console.log('✅ Database initialization completed successfully')
+    mainLogger.info('✅ Database initialization completed successfully')
   } catch (error) {
-    console.error('❌ Failed to initialize database:', error)
+    mainLogger.error('❌ Failed to initialize database:', error)
 
     // Attempt to show user-friendly error dialog
     dialog.showErrorBox(
@@ -78,6 +79,9 @@ app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.worthyfiles')
 
+  // Initialize logging
+  initializeLogging()
+
   // Initialize database
   initializeDatabase()
 
@@ -106,7 +110,7 @@ app.whenReady().then(() => {
   })
 
   // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
+  ipcMain.on('ping', () => mainLogger.info('pong'))
 
   createWindow()
 

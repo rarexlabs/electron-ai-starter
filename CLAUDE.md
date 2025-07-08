@@ -85,6 +85,19 @@ TS_NODE_PROJECT=tsconfig.web.json npx shadcn@latest add [component-name]
   - `npm run dk` - Drizzle Kit operations (generate, migrate, etc.)
   - `npm run db:reset` - Reset development database with fresh schema
 
+### Logging Configuration
+
+- **electron-log** for unified logging across main and renderer processes
+- **Development logs**: `LOG_FOLDER` environment variable (default: `./tmp/logs`)
+- **Production logs**: Electron's userData directory `/logs`
+- **Log files**:
+  - `main.log` - Main process logs (database, IPC, app lifecycle)
+  - `renderer.log` - Renderer process logs (UI, React components)
+- **Features**: Automatic error catching, event logging, file rotation (5MB limit)
+- **Usage**:
+  - Main process: `import { mainLogger } from './lib/logger'`
+  - Renderer process: `import { logger } from '@/lib/logger'`
+
 ## Development Notes
 
 - The application uses a two-process architecture: main (Node.js) and renderer (React), with preload scripts providing secure IPC communication

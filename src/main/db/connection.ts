@@ -5,6 +5,7 @@ import * as path from 'path'
 import { app } from 'electron'
 import * as fs from 'fs'
 import { sql } from 'drizzle-orm'
+import { mainLogger } from '../lib/logger'
 
 let db: ReturnType<typeof drizzle> | null = null
 let sqlite: Database.Database | null = null
@@ -54,22 +55,22 @@ export function runMigrations(): void {
   }
 
   if (!migrationsFolder) {
-    console.log('📦 No migrations folder found in any expected location, skipping migrations')
-    console.log('Searched paths:', possiblePaths)
+    mainLogger.info('📦 No migrations folder found in any expected location, skipping migrations')
+    mainLogger.debug('Searched paths:', possiblePaths)
     return
   }
 
-  console.log('🚀 Running database migrations...')
-  console.log('📂 Migrations folder:', migrationsFolder)
+  mainLogger.info('🚀 Running database migrations...')
+  mainLogger.debug('📂 Migrations folder:', migrationsFolder)
 
   try {
     // Verify migrations folder structure
     const files = fs.readdirSync(migrationsFolder)
     const sqlFiles = files.filter((file) => file.endsWith('.sql'))
-    console.log(`📋 Found ${sqlFiles.length} migration files in folder`)
+    mainLogger.debug(`📋 Found ${sqlFiles.length} migration files in folder`)
 
     if (sqlFiles.length === 0) {
-      console.log('📦 No migration files found, skipping migrations')
+      mainLogger.info('📦 No migration files found, skipping migrations')
       return
     }
 
@@ -87,7 +88,7 @@ export function runMigrations(): void {
       ? sqlite?.prepare('SELECT hash FROM __drizzle_migrations').all() || []
       : []
 
-    console.log(`📊 Previously applied migrations: ${appliedMigrations.length}`)
+    mainLogger.debug(`📊 Previously applied migrations: ${appliedMigrations.length}`)
 
     // Run migrations and capture any changes
     const beforeCount = appliedMigrations.length
@@ -98,12 +99,12 @@ export function runMigrations(): void {
     const newMigrations = afterMigrations.length - beforeCount
 
     if (newMigrations > 0) {
-      console.log(`✅ Applied ${newMigrations} new migration(s) successfully`)
+      mainLogger.info(`✅ Applied ${newMigrations} new migration(s) successfully`)
     } else {
-      console.log('✅ All migrations are up to date - no new migrations to apply')
+      mainLogger.info('✅ All migrations are up to date - no new migrations to apply')
     }
   } catch (error) {
-    console.error('❌ Migration failed:', error)
+    mainLogger.error('❌ Migration failed:', error)
 
     // Add more context to the error
     let errorMessage = 'Unknown migration error'
@@ -132,11 +133,11 @@ export function testDatabaseConnection(): boolean {
 
     // Test that we can execute a simple query without requiring any tables
     database.run(sql`SELECT 1 as test`)
-    console.log('✅ Database connection successful')
+    mainLogger.info('✅ Database connection successful')
 
     return true
   } catch (error) {
-    console.error('❌ Database connection failed:', error)
+    mainLogger.error('❌ Database connection failed:', error)
     return false
   }
 }
