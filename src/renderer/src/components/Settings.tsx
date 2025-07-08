@@ -12,7 +12,7 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const handleClearDatabase = async (): Promise<void> => {
-    if (!confirm('Are you sure you want to clear the database? This action cannot be undone.')) {
+    if (!confirm('Are you sure you want to clear the database?')) {
       return
     }
 
@@ -58,8 +58,8 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
               <div>
                 <h3 className="font-medium text-gray-900 mb-2">Clear Database</h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  This will permanently delete all data from the database. This action cannot be
-                  undone.
+                  This will permanently delete all data from the database and close the application.
+                  You will need to restart the application manually. This action cannot be undone.
                 </p>
                 <Button
                   variant="destructive"

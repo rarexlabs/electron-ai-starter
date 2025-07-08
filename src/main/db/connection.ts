@@ -11,22 +11,7 @@ let sqlite: Database.Database | null = null
 
 export function getDatabase(): ReturnType<typeof drizzle> {
   if (!db) {
-    let dbFolder = process.env.DB_FOLDER || import.meta.env.MAIN_VITE_DB_FOLDER
-
-    // In development, require explicit DB folder. In production, fallback to userData
-    const isDevelopment = process.env.NODE_ENV === 'development' || import.meta.env.DEV
-
-    if (!dbFolder) {
-      if (isDevelopment) {
-        throw new Error(
-          'Database folder is required in development. Please set either DB_FOLDER or MAIN_VITE_DB_FOLDER environment variable.'
-        )
-      }
-      // Production fallback to userData directory
-      dbFolder = app.getPath('userData')
-    }
-
-    const dbPath = path.join(dbFolder, 'app.db')
+    const dbPath = getDatabasePath()
 
     // Ensure directory exists
     const dbDir = path.dirname(dbPath)
@@ -144,11 +129,11 @@ export function runMigrations(): void {
 export function testDatabaseConnection(): boolean {
   try {
     const database = getDatabase()
-    
+
     // Test that we can execute a simple query without requiring any tables
     database.run(sql`SELECT 1 as test`)
     console.log('✅ Database connection successful')
-    
+
     return true
   } catch (error) {
     console.error('❌ Database connection failed:', error)
@@ -161,5 +146,31 @@ export function closeDatabase(): void {
     sqlite.close()
     sqlite = null
     db = null
+  }
+}
+
+function getDatabasePath(): string {
+  let dbFolder = process.env.DB_FOLDER || import.meta.env.MAIN_VITE_DB_FOLDER
+
+  // In development, require explicit DB folder. In production, fallback to userData
+  const isDevelopment = process.env.NODE_ENV === 'development' || import.meta.env.DEV
+
+  if (!dbFolder) {
+    if (isDevelopment) {
+      throw new Error(
+        'Database folder is required in development. Please set either DB_FOLDER or MAIN_VITE_DB_FOLDER environment variable.'
+      )
+    }
+    // Production fallback to userData directory
+    dbFolder = app.getPath('userData')
+  }
+
+  return path.join(dbFolder, 'app.db')
+}
+
+export function removeDatabaseFile(): void {
+  const dbPath = getDatabasePath()
+  if (fs.existsSync(dbPath)) {
+    fs.unlinkSync(dbPath)
   }
 }

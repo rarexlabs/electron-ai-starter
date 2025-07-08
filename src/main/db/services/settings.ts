@@ -1,6 +1,7 @@
 import { eq, and } from 'drizzle-orm'
-import { getDatabase } from '../connection'
+import { getDatabase, closeDatabase, removeDatabaseFile } from '../connection'
 import { settings } from '../schema'
+import { app } from 'electron'
 
 export async function getSetting(namespace: string, key: string): Promise<string | null> {
   const db = getDatabase()
@@ -41,6 +42,7 @@ export async function getSettingsByNamespace(namespace: string): Promise<Record<
 }
 
 export async function clearDatabase(): Promise<void> {
-  const db = getDatabase()
-  await db.delete(settings)
+  closeDatabase()
+  removeDatabaseFile()
+  app.quit()
 }
