@@ -1,0 +1,14 @@
+node_modules
+dist
+out
+.DS_Store
+.eslintcache
+*.log*
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+tmp
+!tmp/.keep
