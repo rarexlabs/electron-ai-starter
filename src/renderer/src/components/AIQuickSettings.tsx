@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,7 +19,10 @@ interface AIQuickSettingsProps {
   className?: string
 }
 
-export function AIQuickSettings({ onProviderChange, className = '' }: AIQuickSettingsProps) {
+export function AIQuickSettings({
+  onProviderChange,
+  className = ''
+}: AIQuickSettingsProps): React.JSX.Element {
   const [selectedProvider, setSelectedProvider] = useState<AIProvider>('openai')
   const [apiKey, setApiKey] = useState('')
   const [model, setModel] = useState('')
@@ -29,17 +32,7 @@ export function AIQuickSettings({ onProviderChange, className = '' }: AIQuickSet
   const [showSettings, setShowSettings] = useState(false)
   const [connectionTestSuccess, setConnectionTestSuccess] = useState(false)
 
-  // Load settings on component mount
-  useEffect(() => {
-    loadSettings()
-  }, [])
-
-  // Load models when provider changes
-  useEffect(() => {
-    loadModels()
-  }, [selectedProvider])
-
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async (): Promise<void> => {
     try {
       // Load default provider
       const savedProvider = await window.database.getSetting('ai', 'default_provider')
@@ -54,9 +47,9 @@ export function AIQuickSettings({ onProviderChange, className = '' }: AIQuickSet
     } catch (error) {
       logger.error('Failed to load AI settings:', error)
     }
-  }
+  }, [])
 
-  const loadModels = async () => {
+  const loadModels = useCallback(async (): Promise<void> => {
     try {
       const availableModels = await window.ai.getModels(selectedProvider)
       setModels(availableModels)
@@ -66,9 +59,9 @@ export function AIQuickSettings({ onProviderChange, className = '' }: AIQuickSet
     } catch (error) {
       logger.error('Failed to load models:', error)
     }
-  }
+  }, [selectedProvider, model])
 
-  const loadProviderSettings = async (provider: AIProvider) => {
+  const loadProviderSettings = async (provider: AIProvider): Promise<void> => {
     const savedApiKey = await window.database.getSetting('ai', `${provider}_api_key`)
     const savedModel = await window.database.getSetting('ai', `${provider}_model`)
     const availableModels = await window.ai.getModels(provider)
@@ -77,13 +70,13 @@ export function AIQuickSettings({ onProviderChange, className = '' }: AIQuickSet
     setModel(savedModel || availableModels[0] || 'gpt-4o')
   }
 
-  const handleProviderChange = async (provider: AIProvider) => {
+  const handleProviderChange = async (provider: AIProvider): Promise<void> => {
     setSelectedProvider(provider)
     await loadProviderSettings(provider)
     onProviderChange?.(provider)
   }
 
-  const testConnection = async () => {
+  const testConnection = async (): Promise<void> => {
     if (!apiKey) return
 
     setIsTesting(true)
@@ -109,7 +102,7 @@ export function AIQuickSettings({ onProviderChange, className = '' }: AIQuickSet
     }
   }
 
-  const saveSettings = async () => {
+  const saveSettings = async (): Promise<void> => {
     setIsSaving(true)
     try {
       await window.database.setSetting('ai', 'default_provider', selectedProvider)
@@ -126,6 +119,16 @@ export function AIQuickSettings({ onProviderChange, className = '' }: AIQuickSet
       setIsSaving(false)
     }
   }
+
+  // Load settings on component mount
+  useEffect(() => {
+    loadSettings()
+  }, [loadSettings])
+
+  // Load models when provider changes
+  useEffect(() => {
+    loadModels()
+  }, [selectedProvider, loadModels])
 
   if (!showSettings) {
     return (

@@ -53,46 +53,48 @@ const aiAPI = {
     onEnd?: () => void,
     onError?: (error: string) => void
   ): Promise<string> => {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const sessionId = await ipcRenderer.invoke('ai-chat-stream', messages, provider)
-        let fullResponse = ''
+    return new Promise((resolve, reject) => {
+      ipcRenderer
+        .invoke('ai-chat-stream', messages, provider)
+        .then((sessionId) => {
+          let fullResponse = ''
 
-        const cleanup = () => {
-          ipcRenderer.removeListener('ai-chat-chunk', handleChunk)
-          ipcRenderer.removeListener('ai-chat-end', handleEnd)
-          ipcRenderer.removeListener('ai-chat-error', handleError)
-        }
-
-        const createHandler =
-          (callback: (id: string, ...args: any[]) => void) =>
-          (_event: any, id: string, ...args: any[]) => {
-            if (id === sessionId) callback(id, ...args)
+          const cleanup = (): void => {
+            ipcRenderer.removeListener('ai-chat-chunk', handleChunk)
+            ipcRenderer.removeListener('ai-chat-end', handleEnd)
+            ipcRenderer.removeListener('ai-chat-error', handleError)
           }
 
-        const handleChunk = createHandler((_, chunk) => {
-          fullResponse += chunk
-          onChunk?.(chunk)
-        })
+          const createHandler =
+            (callback: (id: string, ...args: unknown[]) => void) =>
+            (_event: unknown, id: string, ...args: unknown[]) => {
+              if (id === sessionId) callback(id, ...args)
+            }
 
-        const handleEnd = createHandler(() => {
-          cleanup()
-          onEnd?.()
-          resolve(fullResponse)
-        })
+          const handleChunk = createHandler((_, chunk) => {
+            fullResponse += chunk as string
+            onChunk?.(chunk as string)
+          })
 
-        const handleError = createHandler((_, error) => {
-          cleanup()
-          onError?.(error)
-          reject(new Error(error))
-        })
+          const handleEnd = createHandler(() => {
+            cleanup()
+            onEnd?.()
+            resolve(fullResponse)
+          })
 
-        ipcRenderer.on('ai-chat-chunk', handleChunk)
-        ipcRenderer.on('ai-chat-end', handleEnd)
-        ipcRenderer.on('ai-chat-error', handleError)
-      } catch (error) {
-        reject(error)
-      }
+          const handleError = createHandler((_, error) => {
+            cleanup()
+            onError?.(error as string)
+            reject(new Error(error as string))
+          })
+
+          ipcRenderer.on('ai-chat-chunk', handleChunk)
+          ipcRenderer.on('ai-chat-end', handleEnd)
+          ipcRenderer.on('ai-chat-error', handleError)
+        })
+        .catch((error) => {
+          reject(error)
+        })
     })
   },
 

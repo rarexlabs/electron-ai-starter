@@ -16,7 +16,10 @@ interface ChatInterfaceProps {
   className?: string
 }
 
-export function ChatInterface({ provider = 'openai', className = '' }: ChatInterfaceProps) {
+export function ChatInterface({
+  provider = 'openai',
+  className = ''
+}: ChatInterfaceProps): React.JSX.Element {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
@@ -26,7 +29,7 @@ export function ChatInterface({ provider = 'openai', className = '' }: ChatInter
 
   // Load current provider from settings and update when prop changes
   useEffect(() => {
-    const loadProvider = async () => {
+    const loadProvider = async (): Promise<void> => {
       try {
         const savedProvider = await window.database.getSetting('ai', 'default_provider')
         setCurrentProvider((savedProvider as AIProvider) || provider)

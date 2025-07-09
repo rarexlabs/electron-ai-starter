@@ -1,7 +1,7 @@
 import { createOpenAI } from '@ai-sdk/openai'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
-import { streamText } from 'ai'
+import { streamText, type LanguageModelV1 } from 'ai'
 import { getSetting } from '../db/services/settings'
 import { mainLogger } from './logger'
 
@@ -36,7 +36,7 @@ const MODEL_CONFIG = {
   }
 }
 
-async function createModel(provider: AIProvider) {
+async function createModel(provider: AIProvider): Promise<LanguageModelV1> {
   const apiKey = await getSetting('ai', `${provider}_api_key`)
   const model = await getSetting('ai', `${provider}_model`)
 
