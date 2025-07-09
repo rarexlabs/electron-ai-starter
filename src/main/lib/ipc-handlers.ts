@@ -1,11 +1,6 @@
 import { ipcMain, shell } from 'electron'
 import { dirname } from 'path'
-import {
-  getSetting,
-  setSetting,
-  getSettingsByNamespace,
-  clearDatabase
-} from '../db/services/settings'
+import { getSetting, setSetting, getAllSettings, clearDatabase } from '../db/services/settings'
 import { getDatabasePath, getLogPath } from './paths'
 import { mainLogger } from './logger'
 import {
@@ -18,16 +13,16 @@ import {
 
 export function setupIpcHandlers(): void {
   // Database IPC handlers
-  ipcMain.handle('get-setting', async (_, namespace: string, key: string) => {
-    return getSetting(namespace, key)
+  ipcMain.handle('get-setting', async (_, key: string) => {
+    return getSetting(key)
   })
 
-  ipcMain.handle('set-setting', async (_, namespace: string, key: string, value: string) => {
-    return setSetting(namespace, key, value)
+  ipcMain.handle('set-setting', async (_, key: string, value: unknown) => {
+    return setSetting(key, value)
   })
 
-  ipcMain.handle('get-settings-by-namespace', async (_, namespace: string) => {
-    return getSettingsByNamespace(namespace)
+  ipcMain.handle('get-all-settings', async () => {
+    return getAllSettings()
   })
 
   ipcMain.handle('clear-database', async () => {

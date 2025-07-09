@@ -31,7 +31,8 @@ export function ChatInterface({
   useEffect(() => {
     const loadProvider = async (): Promise<void> => {
       try {
-        const savedProvider = await window.database.getSetting('ai', 'default_provider')
+        const aiSettings = (await window.database.getSetting('ai')) || {}
+        const savedProvider = aiSettings.default_provider
         setCurrentProvider((savedProvider as AIProvider) || provider)
       } catch (err) {
         logger.error('Failed to load provider:', err)

@@ -37,8 +37,9 @@ const MODEL_CONFIG = {
 }
 
 async function createModel(provider: AIProvider): Promise<LanguageModelV1> {
-  const apiKey = await getSetting('ai', `${provider}_api_key`)
-  const model = await getSetting('ai', `${provider}_model`)
+  const aiSettings = (await getSetting('ai')) || {}
+  const apiKey = aiSettings[`${provider}_api_key`]
+  const model = aiSettings[`${provider}_model`]
 
   if (!apiKey) {
     throw new Error(`API key not found for ${provider}`)
@@ -52,8 +53,8 @@ export async function* streamAIResponse(
   messages: AIMessage[],
   provider?: AIProvider
 ): AsyncGenerator<string, void, unknown> {
-  const currentProvider =
-    provider || ((await getSetting('ai', 'default_provider')) as AIProvider) || 'openai'
+  const aiSettings = (await getSetting('ai')) || {}
+  const currentProvider = provider || aiSettings.default_provider || 'openai'
 
   try {
     const model = await createModel(currentProvider)

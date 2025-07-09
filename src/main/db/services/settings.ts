@@ -1,43 +1,40 @@
-import { eq, and } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { getDatabase, closeDatabase, removeDatabaseFile } from '../connection'
 import { settings } from '../schema'
 import { app } from 'electron'
 
-export async function getSetting(namespace: string, key: string): Promise<string | null> {
+export async function getSetting(key: string): Promise<unknown> {
   const db = getDatabase()
   const result = await db
     .select({ value: settings.value })
     .from(settings)
-    .where(and(eq(settings.namespace, namespace), eq(settings.key, key)))
+    .where(eq(settings.key, key))
     .limit(1)
 
   return result[0]?.value || null
 }
 
-export async function setSetting(namespace: string, key: string, value: string): Promise<void> {
+export async function setSetting(key: string, value: unknown): Promise<void> {
   const db = getDatabase()
   await db
     .insert(settings)
-    .values({ namespace, key, value })
+    .values({ key, value })
     .onConflictDoUpdate({
-      target: [settings.namespace, settings.key],
+      target: [settings.key],
       set: { value }
     })
 }
 
-export async function getSettingsByNamespace(namespace: string): Promise<Record<string, string>> {
+export async function getAllSettings(): Promise<Record<string, unknown>> {
   const db = getDatabase()
-  const result = await db
-    .select({ key: settings.key, value: settings.value })
-    .from(settings)
-    .where(eq(settings.namespace, namespace))
+  const result = await db.select({ key: settings.key, value: settings.value }).from(settings)
 
   return result.reduce(
     (acc, row) => {
       acc[row.key] = row.value
       return acc
     },
-    {} as Record<string, string>
+    {} as Record<string, unknown>
   )
 }
 

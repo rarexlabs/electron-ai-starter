@@ -34,16 +34,10 @@ export function AIQuickSettings({
 
   const loadSettings = useCallback(async (): Promise<void> => {
     try {
-      // Load default provider
-      const savedProvider = await window.database.getSetting('ai', 'default_provider')
-      const currentProvider = (savedProvider as AIProvider) || 'openai'
-
-      if (savedProvider) {
-        setSelectedProvider(currentProvider)
-      }
-
-      // Load current provider settings
-      await loadProviderSettings(currentProvider)
+      const aiSettings = (await window.database.getSetting('ai')) || {}
+      const currentProvider = (aiSettings.default_provider as AIProvider) || 'openai'
+      setSelectedProvider(currentProvider)
+      await loadProviderSettings(currentProvider, aiSettings)
     } catch (error) {
       logger.error('Failed to load AI settings:', error)
     }
@@ -61,13 +55,15 @@ export function AIQuickSettings({
     }
   }, [selectedProvider, model])
 
-  const loadProviderSettings = async (provider: AIProvider): Promise<void> => {
-    const savedApiKey = await window.database.getSetting('ai', `${provider}_api_key`)
-    const savedModel = await window.database.getSetting('ai', `${provider}_model`)
+  const loadProviderSettings = async (
+    provider: AIProvider,
+    aiSettings?: Record<string, unknown>
+  ): Promise<void> => {
+    const settings = aiSettings || (await window.database.getSetting('ai')) || {}
     const availableModels = await window.ai.getModels(provider)
 
-    setApiKey(savedApiKey || '')
-    setModel(savedModel || availableModels[0] || 'gpt-4o')
+    setApiKey(settings[`${provider}_api_key`] || '')
+    setModel(settings[`${provider}_model`] || availableModels[0] || 'gpt-4o')
   }
 
   const handleProviderChange = async (provider: AIProvider): Promise<void> => {
@@ -82,18 +78,19 @@ export function AIQuickSettings({
     setIsTesting(true)
     setConnectionTestSuccess(false)
     try {
-      // Save temporarily for testing
-      await window.database.setSetting('ai', `${selectedProvider}_api_key`, apiKey)
-      await window.database.setSetting('ai', `${selectedProvider}_model`, model)
+      const currentAiSettings = (await window.database.getSetting('ai')) || {}
+      const updatedSettings = {
+        ...currentAiSettings,
+        [`${selectedProvider}_api_key`]: apiKey,
+        [`${selectedProvider}_model`]: model
+      }
 
+      await window.database.setSetting('ai', updatedSettings)
       const connected = await window.ai.testConnection(selectedProvider)
 
       if (connected) {
         setConnectionTestSuccess(true)
-        // Reset success state after 3 seconds
-        setTimeout(() => {
-          setConnectionTestSuccess(false)
-        }, 3000)
+        setTimeout(() => setConnectionTestSuccess(false), 3000)
       }
     } catch (error) {
       logger.error(`Failed to test ${selectedProvider} connection:`, error)
@@ -105,13 +102,16 @@ export function AIQuickSettings({
   const saveSettings = async (): Promise<void> => {
     setIsSaving(true)
     try {
-      await window.database.setSetting('ai', 'default_provider', selectedProvider)
-      await window.database.setSetting('ai', `${selectedProvider}_api_key`, apiKey)
-      await window.database.setSetting('ai', `${selectedProvider}_model`, model)
+      const currentAiSettings = (await window.database.getSetting('ai')) || {}
+      const updatedSettings = {
+        ...currentAiSettings,
+        default_provider: selectedProvider,
+        [`${selectedProvider}_api_key`]: apiKey,
+        [`${selectedProvider}_model`]: model
+      }
 
-      // Test connection after saving
+      await window.database.setSetting('ai', updatedSettings)
       await testConnection()
-
       setShowSettings(false)
     } catch (error) {
       logger.error('Failed to save settings:', error)

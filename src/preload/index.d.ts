@@ -12,9 +12,9 @@ declare global {
     electron: ElectronAPI
     api: unknown
     database: {
-      getSetting(namespace: string, key: string): Promise<string | null>
-      setSetting(namespace: string, key: string, value: string): Promise<void>
-      getSettingsByNamespace(namespace: string): Promise<Record<string, string>>
+      getSetting(key: string): Promise<unknown>
+      setSetting(key: string, value: unknown): Promise<void>
+      getAllSettings(): Promise<Record<string, unknown>>
       clearDatabase(): Promise<void>
       getDatabasePath(): Promise<string>
       getLogPath(): Promise<string>

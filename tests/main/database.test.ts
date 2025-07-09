@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { eq, and } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { setupDatabaseTest } from './database-helper'
 import { settings } from '../../src/main/db/schema'
+import { getSetting, setSetting, getAllSettings } from '../../src/main/db/services/settings'
 
 describe('Database Operations', () => {
   const getTestDatabase = setupDatabaseTest()
@@ -10,22 +11,21 @@ describe('Database Operations', () => {
     it('should insert and retrieve a setting', async () => {
       const db = getTestDatabase()
 
-      // Insert a setting
+      // Insert a setting with JSON value
       await db.insert(settings).values({
-        namespace: 'app',
         key: 'theme',
-        value: 'dark'
+        value: { mode: 'dark', accent: 'blue' }
       })
 
       // Retrieve the setting
       const result = await db
         .select({ value: settings.value })
         .from(settings)
-        .where(and(eq(settings.namespace, 'app'), eq(settings.key, 'theme')))
+        .where(eq(settings.key, 'theme'))
         .limit(1)
 
       expect(result).toHaveLength(1)
-      expect(result[0].value).toBe('dark')
+      expect(result[0].value).toEqual({ mode: 'dark', accent: 'blue' })
     })
 
     it('should update an existing setting using onConflictDoUpdate', async () => {
@@ -33,53 +33,48 @@ describe('Database Operations', () => {
 
       // Insert initial setting
       await db.insert(settings).values({
-        namespace: 'app',
         key: 'theme',
-        value: 'light'
+        value: { mode: 'light' }
       })
 
       // Update the setting using onConflictDoUpdate (same as setSetting service)
       await db
         .insert(settings)
         .values({
-          namespace: 'app',
           key: 'theme',
-          value: 'dark'
+          value: { mode: 'dark' }
         })
         .onConflictDoUpdate({
-          target: [settings.namespace, settings.key],
-          set: { value: 'dark' }
+          target: [settings.key],
+          set: { value: { mode: 'dark' } }
         })
 
       // Verify the update
       const result = await db
         .select({ value: settings.value })
         .from(settings)
-        .where(and(eq(settings.namespace, 'app'), eq(settings.key, 'theme')))
+        .where(eq(settings.key, 'theme'))
         .limit(1)
 
       expect(result).toHaveLength(1)
-      expect(result[0].value).toBe('dark')
+      expect(result[0].value).toEqual({ mode: 'dark' })
     })
 
-    it('should retrieve multiple settings by namespace', async () => {
+    it('should retrieve multiple settings', async () => {
       const db = getTestDatabase()
 
-      // Insert multiple settings in the same namespace
+      // Insert multiple settings
       await db.insert(settings).values([
-        { namespace: 'ui', key: 'theme', value: 'dark' },
-        { namespace: 'ui', key: 'language', value: 'en' },
-        { namespace: 'ui', key: 'fontSize', value: '14' },
-        { namespace: 'other', key: 'setting', value: 'value' }
+        { key: 'ui.theme', value: 'dark' },
+        { key: 'ui.language', value: 'en' },
+        { key: 'ui.fontSize', value: 14 },
+        { key: 'other.setting', value: 'value' }
       ])
 
-      // Retrieve all settings for 'ui' namespace
-      const result = await db
-        .select({ key: settings.key, value: settings.value })
-        .from(settings)
-        .where(eq(settings.namespace, 'ui'))
+      // Retrieve all settings
+      const result = await db.select({ key: settings.key, value: settings.value }).from(settings)
 
-      expect(result).toHaveLength(3)
+      expect(result).toHaveLength(4)
 
       // Convert to object for easier testing
       const settingsMap = result.reduce(
@@ -87,13 +82,14 @@ describe('Database Operations', () => {
           acc[row.key] = row.value
           return acc
         },
-        {} as Record<string, string>
+        {} as Record<string, unknown>
       )
 
       expect(settingsMap).toEqual({
-        theme: 'dark',
-        language: 'en',
-        fontSize: '14'
+        'ui.theme': 'dark',
+        'ui.language': 'en',
+        'ui.fontSize': 14,
+        'other.setting': 'value'
       })
     })
 
@@ -104,7 +100,7 @@ describe('Database Operations', () => {
       const result = await db
         .select({ value: settings.value })
         .from(settings)
-        .where(and(eq(settings.namespace, 'nonexistent'), eq(settings.key, 'key')))
+        .where(eq(settings.key, 'nonexistent'))
         .limit(1)
 
       expect(result).toHaveLength(0)
@@ -115,9 +111,9 @@ describe('Database Operations', () => {
 
       // Insert some test data
       await db.insert(settings).values([
-        { namespace: 'app', key: 'theme', value: 'dark' },
-        { namespace: 'user', key: 'name', value: 'John' },
-        { namespace: 'system', key: 'version', value: '1.0.0' }
+        { key: 'app.theme', value: 'dark' },
+        { key: 'user.name', value: 'John' },
+        { key: 'system.version', value: '1.0.0' }
       ])
 
       // Verify data exists
@@ -137,7 +133,6 @@ describe('Database Operations', () => {
 
       // Insert a setting
       await db.insert(settings).values({
-        namespace: 'app',
         key: 'theme',
         value: 'light'
       })
@@ -145,7 +140,6 @@ describe('Database Operations', () => {
       // Try to insert duplicate (should fail without onConflictDoUpdate)
       await expect(
         db.insert(settings).values({
-          namespace: 'app',
           key: 'theme',
           value: 'dark'
         })
@@ -155,40 +149,35 @@ describe('Database Operations', () => {
       const result = await db
         .select({ value: settings.value })
         .from(settings)
-        .where(and(eq(settings.namespace, 'app'), eq(settings.key, 'theme')))
+        .where(eq(settings.key, 'theme'))
 
       expect(result[0].value).toBe('light')
     })
 
-    it('should support multiple namespaces with same keys', async () => {
+    it('should support hierarchical key naming', async () => {
       const db = getTestDatabase()
 
-      // Insert same key in different namespaces
+      // Insert hierarchical keys
       await db.insert(settings).values([
-        { namespace: 'app', key: 'theme', value: 'dark' },
-        { namespace: 'user', key: 'theme', value: 'light' },
-        { namespace: 'admin', key: 'theme', value: 'blue' }
+        { key: 'ai.provider', value: 'openai' },
+        { key: 'ai.model', value: 'gpt-4' },
+        { key: 'ui.theme', value: 'dark' },
+        { key: 'ui.language', value: 'en' }
       ])
 
-      // Verify each namespace has its own value
-      const appTheme = await db
+      // Verify each key has its own value
+      const aiProvider = await db
         .select({ value: settings.value })
         .from(settings)
-        .where(and(eq(settings.namespace, 'app'), eq(settings.key, 'theme')))
+        .where(eq(settings.key, 'ai.provider'))
 
-      const userTheme = await db
+      const uiTheme = await db
         .select({ value: settings.value })
         .from(settings)
-        .where(and(eq(settings.namespace, 'user'), eq(settings.key, 'theme')))
+        .where(eq(settings.key, 'ui.theme'))
 
-      const adminTheme = await db
-        .select({ value: settings.value })
-        .from(settings)
-        .where(and(eq(settings.namespace, 'admin'), eq(settings.key, 'theme')))
-
-      expect(appTheme[0].value).toBe('dark')
-      expect(userTheme[0].value).toBe('light')
-      expect(adminTheme[0].value).toBe('blue')
+      expect(aiProvider[0].value).toBe('openai')
+      expect(uiTheme[0].value).toBe('dark')
     })
   })
 
@@ -197,9 +186,9 @@ describe('Database Operations', () => {
       const db = getTestDatabase()
       const tableInfo = await db.all(`PRAGMA table_info(settings)`)
 
-      expect(tableInfo).toHaveLength(3)
+      expect(tableInfo).toHaveLength(2)
       const columnNames = tableInfo.map((col: { name: string }) => col.name)
-      expect(columnNames).toEqual(['namespace', 'key', 'value'])
+      expect(columnNames).toEqual(['key', 'value'])
     })
 
     it('should maintain WAL journal mode', async () => {
@@ -213,36 +202,36 @@ describe('Database Operations', () => {
 describe('Settings Service Pattern', () => {
   const getTestDatabase = setupDatabaseTest()
 
-  it('should support service-like operations', async () => {
+  it('should support service-like operations with JSON values', async () => {
+    // Test service operations with JSON values
+    await setSetting('test.complex', { nested: { value: 'data' }, array: [1, 2, 3] })
+    const retrieved = await getSetting('test.complex')
+    expect(retrieved).toEqual({ nested: { value: 'data' }, array: [1, 2, 3] })
+
+    await setSetting('test.simple', 'simple string')
+    expect(await getSetting('test.simple')).toBe('simple string')
+
+    await setSetting('test.number', 42)
+    expect(await getSetting('test.number')).toBe(42)
+
+    expect(await getSetting('test.nonexistent')).toBe(null)
+  })
+
+  it('should support getAllSettings function', async () => {
+    // Clear any existing data first
     const db = getTestDatabase()
+    await db.delete(settings)
 
-    // Helper functions mimicking service layer
-    const getSetting = async (namespace: string, key: string): Promise<string | null> => {
-      const result = await db
-        .select({ value: settings.value })
-        .from(settings)
-        .where(and(eq(settings.namespace, namespace), eq(settings.key, key)))
-        .limit(1)
-      return result[0]?.value || null
-    }
+    // Insert test data
+    await setSetting('key1', 'value1')
+    await setSetting('key2', { nested: 'value2' })
+    await setSetting('key3', 123)
 
-    const setSetting = async (namespace: string, key: string, value: string): Promise<void> => {
-      await db
-        .insert(settings)
-        .values({ namespace, key, value })
-        .onConflictDoUpdate({
-          target: [settings.namespace, settings.key],
-          set: { value }
-        })
-    }
+    const allSettings = await getAllSettings()
 
-    // Test service operations
-    await setSetting('test', 'setting1', 'value1')
-    expect(await getSetting('test', 'setting1')).toBe('value1')
-
-    await setSetting('test', 'setting1', 'updatedValue')
-    expect(await getSetting('test', 'setting1')).toBe('updatedValue')
-
-    expect(await getSetting('test', 'nonexistent')).toBe(null)
+    // Check that our test data is present
+    expect(allSettings.key1).toBe('value1')
+    expect(allSettings.key2).toEqual({ nested: 'value2' })
+    expect(allSettings.key3).toBe(123)
   })
 })

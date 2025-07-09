@@ -61,10 +61,10 @@ export function DummyDataManager(): React.JSX.Element {
     const loadDummyData = async (): Promise<void> => {
       try {
         setIsLoading(true)
-        const settings = await window.database.getSettingsByNamespace('test')
+        const dummyData = (await window.database.getSetting('dummy')) || {}
 
-        form.setValue('settingA', settings.settingA || 'Default A')
-        form.setValue('settingB', settings.settingB || 'Default B')
+        form.setValue('settingA', dummyData.settingA || 'Default A')
+        form.setValue('settingB', dummyData.settingB || 'Default B')
       } catch (error) {
         logger.error('Error loading dummy data:', error)
         setMessage({
@@ -84,9 +84,10 @@ export function DummyDataManager(): React.JSX.Element {
       setIsLoading(true)
       setMessage(null)
 
-      // Save each setting in the 'test' namespace
-      await window.database.setSetting('test', 'settingA', data.settingA)
-      await window.database.setSetting('test', 'settingB', data.settingB)
+      await window.database.setSetting('dummy', {
+        settingA: data.settingA,
+        settingB: data.settingB
+      })
 
       setMessage({
         type: 'success',
