@@ -26,6 +26,7 @@ A modern, full-featured Electron application template with React, TypeScript, an
 - **Electron** with electron-vite bundler
 - **SQLite** database with Drizzle ORM
 - **better-sqlite3** for database operations
+- **electron-log** for unified logging across processes
 
 ### Development Tools
 
@@ -33,6 +34,7 @@ A modern, full-featured Electron application template with React, TypeScript, an
 - **ESLint** for code linting
 - **Prettier** for code formatting
 - **Drizzle Kit** for database migrations
+- **SWC** for fast TypeScript/JavaScript compilation
 
 ## Project Setup
 
