@@ -2,7 +2,13 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { CheckCircle, XCircle, Loader2, Settings } from 'lucide-react'
 import type { AIProvider } from '../../../preload/index.d'
@@ -38,7 +44,7 @@ export function AIQuickSettings({ onProviderChange, className = '' }: AIQuickSet
       // Load default provider
       const savedProvider = await window.database.getSetting('ai', 'default_provider')
       const currentProvider = (savedProvider as AIProvider) || 'openai'
-      
+
       if (savedProvider) {
         setSelectedProvider(currentProvider)
       }
@@ -70,14 +76,15 @@ export function AIQuickSettings({ onProviderChange, className = '' }: AIQuickSet
   const loadProviderSettings = async (provider: AIProvider) => {
     const savedApiKey = await window.database.getSetting('ai', `${provider}_api_key`)
     const savedModel = await window.database.getSetting('ai', `${provider}_model`)
-    
+
     setApiKey(savedApiKey || '')
-    setModel(savedModel || await getDefaultModel(provider))
-    setIsConnected(false)
-    
+    setModel(savedModel || (await getDefaultModel(provider)))
+
     // Test connection if API key exists
     if (savedApiKey) {
-      testConnection()
+      await testConnection(savedApiKey)
+    } else {
+      setIsConnected(false)
     }
   }
 
@@ -87,13 +94,14 @@ export function AIQuickSettings({ onProviderChange, className = '' }: AIQuickSet
     onProviderChange?.(provider)
   }
 
-  const testConnection = async () => {
-    if (!apiKey) return
+  const testConnection = async (keyToTest?: string) => {
+    const testKey = keyToTest || apiKey
+    if (!testKey) return
 
     setIsTesting(true)
     try {
       // Save temporarily for testing
-      await window.database.setSetting('ai', `${selectedProvider}_api_key`, apiKey)
+      await window.database.setSetting('ai', `${selectedProvider}_api_key`, testKey)
       await window.database.setSetting('ai', `${selectedProvider}_model`, model)
 
       const connected = await window.ai.testConnection(selectedProvider)
@@ -112,10 +120,10 @@ export function AIQuickSettings({ onProviderChange, className = '' }: AIQuickSet
       await window.database.setSetting('ai', 'default_provider', selectedProvider)
       await window.database.setSetting('ai', `${selectedProvider}_api_key`, apiKey)
       await window.database.setSetting('ai', `${selectedProvider}_model`, model)
-      
+
       // Test connection after saving
       await testConnection()
-      
+
       setShowSettings(false)
     } catch (error) {
       logger.error('Failed to save settings:', error)
@@ -134,7 +142,9 @@ export function AIQuickSettings({ onProviderChange, className = '' }: AIQuickSet
               <CardDescription className="flex items-center gap-2">
                 Using {selectedProvider}
                 {isConnected && <CheckCircle className="h-3 w-3 text-green-600" />}
-                {apiKey && !isConnected && !isTesting && <XCircle className="h-3 w-3 text-red-600" />}
+                {apiKey && !isConnected && !isTesting && (
+                  <XCircle className="h-3 w-3 text-red-600" />
+                )}
               </CardDescription>
             </div>
             <Button
@@ -157,11 +167,7 @@ export function AIQuickSettings({ onProviderChange, className = '' }: AIQuickSet
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">Configure AI Assistant</CardTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowSettings(false)}
-          >
+          <Button variant="outline" size="sm" onClick={() => setShowSettings(false)}>
             Done
           </Button>
         </div>
@@ -227,11 +233,7 @@ export function AIQuickSettings({ onProviderChange, className = '' }: AIQuickSet
             )}
           </Button>
 
-          <Button
-            onClick={saveSettings}
-            disabled={!apiKey || isSaving}
-            size="sm"
-          >
+          <Button onClick={saveSettings} disabled={!apiKey || isSaving} size="sm">
             {isSaving ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />

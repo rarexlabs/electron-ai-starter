@@ -22,7 +22,7 @@ declare global {
     }
     ai: {
       streamChat(
-        messages: AIMessage[], 
+        messages: AIMessage[],
         provider?: AIProvider,
         onChunk?: (chunk: string) => void,
         onEnd?: () => void,

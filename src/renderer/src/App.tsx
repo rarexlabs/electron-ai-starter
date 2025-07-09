@@ -44,7 +44,8 @@ function App(): React.JSX.Element {
               <CardContent className="p-6">
                 <div className="text-sm text-gray-600 mb-2">Hello World</div>
                 <CardDescription>
-                  Welcome to your Electron starter with AI chat capabilities. Configure your AI providers in settings to start chatting.
+                  Welcome to your Electron starter with AI chat capabilities. Configure your AI
+                  providers in settings to start chatting.
                 </CardDescription>
               </CardContent>
             </Card>
@@ -54,12 +55,8 @@ function App(): React.JSX.Element {
 
           {/* Right Column - AI Chat */}
           <div className="space-y-4">
-            <AIQuickSettings 
-              onProviderChange={setCurrentProvider}
-            />
-            <ChatInterface 
-              provider={currentProvider}
-            />
+            <AIQuickSettings onProviderChange={setCurrentProvider} />
+            <ChatInterface provider={currentProvider} />
           </div>
         </div>
       </div>

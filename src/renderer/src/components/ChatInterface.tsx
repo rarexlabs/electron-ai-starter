@@ -45,80 +45,84 @@ export function ChatInterface({ provider = 'openai', className = '' }: ChatInter
     }
   }, [messages])
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!input.trim() || isStreaming) return
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault()
+      if (!input.trim() || isStreaming) return
 
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: input.trim(),
-      timestamp: Date.now()
-    }
-
-    setMessages(prev => [...prev, userMessage])
-    setInput('')
-    setIsStreaming(true)
-    setError(null)
-
-    try {
-      // Prepare messages for AI
-      const aiMessages: AIMessage[] = [
-        ...messages.map(msg => ({ role: msg.role, content: msg.content })),
-        { role: 'user', content: userMessage.content }
-      ]
-
-      // Create placeholder for assistant message
-      const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: '',
+      const userMessage: ChatMessage = {
+        id: Date.now().toString(),
+        role: 'user',
+        content: input.trim(),
         timestamp: Date.now()
       }
 
-      // Add assistant message to display streaming content
-      setMessages(prev => [...prev, assistantMessage])
+      setMessages((prev) => [...prev, userMessage])
+      setInput('')
+      setIsStreaming(true)
+      setError(null)
 
-      // Stream response from main process
-      await window.ai.streamChat(
-        aiMessages, 
-        currentProvider,
-        // onChunk: update message content directly
-        (chunk: string) => {
-          setMessages(prev => 
-            prev.map(msg => 
-              msg.id === assistantMessage.id 
-                ? { ...msg, content: msg.content + chunk }
-                : msg
-            )
-          )
-        },
-        // onEnd: streaming complete
-        () => {
-          // Streaming is complete
-          setIsStreaming(false)
-        },
-        // onError: handle streaming errors
-        (error: string) => {
-          setError(error)
-          // Remove the placeholder message on error
-          setMessages(prev => prev.filter(msg => msg.id !== assistantMessage.id))
+      try {
+        // Prepare messages for AI
+        const aiMessages: AIMessage[] = [
+          ...messages.map((msg) => ({ role: msg.role, content: msg.content })),
+          { role: 'user', content: userMessage.content }
+        ]
+
+        // Create placeholder for assistant message
+        const assistantMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: '',
+          timestamp: Date.now()
         }
-      )
-      
-    } catch (err) {
-      logger.error('Chat error:', err)
-      const errorMessage = err instanceof Error && err.message.includes('API key')
-        ? `Please configure your ${currentProvider} API key in settings`
-        : err instanceof Error && (err.message.includes('network') || err.message.includes('fetch'))
-          ? 'Network error. Please check your internet connection'
-          : err instanceof Error ? err.message : 'Failed to get AI response'
-      setError(errorMessage)
-    } finally {
-      // Error handling will reset streaming state
-      setIsStreaming(false)
-    }
-  }, [input, isStreaming, messages, currentProvider])
+
+        // Add assistant message to display streaming content
+        setMessages((prev) => [...prev, assistantMessage])
+
+        // Stream response from main process
+        await window.ai.streamChat(
+          aiMessages,
+          currentProvider,
+          // onChunk: update message content directly
+          (chunk: string) => {
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === assistantMessage.id ? { ...msg, content: msg.content + chunk } : msg
+              )
+            )
+          },
+          // onEnd: streaming complete
+          () => {
+            // Streaming is complete
+            setIsStreaming(false)
+          },
+          // onError: handle streaming errors
+          (error: string) => {
+            setError(error)
+            // Remove the placeholder message on error
+            setMessages((prev) => prev.filter((msg) => msg.id !== assistantMessage.id))
+          }
+        )
+      } catch (err) {
+        logger.error('Chat error:', err)
+        const errorMessage =
+          err instanceof Error && err.message.includes('API key')
+            ? `Please configure your ${currentProvider} API key in settings`
+            : err instanceof Error &&
+                (err.message.includes('network') || err.message.includes('fetch'))
+              ? 'Network error. Please check your internet connection'
+              : err instanceof Error
+                ? err.message
+                : 'Failed to get AI response'
+        setError(errorMessage)
+      } finally {
+        // Error handling will reset streaming state
+        setIsStreaming(false)
+      }
+    },
+    [input, isStreaming, messages, currentProvider]
+  )
 
   const clearChat = useCallback(() => {
     setMessages([])
@@ -134,12 +138,7 @@ export function ChatInterface({ provider = 'openai', className = '' }: ChatInter
             <Bot className="h-5 w-5 text-blue-600" />
             <h3 className="font-semibold">AI Chat ({currentProvider})</h3>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearChat}
-            disabled={isStreaming}
-          >
+          <Button variant="ghost" size="sm" onClick={clearChat} disabled={isStreaming}>
             Clear
           </Button>
         </div>
@@ -154,7 +153,7 @@ export function ChatInterface({ provider = 'openai', className = '' }: ChatInter
               </div>
             </div>
           )}
-          
+
           {messages.map((message) => (
             <div
               key={message.id}
@@ -167,9 +166,7 @@ export function ChatInterface({ provider = 'openai', className = '' }: ChatInter
               )}
               <div
                 className={`max-w-[80%] px-3 py-2 rounded-lg ${
-                  message.role === 'user'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-900'
+                  message.role === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-900'
                 }`}
               >
                 {message.content || (
@@ -179,12 +176,12 @@ export function ChatInterface({ provider = 'openai', className = '' }: ChatInter
                   </div>
                 )}
                 {/* Show cursor when streaming and this is the last assistant message */}
-                {message.role === 'assistant' && 
-                 isStreaming && 
-                 message.id === messages[messages.length - 1]?.id &&
-                 message.content && (
-                  <span className="inline-block w-1 h-4 bg-blue-600 animate-pulse ml-1" />
-                )}
+                {message.role === 'assistant' &&
+                  isStreaming &&
+                  message.id === messages[messages.length - 1]?.id &&
+                  message.content && (
+                    <span className="inline-block w-1 h-4 bg-blue-600 animate-pulse ml-1" />
+                  )}
               </div>
               {message.role === 'user' && (
                 <User className="h-4 w-4 text-gray-600 mt-1 flex-shrink-0" />
@@ -199,12 +196,7 @@ export function ChatInterface({ provider = 'openai', className = '' }: ChatInter
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-sm text-red-700">{error}</p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setError(null)}
-              className="mt-2"
-            >
+            <Button variant="outline" size="sm" onClick={() => setError(null)} className="mt-2">
               Dismiss
             </Button>
           </div>
@@ -219,11 +211,7 @@ export function ChatInterface({ provider = 'openai', className = '' }: ChatInter
             disabled={isStreaming}
             className="flex-1"
           />
-          <Button
-            type="submit"
-            disabled={!input.trim() || isStreaming}
-            size="icon"
-          >
+          <Button type="submit" disabled={!input.trim() || isStreaming} size="icon">
             {isStreaming ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (

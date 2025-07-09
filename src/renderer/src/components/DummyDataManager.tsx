@@ -107,9 +107,7 @@ export function DummyDataManager(): React.JSX.Element {
     <Card className="shadow-sm">
       <CardHeader>
         <CardTitle>Dummy Database Data</CardTitle>
-        <CardDescription>
-          Data are persisted to SQLITE DB.
-        </CardDescription>
+        <CardDescription>Data are persisted to SQLITE DB.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>

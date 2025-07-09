@@ -47,7 +47,7 @@ const databaseAPI = {
 // AI Chat API implementation using secure IPC
 const aiAPI = {
   streamChat: (
-    messages: AIMessage[], 
+    messages: AIMessage[],
     provider?: AIProvider,
     onChunk?: (chunk: string) => void,
     onEnd?: () => void,
@@ -57,39 +57,39 @@ const aiAPI = {
       try {
         const sessionId = await ipcRenderer.invoke('ai-chat-stream', messages, provider)
         let fullResponse = ''
-        
+
         const cleanup = () => {
           ipcRenderer.removeListener('ai-chat-chunk', handleChunk)
           ipcRenderer.removeListener('ai-chat-end', handleEnd)
           ipcRenderer.removeListener('ai-chat-error', handleError)
         }
-        
-        const createHandler = (callback: (id: string, ...args: any[]) => void) => 
+
+        const createHandler =
+          (callback: (id: string, ...args: any[]) => void) =>
           (_event: any, id: string, ...args: any[]) => {
             if (id === sessionId) callback(id, ...args)
           }
-        
+
         const handleChunk = createHandler((_, chunk) => {
           fullResponse += chunk
           onChunk?.(chunk)
         })
-        
+
         const handleEnd = createHandler(() => {
           cleanup()
           onEnd?.()
           resolve(fullResponse)
         })
-        
+
         const handleError = createHandler((_, error) => {
           cleanup()
           onError?.(error)
           reject(new Error(error))
         })
-        
+
         ipcRenderer.on('ai-chat-chunk', handleChunk)
         ipcRenderer.on('ai-chat-end', handleEnd)
         ipcRenderer.on('ai-chat-error', handleError)
-        
       } catch (error) {
         reject(error)
       }

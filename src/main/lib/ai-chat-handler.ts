@@ -12,7 +12,6 @@ export interface AIMessage {
   content: string
 }
 
-
 const MODEL_CONFIG = {
   openai: {
     default: 'gpt-4o',
@@ -21,7 +20,13 @@ const MODEL_CONFIG = {
   },
   anthropic: {
     default: 'claude-3-5-sonnet-20241022',
-    available: ['claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307'],
+    available: [
+      'claude-3-5-sonnet-20241022',
+      'claude-3-5-haiku-20241022',
+      'claude-3-opus-20240229',
+      'claude-3-sonnet-20240229',
+      'claude-3-haiku-20240307'
+    ],
     createModel: (apiKey: string, model: string) => createAnthropic({ apiKey })(model)
   },
   google: {
@@ -34,11 +39,11 @@ const MODEL_CONFIG = {
 async function createModel(provider: AIProvider) {
   const apiKey = await getSetting('ai', `${provider}_api_key`)
   const model = await getSetting('ai', `${provider}_model`)
-  
+
   if (!apiKey) {
     throw new Error(`API key not found for ${provider}`)
   }
-  
+
   const config = MODEL_CONFIG[provider]
   return config.createModel(apiKey, model || config.default)
 }
@@ -47,19 +52,20 @@ export async function* streamAIResponse(
   messages: AIMessage[],
   provider?: AIProvider
 ): AsyncGenerator<string, void, unknown> {
-  const currentProvider = provider || await getSetting('ai', 'default_provider') as AIProvider || 'openai'
-  
+  const currentProvider =
+    provider || ((await getSetting('ai', 'default_provider')) as AIProvider) || 'openai'
+
   try {
     const model = await createModel(currentProvider)
     const result = await streamText({
       model,
       messages,
       temperature: 0.7,
-      maxTokens: 1000,
+      maxTokens: 1000
     })
-    
+
     mainLogger.info(`AI response streaming started with ${currentProvider}`)
-    
+
     for await (const chunk of result.textStream) {
       yield chunk
     }
@@ -79,9 +85,9 @@ export async function testConnection(provider: AIProvider): Promise<boolean> {
     const result = await streamText({
       model,
       messages: [{ role: 'user', content: 'Test' }],
-      maxTokens: 5,
+      maxTokens: 5
     })
-    
+
     for await (const chunk of result.textStream) {
       if (chunk?.length > 0) {
         mainLogger.info(`Connection test successful for ${provider}`)

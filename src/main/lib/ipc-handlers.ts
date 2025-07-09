@@ -8,7 +8,13 @@ import {
 } from '../db/services/settings'
 import { getDatabasePath, getLogPath } from './paths'
 import { mainLogger } from './logger'
-import { streamAIResponse, getAvailableModels, testConnection, type AIProvider, type AIMessage } from './ai-chat-handler'
+import {
+  streamAIResponse,
+  getAvailableModels,
+  testConnection,
+  type AIProvider,
+  type AIMessage
+} from './ai-chat-handler'
 
 export function setupIpcHandlers(): void {
   // Database IPC handlers
@@ -61,11 +67,11 @@ export function setupIpcHandlers(): void {
   // AI Chat IPC handlers
   ipcMain.handle('ai-chat-stream', async (event, messages: AIMessage[], provider?: AIProvider) => {
     const sessionId = Date.now().toString()
-    
+
     try {
       // Start streaming in the background
       const streamGenerator = streamAIResponse(messages, provider)
-      
+
       // Process stream chunks
       ;(async () => {
         try {
@@ -80,7 +86,7 @@ export function setupIpcHandlers(): void {
           event.sender.send('ai-chat-error', sessionId, errorMessage)
         }
       })()
-      
+
       return sessionId
     } catch (error) {
       mainLogger.error('AI chat stream error:', error)
