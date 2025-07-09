@@ -9,6 +9,9 @@ declare global {
       setSetting(namespace: string, key: string, value: string): Promise<void>
       getSettingsByNamespace(namespace: string): Promise<Record<string, string>>
       clearDatabase(): Promise<void>
+      getDatabasePath(): Promise<string>
+      getLogPath(): Promise<string>
+      openFolder(folderPath: string): Promise<void>
     }
   }
 }

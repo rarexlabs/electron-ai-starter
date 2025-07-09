@@ -9,7 +9,6 @@ import { logger } from '@/lib/logger'
 function App(): React.JSX.Element {
   const [currentPage, setCurrentPage] = useState<'home' | 'settings'>('home')
 
-
   const handleSettingsClick = (): void => {
     logger.info('Settings page opened')
     setCurrentPage('settings')

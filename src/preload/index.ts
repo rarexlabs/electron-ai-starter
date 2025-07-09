@@ -20,6 +20,18 @@ const databaseAPI = {
 
   clearDatabase: (): Promise<void> => {
     return ipcRenderer.invoke('clear-database')
+  },
+
+  getDatabasePath: (): Promise<string> => {
+    return ipcRenderer.invoke('get-database-path')
+  },
+
+  getLogPath: (): Promise<string> => {
+    return ipcRenderer.invoke('get-log-path')
+  },
+
+  openFolder: (folderPath: string): Promise<void> => {
+    return ipcRenderer.invoke('open-folder', folderPath)
   }
 }
 

@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { ArrowLeft, Trash2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { ArrowLeft, Trash2, FolderOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -10,6 +10,76 @@ interface SettingsProps {
 export function Settings({ onBack }: SettingsProps): React.JSX.Element {
   const [isClearingDatabase, setIsClearingDatabase] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [databasePath, setDatabasePath] = useState<string>('')
+  const [logPath, setLogPath] = useState<string>('')
+  const [isLoadingPaths, setIsLoadingPaths] = useState(true)
+
+  useEffect(() => {
+    const loadPaths = async (): Promise<void> => {
+      try {
+        const [dbPath, logPath] = await Promise.all([
+          window.database.getDatabasePath(),
+          window.database.getLogPath()
+        ])
+        setDatabasePath(dbPath)
+        setLogPath(logPath)
+      } catch (error) {
+        console.error('Failed to load paths:', error)
+        setMessage({
+          type: 'error',
+          text: 'Failed to load file paths'
+        })
+      } finally {
+        setIsLoadingPaths(false)
+      }
+    }
+
+    loadPaths()
+  }, [])
+
+  const handleOpenFolder = async (folderPath: string): Promise<void> => {
+    try {
+      await window.database.openFolder(folderPath)
+    } catch (error) {
+      console.error('Failed to open folder:', error)
+      setMessage({
+        type: 'error',
+        text: 'Failed to open folder'
+      })
+    }
+  }
+
+  const PathDisplay = ({
+    title,
+    description,
+    path
+  }: {
+    title: string
+    description: string
+    path: string
+  }): React.JSX.Element => (
+    <div>
+      <h3 className="font-medium text-gray-900 mb-2">{title}</h3>
+      <p className="text-sm text-gray-600 mb-3">{description}</p>
+      <div className="flex items-center gap-3">
+        <div className="flex-1 min-w-0">
+          <code className="text-sm bg-gray-100 px-3 py-2 rounded border block truncate">
+            {isLoadingPaths ? 'Loading...' : path || 'Path not available'}
+          </code>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handleOpenFolder(path)}
+          disabled={isLoadingPaths || !path}
+          className="flex items-center gap-2 shrink-0"
+        >
+          <FolderOpen className="h-4 w-4" />
+          Open Folder
+        </Button>
+      </div>
+    </div>
+  )
 
   const handleClearDatabase = async (): Promise<void> => {
     if (!confirm('Are you sure you want to clear the database?')) {
@@ -47,6 +117,27 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
           </Button>
           <h1 className="text-4xl font-bold text-gray-900">Settings</h1>
         </div>
+
+        {/* File Paths Section */}
+        <Card className="shadow-sm mb-6">
+          <CardHeader>
+            <CardTitle>File Locations</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <PathDisplay
+                title="Database Location"
+                description="Location where application data is stored"
+                path={databasePath}
+              />
+              <PathDisplay
+                title="Log Files Location"
+                description="Location where application log files are stored"
+                path={logPath}
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Database Management */}
         <Card className="shadow-sm">

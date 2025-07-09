@@ -1,5 +1,5 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
-import { join } from 'path'
+import { join, dirname, resolve } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { getDatabase, closeDatabase, runMigrations, testDatabaseConnection } from './db/connection'
@@ -17,6 +17,29 @@ initializeLogging()
 // Log app startup as early as possible
 mainLogger.info('🚀 App starting...')
 mainLogger.info('🔧 Main process started')
+
+// Helper functions for path management
+function getBasePath(): string {
+  const isDev = process.env.NODE_ENV === 'development' || import.meta.env.DEV
+  const configPath = process.env.DB_PATH || import.meta.env.MAIN_VITE_USER_DATA_PATH
+
+  if (!configPath) {
+    if (isDev) {
+      throw new Error('Database path is required in development.')
+    }
+    return app.getPath('userData')
+  }
+
+  return configPath
+}
+
+function getDatabasePath(): string {
+  return resolve(join(getBasePath(), 'db', 'app.db'))
+}
+
+function getLogPath(): string {
+  return resolve(join(getBasePath(), 'logs'))
+}
 
 function initializeDatabase(): void {
   try {
@@ -111,6 +134,36 @@ app.whenReady().then(() => {
 
   ipcMain.handle('clear-database', async () => {
     return clearDatabase()
+  })
+
+  // Path IPC handlers
+  ipcMain.handle('get-database-path', async () => {
+    try {
+      const dbPath = getDatabasePath()
+      return resolve(dirname(dbPath)) // Return the absolute path to the folder containing the database file
+    } catch (error) {
+      mainLogger.error('Failed to get database path:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('get-log-path', async () => {
+    try {
+      return getLogPath()
+    } catch (error) {
+      mainLogger.error('Failed to get log path:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('open-folder', async (_, folderPath: string) => {
+    try {
+      await shell.openPath(folderPath)
+      mainLogger.info(`Opened folder: ${folderPath}`)
+    } catch (error) {
+      mainLogger.error('Failed to open folder:', error)
+      throw error
+    }
   })
 
   // IPC test
