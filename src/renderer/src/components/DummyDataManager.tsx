@@ -4,7 +4,14 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Save } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter
+} from '@/components/ui/card'
 import {
   Form,
   FormControl,
@@ -100,6 +107,9 @@ export function DummyDataManager(): React.JSX.Element {
     <Card className="shadow-sm">
       <CardHeader>
         <CardTitle>Test Data Manager</CardTitle>
+        <CardDescription>
+          Manage test settings to verify database connectivity and data persistence.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -133,13 +143,6 @@ export function DummyDataManager(): React.JSX.Element {
                 </FormItem>
               )}
             />
-
-            <div className="flex justify-end">
-              <Button type="submit" disabled={isLoading} className="flex items-center gap-2">
-                <Save className="h-4 w-4" />
-                {isLoading ? 'Saving...' : 'Save Test Data'}
-              </Button>
-            </div>
           </form>
         </Form>
 
@@ -156,6 +159,16 @@ export function DummyDataManager(): React.JSX.Element {
           </div>
         )}
       </CardContent>
+      <CardFooter>
+        <Button
+          onClick={form.handleSubmit(onSubmit)}
+          disabled={isLoading}
+          className="flex items-center gap-2 ml-auto"
+        >
+          <Save className="h-4 w-4" />
+          {isLoading ? 'Saving...' : 'Save Test Data'}
+        </Button>
+      </CardFooter>
     </Card>
   )
 }

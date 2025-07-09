@@ -3,10 +3,10 @@ import './assets/global.css'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
-import { logger } from '@/lib/logger'
+import log from 'electron-log/renderer'
 
 // Log renderer startup as early as possible
-logger.info('🎨 Renderer process started')
+log.info('🎨 Renderer process started')
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

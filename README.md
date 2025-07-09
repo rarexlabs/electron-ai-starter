@@ -125,4 +125,3 @@ Pre-configured path aliases for cleaner imports:
 2. Run `npm install`
 3. Start development with `npm run dev`
 4. Begin building your Electron app!
-

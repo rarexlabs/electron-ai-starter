@@ -1,21 +1,21 @@
 import { useState } from 'react'
 import { Settings as SettingsIcon } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Settings } from '@/components/Settings'
 import { DummyDataManager } from '@/components/DummyDataManager'
-import { logger } from '@/lib/logger'
+import log from 'electron-log/renderer'
 
 function App(): React.JSX.Element {
   const [currentPage, setCurrentPage] = useState<'home' | 'settings'>('home')
 
   const handleSettingsClick = (): void => {
-    logger.info('Settings page opened')
+    log.info('Settings page opened')
     setCurrentPage('settings')
   }
 
   const handleBackToHome = (): void => {
-    logger.info('Navigated back to home')
+    log.info('Navigated back to home')
     setCurrentPage('home')
   }
 
@@ -34,11 +34,11 @@ function App(): React.JSX.Element {
         </div>
 
         <Card className="shadow-sm mb-6">
-          <CardContent className="p-6 space-y-4">
-            <div className="text-sm text-gray-600">Hello World</div>
-            <div className="text-xs text-gray-500">
+          <CardContent className="p-6">
+            <div className="text-sm text-gray-600 mb-2">Hello World</div>
+            <CardDescription>
               Click the settings icon in the top right to access application settings.
-            </div>
+            </CardDescription>
           </CardContent>
         </Card>
 

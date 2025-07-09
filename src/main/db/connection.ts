@@ -2,10 +2,10 @@ import { drizzle } from 'drizzle-orm/better-sqlite3'
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator'
 import Database from 'better-sqlite3'
 import * as path from 'path'
-import { app } from 'electron'
 import * as fs from 'fs'
 import { sql } from 'drizzle-orm'
 import { mainLogger } from '../lib/logger'
+import { getDatabasePath } from '../lib/paths'
 
 let db: ReturnType<typeof drizzle> | null = null
 let sqlite: Database.Database | null = null
@@ -37,63 +37,19 @@ export function runMigrations(): void {
     throw new Error('Database not initialized. Call getDatabase() first.')
   }
 
-  // Try multiple possible paths for migrations folder
-  const possiblePaths = [
-    // Development path (when running electron-vite dev)
-    path.join(process.cwd(), 'src', 'main', 'db', 'migrations'),
-    // Production path (relative to built main process)
-    path.join(__dirname, 'db', 'migrations'),
-    // Alternative production path
-    path.join(__dirname, '..', '..', 'src', 'main', 'db', 'migrations')
-  ]
-
-  let migrationsFolder: string | null = null
-  for (const possiblePath of possiblePaths) {
-    if (fs.existsSync(possiblePath)) {
-      migrationsFolder = possiblePath
-      break
-    }
-  }
-
+  const migrationsFolder = getMigrationsFolder()
   if (!migrationsFolder) {
-    mainLogger.info('📦 No migrations folder found in any expected location, skipping migrations')
-    mainLogger.debug('Searched paths:', possiblePaths)
+    mainLogger.info('📦 No migrations folder found, skipping migrations')
     return
   }
 
   mainLogger.info('🚀 Running migrations...')
 
   try {
-    // Verify migrations folder structure
-    const files = fs.readdirSync(migrationsFolder)
-    const sqlFiles = files.filter((file) => file.endsWith('.sql'))
-
-    if (sqlFiles.length === 0) {
-      mainLogger.info('📦 No migration files found')
-      return
-    }
-
-    // Check if __drizzle_migrations table exists to see if any migrations have been run before
-    const hasMigrationsTable = sqlite
-      ?.prepare(
-        `
-      SELECT name FROM sqlite_master 
-      WHERE type='table' AND name='__drizzle_migrations'
-    `
-      )
-      .get()
-
-    const appliedMigrations = hasMigrationsTable
-      ? sqlite?.prepare('SELECT hash FROM __drizzle_migrations').all() || []
-      : []
-
-    // Run migrations and capture any changes
-    const beforeCount = appliedMigrations.length
+    const beforeCount = getAppliedMigrationsCount()
     migrate(db, { migrationsFolder })
-
-    // Check how many migrations are applied now
-    const afterMigrations = sqlite?.prepare('SELECT hash FROM __drizzle_migrations').all() || []
-    const newMigrations = afterMigrations.length - beforeCount
+    const afterCount = getAppliedMigrationsCount()
+    const newMigrations = afterCount - beforeCount
 
     if (newMigrations > 0) {
       mainLogger.info(`✅ Applied ${newMigrations} new migration(s)`)
@@ -102,36 +58,56 @@ export function runMigrations(): void {
     }
   } catch (error) {
     mainLogger.error('❌ Migration failed:', error)
-
-    // Add more context to the error
-    let errorMessage = 'Unknown migration error'
-    if (error instanceof Error) {
-      errorMessage = error.message
-
-      // Provide helpful hints for common errors
-      if (errorMessage.includes('SQLITE_CORRUPT')) {
-        errorMessage +=
-          '\n\nThe database file may be corrupted. Try deleting the database file and restarting the application.'
-      } else if (errorMessage.includes('SQLITE_BUSY')) {
-        errorMessage +=
-          '\n\nThe database is locked by another process. Make sure no other instances of the application are running.'
-      } else if (errorMessage.includes('SQLITE_READONLY')) {
-        errorMessage += '\n\nThe database file is read-only. Check file permissions.'
-      }
-    }
-
-    throw new Error(`Database migration failed: ${errorMessage}`)
+    throw new Error(`Database migration failed: ${getMigrationErrorMessage(error)}`)
   }
+}
+
+function getMigrationsFolder(): string | null {
+  const possiblePaths = [
+    path.join(process.cwd(), 'src', 'main', 'db', 'migrations'),
+    path.join(__dirname, 'db', 'migrations'),
+    path.join(__dirname, '..', '..', 'src', 'main', 'db', 'migrations')
+  ]
+
+  return possiblePaths.find(fs.existsSync) || null
+}
+
+function getAppliedMigrationsCount(): number {
+  const hasMigrationsTable = sqlite
+    ?.prepare(
+      `
+    SELECT name FROM sqlite_master 
+    WHERE type='table' AND name='__drizzle_migrations'
+  `
+    )
+    .get()
+
+  return hasMigrationsTable
+    ? sqlite?.prepare('SELECT hash FROM __drizzle_migrations').all()?.length || 0
+    : 0
+}
+
+function getMigrationErrorMessage(error: unknown): string {
+  if (!(error instanceof Error)) return 'Unknown migration error'
+
+  let message = error.message
+  if (message.includes('SQLITE_CORRUPT')) {
+    message +=
+      '\n\nThe database file may be corrupted. Try deleting the database file and restarting the application.'
+  } else if (message.includes('SQLITE_BUSY')) {
+    message +=
+      '\n\nThe database is locked by another process. Make sure no other instances of the application are running.'
+  } else if (message.includes('SQLITE_READONLY')) {
+    message += '\n\nThe database file is read-only. Check file permissions.'
+  }
+
+  return message
 }
 
 export function testDatabaseConnection(): boolean {
   try {
-    const database = getDatabase()
-
-    // Test that we can execute a simple query without requiring any tables
-    database.run(sql`SELECT 1 as test`)
+    getDatabase().run(sql`SELECT 1 as test`)
     mainLogger.info('✅ Database connected')
-
     return true
   } catch (error) {
     mainLogger.error('❌ Database connection failed:', error)
@@ -145,26 +121,6 @@ export function closeDatabase(): void {
     sqlite = null
     db = null
   }
-}
-
-function getDatabasePath(): string {
-  let dbPath = process.env.DB_PATH || import.meta.env.MAIN_VITE_USER_DATA_PATH
-
-  // In development, require explicit DB path. In production, fallback to userData
-  const isDevelopment = process.env.NODE_ENV === 'development' || import.meta.env.DEV
-
-  if (!dbPath) {
-    if (isDevelopment) {
-      throw new Error(
-        'Database path is required in development. Please set either DB_PATH or MAIN_VITE_USER_DATA_PATH environment variable.'
-      )
-    }
-    // Production fallback to userData directory
-    dbPath = app.getPath('userData')
-  }
-
-  // Always append hardcoded 'db' folder and database file name
-  return path.join(dbPath, 'db', 'app.db')
 }
 
 export function removeDatabaseFile(): void {

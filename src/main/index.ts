@@ -1,15 +1,10 @@
-import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
-import { join, dirname, resolve } from 'path'
+import { app, shell, BrowserWindow, dialog } from 'electron'
+import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { getDatabase, closeDatabase, runMigrations, testDatabaseConnection } from './db/connection'
-import {
-  getSetting,
-  setSetting,
-  getSettingsByNamespace,
-  clearDatabase
-} from './db/services/settings'
 import { initializeLogging, mainLogger } from './lib/logger'
+import { setupIpcHandlers } from './lib/ipc-handlers'
 
 // Initialize logging immediately
 initializeLogging()
@@ -17,29 +12,6 @@ initializeLogging()
 // Log app startup as early as possible
 mainLogger.info('🚀 App starting...')
 mainLogger.info('🔧 Main process started')
-
-// Helper functions for path management
-function getBasePath(): string {
-  const isDev = process.env.NODE_ENV === 'development' || import.meta.env.DEV
-  const configPath = process.env.DB_PATH || import.meta.env.MAIN_VITE_USER_DATA_PATH
-
-  if (!configPath) {
-    if (isDev) {
-      throw new Error('Database path is required in development.')
-    }
-    return app.getPath('userData')
-  }
-
-  return configPath
-}
-
-function getDatabasePath(): string {
-  return resolve(join(getBasePath(), 'db', 'app.db'))
-}
-
-function getLogPath(): string {
-  return resolve(join(getBasePath(), 'logs'))
-}
 
 function initializeDatabase(): void {
   try {
@@ -119,55 +91,8 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // Database IPC handlers
-  ipcMain.handle('get-setting', async (_, namespace: string, key: string) => {
-    return getSetting(namespace, key)
-  })
-
-  ipcMain.handle('set-setting', async (_, namespace: string, key: string, value: string) => {
-    return setSetting(namespace, key, value)
-  })
-
-  ipcMain.handle('get-settings-by-namespace', async (_, namespace: string) => {
-    return getSettingsByNamespace(namespace)
-  })
-
-  ipcMain.handle('clear-database', async () => {
-    return clearDatabase()
-  })
-
-  // Path IPC handlers
-  ipcMain.handle('get-database-path', async () => {
-    try {
-      const dbPath = getDatabasePath()
-      return resolve(dirname(dbPath)) // Return the absolute path to the folder containing the database file
-    } catch (error) {
-      mainLogger.error('Failed to get database path:', error)
-      throw error
-    }
-  })
-
-  ipcMain.handle('get-log-path', async () => {
-    try {
-      return getLogPath()
-    } catch (error) {
-      mainLogger.error('Failed to get log path:', error)
-      throw error
-    }
-  })
-
-  ipcMain.handle('open-folder', async (_, folderPath: string) => {
-    try {
-      await shell.openPath(folderPath)
-      mainLogger.info(`Opened folder: ${folderPath}`)
-    } catch (error) {
-      mainLogger.error('Failed to open folder:', error)
-      throw error
-    }
-  })
-
-  // IPC test
-  ipcMain.on('ping', () => mainLogger.info('pong'))
+  // Setup IPC handlers
+  setupIpcHandlers()
 
   createWindow()
 

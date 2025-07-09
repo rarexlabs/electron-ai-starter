@@ -1,7 +1,14 @@
 import { useState, useEffect } from 'react'
 import { ArrowLeft, Trash2, FolderOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter
+} from '@/components/ui/card'
 
 interface SettingsProps {
   onBack: () => void
@@ -122,6 +129,9 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
         <Card className="shadow-sm mb-6">
           <CardHeader>
             <CardTitle>File Locations</CardTitle>
+            <CardDescription>
+              View and access the folders where your application data and logs are stored.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
@@ -143,27 +153,30 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
         <Card className="shadow-sm">
           <CardHeader>
             <CardTitle className="text-red-600">Danger Zone</CardTitle>
+            <CardDescription>
+              Irreversible actions that will permanently modify your application data.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-medium text-gray-900 mb-2">Clear Database</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  This will permanently delete all data from the database and close the application.
-                  You will need to restart the application manually. This action cannot be undone.
-                </p>
-                <Button
-                  variant="destructive"
-                  onClick={handleClearDatabase}
-                  disabled={isClearingDatabase}
-                  className="flex items-center gap-2"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  {isClearingDatabase ? 'Clearing...' : 'Clear Database'}
-                </Button>
-              </div>
+            <div>
+              <h3 className="font-medium text-gray-900 mb-2">Clear Database</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                This will permanently delete all data from the database and close the application.
+                You will need to restart the application manually. This action cannot be undone.
+              </p>
             </div>
           </CardContent>
+          <CardFooter>
+            <Button
+              variant="destructive"
+              onClick={handleClearDatabase}
+              disabled={isClearingDatabase}
+              className="flex items-center gap-2"
+            >
+              <Trash2 className="h-4 w-4" />
+              {isClearingDatabase ? 'Clearing...' : 'Clear Database'}
+            </Button>
+          </CardFooter>
         </Card>
 
         {/* Message Display */}
