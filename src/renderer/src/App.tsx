@@ -59,7 +59,6 @@ function App(): React.JSX.Element {
             />
             <ChatInterface 
               provider={currentProvider}
-              className="h-full" 
             />
           </div>
         </div>

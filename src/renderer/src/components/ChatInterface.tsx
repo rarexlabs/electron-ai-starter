@@ -40,7 +40,9 @@ export function ChatInterface({ provider = 'openai', className = '' }: ChatInter
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (messages.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
   }, [messages])
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
