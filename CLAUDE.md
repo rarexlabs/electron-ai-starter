@@ -73,7 +73,7 @@ The following aliases are configured:
 Use the following command to add new Shadcn components:
 
 ```bash
-TS_NODE_PROJECT=tsconfig.web.json npx shadcn@latest add [component-name]
+npm run shadcn [component-name]
 ```
 
 ### Database Configuration
