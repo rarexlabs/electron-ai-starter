@@ -16,7 +16,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -107,9 +106,9 @@ export function DummyDataManager(): React.JSX.Element {
   return (
     <Card className="shadow-sm">
       <CardHeader>
-        <CardTitle>Test Data Manager</CardTitle>
+        <CardTitle>Dummy Database Data</CardTitle>
         <CardDescription>
-          Manage test settings to verify database connectivity and data persistence.
+          Data are persisted to SQLITE DB.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -124,7 +123,6 @@ export function DummyDataManager(): React.JSX.Element {
                   <FormControl>
                     <Input placeholder="Enter Setting A value" {...field} disabled={isLoading} />
                   </FormControl>
-                  <FormDescription>Test setting A for database operations.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -139,7 +137,6 @@ export function DummyDataManager(): React.JSX.Element {
                   <FormControl>
                     <Input placeholder="Enter Setting B value" {...field} disabled={isLoading} />
                   </FormControl>
-                  <FormDescription>Test setting B for database operations.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -167,7 +164,7 @@ export function DummyDataManager(): React.JSX.Element {
           className="flex items-center gap-2 ml-auto"
         >
           <Save className="h-4 w-4" />
-          {isLoading ? 'Saving...' : 'Save Test Data'}
+          {isLoading ? 'Saving...' : 'Save'}
         </Button>
       </CardFooter>
     </Card>
