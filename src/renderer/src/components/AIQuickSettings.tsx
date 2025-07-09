@@ -10,7 +10,7 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { CheckCircle, XCircle, Loader2, Settings } from 'lucide-react'
+import { CheckCircle, Loader2, Settings } from 'lucide-react'
 import type { AIProvider } from '../../../preload/index.d'
 import { logger } from '@/lib/logger'
 
@@ -24,10 +24,10 @@ export function AIQuickSettings({ onProviderChange, className = '' }: AIQuickSet
   const [apiKey, setApiKey] = useState('')
   const [model, setModel] = useState('')
   const [models, setModels] = useState<string[]>([])
-  const [isConnected, setIsConnected] = useState(false)
   const [isTesting, setIsTesting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [connectionTestSuccess, setConnectionTestSuccess] = useState(false)
 
   // Load settings on component mount
   useEffect(() => {
@@ -68,24 +68,13 @@ export function AIQuickSettings({ onProviderChange, className = '' }: AIQuickSet
     }
   }
 
-  const getDefaultModel = async (provider: AIProvider): Promise<string> => {
-    const availableModels = await window.ai.getModels(provider)
-    return availableModels[0] || 'gpt-4o'
-  }
-
   const loadProviderSettings = async (provider: AIProvider) => {
     const savedApiKey = await window.database.getSetting('ai', `${provider}_api_key`)
     const savedModel = await window.database.getSetting('ai', `${provider}_model`)
+    const availableModels = await window.ai.getModels(provider)
 
     setApiKey(savedApiKey || '')
-    setModel(savedModel || (await getDefaultModel(provider)))
-
-    // Test connection if API key exists
-    if (savedApiKey) {
-      await testConnection(savedApiKey)
-    } else {
-      setIsConnected(false)
-    }
+    setModel(savedModel || availableModels[0] || 'gpt-4o')
   }
 
   const handleProviderChange = async (provider: AIProvider) => {
@@ -94,21 +83,27 @@ export function AIQuickSettings({ onProviderChange, className = '' }: AIQuickSet
     onProviderChange?.(provider)
   }
 
-  const testConnection = async (keyToTest?: string) => {
-    const testKey = keyToTest || apiKey
-    if (!testKey) return
+  const testConnection = async () => {
+    if (!apiKey) return
 
     setIsTesting(true)
+    setConnectionTestSuccess(false)
     try {
       // Save temporarily for testing
-      await window.database.setSetting('ai', `${selectedProvider}_api_key`, testKey)
+      await window.database.setSetting('ai', `${selectedProvider}_api_key`, apiKey)
       await window.database.setSetting('ai', `${selectedProvider}_model`, model)
 
       const connected = await window.ai.testConnection(selectedProvider)
-      setIsConnected(connected)
+
+      if (connected) {
+        setConnectionTestSuccess(true)
+        // Reset success state after 3 seconds
+        setTimeout(() => {
+          setConnectionTestSuccess(false)
+        }, 3000)
+      }
     } catch (error) {
       logger.error(`Failed to test ${selectedProvider} connection:`, error)
-      setIsConnected(false)
     } finally {
       setIsTesting(false)
     }
@@ -134,18 +129,12 @@ export function AIQuickSettings({ onProviderChange, className = '' }: AIQuickSet
 
   if (!showSettings) {
     return (
-      <Card className={`${className}`}>
+      <Card className={className}>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-lg">AI Assistant</CardTitle>
-              <CardDescription className="flex items-center gap-2">
-                Using {selectedProvider}
-                {isConnected && <CheckCircle className="h-3 w-3 text-green-600" />}
-                {apiKey && !isConnected && !isTesting && (
-                  <XCircle className="h-3 w-3 text-red-600" />
-                )}
-              </CardDescription>
+              <CardDescription>Using {selectedProvider}</CardDescription>
             </div>
             <Button
               variant="outline"
@@ -163,7 +152,7 @@ export function AIQuickSettings({ onProviderChange, className = '' }: AIQuickSet
   }
 
   return (
-    <Card className={`${className}`}>
+    <Card className={className}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">Configure AI Assistant</CardTitle>
@@ -218,15 +207,21 @@ export function AIQuickSettings({ onProviderChange, className = '' }: AIQuickSet
 
         <div className="flex items-center justify-between">
           <Button
-            onClick={testConnection}
+            onClick={() => testConnection()}
             disabled={!apiKey || isTesting}
-            variant="outline"
+            variant={connectionTestSuccess ? 'default' : 'outline'}
             size="sm"
+            className={connectionTestSuccess ? 'bg-green-600 hover:bg-green-700 text-white' : ''}
           >
             {isTesting ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
                 Testing...
+              </>
+            ) : connectionTestSuccess ? (
+              <>
+                <CheckCircle className="h-4 w-4" />
+                Connection Successful!
               </>
             ) : (
               'Test Connection'
@@ -236,7 +231,7 @@ export function AIQuickSettings({ onProviderChange, className = '' }: AIQuickSet
           <Button onClick={saveSettings} disabled={!apiKey || isSaving} size="sm">
             {isSaving ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
                 Saving...
               </>
             ) : (
