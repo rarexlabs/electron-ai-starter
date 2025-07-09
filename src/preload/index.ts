@@ -1,8 +1,17 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import log from 'electron-log/preload'
 
 // Custom APIs for renderer
 const api = {}
+
+// AI Chat API types
+export type AIProvider = 'openai' | 'anthropic' | 'google'
+
+export interface AIMessage {
+  role: 'user' | 'assistant' | 'system'
+  content: string
+}
 
 // Database API implementation using secure IPC
 const databaseAPI = {
@@ -35,6 +44,67 @@ const databaseAPI = {
   }
 }
 
+// AI Chat API implementation using secure IPC
+const aiAPI = {
+  streamChat: (
+    messages: AIMessage[], 
+    provider?: AIProvider,
+    onChunk?: (chunk: string) => void,
+    onEnd?: () => void,
+    onError?: (error: string) => void
+  ): Promise<string> => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const sessionId = await ipcRenderer.invoke('ai-chat-stream', messages, provider)
+        let fullResponse = ''
+        
+        const cleanup = () => {
+          ipcRenderer.removeListener('ai-chat-chunk', handleChunk)
+          ipcRenderer.removeListener('ai-chat-end', handleEnd)
+          ipcRenderer.removeListener('ai-chat-error', handleError)
+        }
+        
+        const createHandler = (callback: (id: string, ...args: any[]) => void) => 
+          (_event: any, id: string, ...args: any[]) => {
+            if (id === sessionId) callback(id, ...args)
+          }
+        
+        const handleChunk = createHandler((_, chunk) => {
+          fullResponse += chunk
+          onChunk?.(chunk)
+        })
+        
+        const handleEnd = createHandler(() => {
+          cleanup()
+          onEnd?.()
+          resolve(fullResponse)
+        })
+        
+        const handleError = createHandler((_, error) => {
+          cleanup()
+          onError?.(error)
+          reject(new Error(error))
+        })
+        
+        ipcRenderer.on('ai-chat-chunk', handleChunk)
+        ipcRenderer.on('ai-chat-end', handleEnd)
+        ipcRenderer.on('ai-chat-error', handleError)
+        
+      } catch (error) {
+        reject(error)
+      }
+    })
+  },
+
+  getModels: (provider: AIProvider): Promise<string[]> => {
+    return ipcRenderer.invoke('ai-get-models', provider)
+  },
+
+  testConnection: (provider: AIProvider): Promise<boolean> => {
+    return ipcRenderer.invoke('ai-test-connection', provider)
+  }
+}
+
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
 // just add to the DOM global.
@@ -43,8 +113,9 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('api', api)
     contextBridge.exposeInMainWorld('database', databaseAPI)
+    contextBridge.exposeInMainWorld('ai', aiAPI)
   } catch (error) {
-    console.error(error)
+    log.error('Context bridge error:', error)
   }
 } else {
   // @ts-ignore (define in dts)
@@ -53,4 +124,6 @@ if (process.contextIsolated) {
   window.api = api
   // @ts-ignore (define in dts)
   window.database = databaseAPI
+  // @ts-ignore (define in dts)
+  window.ai = aiAPI
 }

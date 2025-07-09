@@ -1,5 +1,12 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
 
+export type AIProvider = 'openai' | 'anthropic' | 'google'
+
+export interface AIMessage {
+  role: 'user' | 'assistant' | 'system'
+  content: string
+}
+
 declare global {
   interface Window {
     electron: ElectronAPI
@@ -12,6 +19,17 @@ declare global {
       getDatabasePath(): Promise<string>
       getLogPath(): Promise<string>
       openFolder(folderPath: string): Promise<void>
+    }
+    ai: {
+      streamChat(
+        messages: AIMessage[], 
+        provider?: AIProvider,
+        onChunk?: (chunk: string) => void,
+        onEnd?: () => void,
+        onError?: (error: string) => void
+      ): Promise<string>
+      getModels(provider: AIProvider): Promise<string[]>
+      testConnection(provider: AIProvider): Promise<boolean>
     }
   }
 }

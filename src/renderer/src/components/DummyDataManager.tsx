@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Save } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { logger } from '@/lib/logger'
 import {
   Card,
   CardContent,
@@ -66,7 +67,7 @@ export function DummyDataManager(): React.JSX.Element {
         form.setValue('settingA', settings.settingA || 'Default A')
         form.setValue('settingB', settings.settingB || 'Default B')
       } catch (error) {
-        console.error('Error loading dummy data:', error)
+        logger.error('Error loading dummy data:', error)
         setMessage({
           type: 'error',
           text: 'Failed to load dummy data. Please try again.'
@@ -93,7 +94,7 @@ export function DummyDataManager(): React.JSX.Element {
         text: 'Dummy data saved successfully!'
       })
     } catch (error) {
-      console.error('Error saving dummy data:', error)
+      logger.error('Error saving dummy data:', error)
       setMessage({
         type: 'error',
         text: 'Failed to save dummy data. Please try again.'
