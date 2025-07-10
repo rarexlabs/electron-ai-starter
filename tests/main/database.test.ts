@@ -191,10 +191,10 @@ describe('Database Operations', () => {
       expect(columnNames).toEqual(['key', 'value'])
     })
 
-    it('should maintain WAL journal mode', async () => {
+    it('should use memory journal mode for in-memory database', async () => {
       const db = getTestDatabase()
       const journalMode = await db.get(`PRAGMA journal_mode`)
-      expect(journalMode.journal_mode).toBe('wal')
+      expect(journalMode.journal_mode).toBe('memory')
     })
   })
 })
@@ -203,31 +203,31 @@ describe('Settings Service Pattern', () => {
   const getTestDatabase = setupDatabaseTest()
 
   it('should support service-like operations with JSON values', async () => {
+    const db = getTestDatabase()
+
     // Test service operations with JSON values
-    await setSetting('test.complex', { nested: { value: 'data' }, array: [1, 2, 3] })
-    const retrieved = await getSetting('test.complex')
+    await setSetting('test.complex', { nested: { value: 'data' }, array: [1, 2, 3] }, db)
+    const retrieved = await getSetting('test.complex', db)
     expect(retrieved).toEqual({ nested: { value: 'data' }, array: [1, 2, 3] })
 
-    await setSetting('test.simple', 'simple string')
-    expect(await getSetting('test.simple')).toBe('simple string')
+    await setSetting('test.simple', 'simple string', db)
+    expect(await getSetting('test.simple', db)).toBe('simple string')
 
-    await setSetting('test.number', 42)
-    expect(await getSetting('test.number')).toBe(42)
+    await setSetting('test.number', 42, db)
+    expect(await getSetting('test.number', db)).toBe(42)
 
-    expect(await getSetting('test.nonexistent')).toBe(null)
+    expect(await getSetting('test.nonexistent', db)).toBe(null)
   })
 
   it('should support getAllSettings function', async () => {
-    // Clear any existing data first
     const db = getTestDatabase()
-    await db.delete(settings)
 
     // Insert test data
-    await setSetting('key1', 'value1')
-    await setSetting('key2', { nested: 'value2' })
-    await setSetting('key3', 123)
+    await setSetting('key1', 'value1', db)
+    await setSetting('key2', { nested: 'value2' }, db)
+    await setSetting('key3', 123, db)
 
-    const allSettings = await getAllSettings()
+    const allSettings = await getAllSettings(db)
 
     // Check that our test data is present
     expect(allSettings.key1).toBe('value1')

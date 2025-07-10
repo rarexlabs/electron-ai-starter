@@ -3,9 +3,12 @@ import { getDatabase, closeDatabase, removeDatabaseFile } from '../connection'
 import { settings } from '../schema'
 import { app } from 'electron'
 
-export async function getSetting(key: string): Promise<unknown> {
-  const db = getDatabase()
-  const result = await db
+export async function getSetting(
+  key: string,
+  db?: ReturnType<typeof getDatabase>
+): Promise<unknown> {
+  const database = db || getDatabase()
+  const result = await database
     .select({ value: settings.value })
     .from(settings)
     .where(eq(settings.key, key))
@@ -14,9 +17,13 @@ export async function getSetting(key: string): Promise<unknown> {
   return result[0]?.value || null
 }
 
-export async function setSetting(key: string, value: unknown): Promise<void> {
-  const db = getDatabase()
-  await db
+export async function setSetting(
+  key: string,
+  value: unknown,
+  db?: ReturnType<typeof getDatabase>
+): Promise<void> {
+  const database = db || getDatabase()
+  await database
     .insert(settings)
     .values({ key, value })
     .onConflictDoUpdate({
@@ -25,9 +32,11 @@ export async function setSetting(key: string, value: unknown): Promise<void> {
     })
 }
 
-export async function getAllSettings(): Promise<Record<string, unknown>> {
-  const db = getDatabase()
-  const result = await db.select({ key: settings.key, value: settings.value }).from(settings)
+export async function getAllSettings(
+  db?: ReturnType<typeof getDatabase>
+): Promise<Record<string, unknown>> {
+  const database = db || getDatabase()
+  const result = await database.select({ key: settings.key, value: settings.value }).from(settings)
 
   return result.reduce(
     (acc, row) => {

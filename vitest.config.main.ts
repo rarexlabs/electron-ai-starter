@@ -8,12 +8,7 @@ export default defineConfig({
     exclude: ['**/node_modules/**', '**/out/**', '**/coverage/**'],
     // Use forks pool for better Electron compatibility (native modules)
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: true // Run all tests in single process for shared context
-      }
-    },
-    // Timeouts appropriate for database/file operations
+    // Timeouts appropriate for database operations
     testTimeout: 10000,
     hookTimeout: 10000
   },
