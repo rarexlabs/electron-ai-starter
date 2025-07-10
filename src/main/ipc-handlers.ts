@@ -3,7 +3,7 @@ import { dirname } from 'path'
 import { getSetting, setSetting, getAllSettings, clearSetting, clearDatabase } from './settings'
 import { getDatabasePath, getLogPath } from './paths'
 import { mainLogger } from './logger'
-import { streamAIChat, abortAIChat, getAvailableModels, testConnection } from './ai'
+import { streamAIChat, abortAIChat, listAvailableModel, testConnection } from './ai'
 import type { AIProvider } from '../types/ai'
 
 export function setupIpcHandlers(): void {
@@ -80,7 +80,7 @@ export function setupIpcHandlers(): void {
 
   ipcMain.handle('get-ai-models', async (_, provider: AIProvider) => {
     try {
-      return await getAvailableModels(provider)
+      return await listAvailableModel(provider)
     } catch (error) {
       mainLogger.error('Failed to get AI models:', error)
       throw error

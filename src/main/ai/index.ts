@@ -6,10 +6,33 @@ import {
   streamAIResponse,
   activeStreamSessions
 } from './stream'
+import { createModel } from './factory'
+import { streamText } from 'ai'
+import { mainLogger } from '../logger'
 
-// Re-export all functions from config and stream modules
-export * from './config'
-export * from './stream'
+export { listAvailableModel } from './factory'
+
+export async function testConnection(provider: AIProvider): Promise<boolean> {
+  try {
+    const model = await createModel(provider)
+    const result = streamText({
+      model,
+      messages: [{ role: 'user', content: 'Test' }],
+      maxTokens: 5
+    })
+
+    for await (const chunk of result.textStream) {
+      if (chunk?.length > 0) {
+        mainLogger.info(`Connection test successful for ${provider}`)
+        return true
+      }
+    }
+    return false
+  } catch (error) {
+    mainLogger.error(`Connection test failed for ${provider}:`, error)
+    return false
+  }
+}
 
 // Main orchestration function for AI chat processing
 export async function streamAIChat(

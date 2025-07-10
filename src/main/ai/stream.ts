@@ -1,7 +1,7 @@
 import { streamText } from 'ai'
 import { getSetting } from '../settings'
 import { mainLogger } from '../logger'
-import { createModel } from './config'
+import { createModel } from './factory'
 import type { AIProvider, AIMessage, AIStreamSession, AISettings } from '../../types/ai'
 
 // Track active streaming sessions

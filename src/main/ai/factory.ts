@@ -1,12 +1,11 @@
 import { createOpenAI } from '@ai-sdk/openai'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
-import { streamText, type LanguageModelV1 } from 'ai'
 import { getSetting } from '../settings'
-import { mainLogger } from '../logger'
 import type { AIProvider } from '../../types/ai'
+import type { LanguageModelV1 } from 'ai'
 
-export const MODEL_CONFIG = {
+export const FACTORY = {
   openai: {
     default: 'gpt-4o',
     available: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo'],
@@ -30,6 +29,10 @@ export const MODEL_CONFIG = {
   }
 }
 
+export async function listAvailableModel(provider: AIProvider): Promise<string[]> {
+  return FACTORY[provider]?.available || []
+}
+
 export async function createModel(provider: AIProvider): Promise<LanguageModelV1> {
   const aiSettings = (await getSetting('ai')) || {}
   const apiKey = aiSettings[`${provider}_api_key`]
@@ -39,32 +42,6 @@ export async function createModel(provider: AIProvider): Promise<LanguageModelV1
     throw new Error(`API key not found for ${provider}`)
   }
 
-  const config = MODEL_CONFIG[provider]
+  const config = FACTORY[provider]
   return config.createModel(apiKey, model || config.default)
-}
-
-export async function getAvailableModels(provider: AIProvider): Promise<string[]> {
-  return MODEL_CONFIG[provider]?.available || []
-}
-
-export async function testConnection(provider: AIProvider): Promise<boolean> {
-  try {
-    const model = await createModel(provider)
-    const result = await streamText({
-      model,
-      messages: [{ role: 'user', content: 'Test' }],
-      maxTokens: 5
-    })
-
-    for await (const chunk of result.textStream) {
-      if (chunk?.length > 0) {
-        mainLogger.info(`Connection test successful for ${provider}`)
-        return true
-      }
-    }
-    return false
-  } catch (error) {
-    mainLogger.error(`Connection test failed for ${provider}:`, error)
-    return false
-  }
 }
