@@ -15,61 +15,66 @@ const AIModelAdapter: ChatModelAdapter = {
       }))
 
       let fullContent = ''
-      const chunks: string[] = []
-      let isComplete = false
-      let hasError = false
-      let errorMessage = ''
+      const chunkQueue: string[] = []
+      let completed = false
+      let error: string | null = null
+      let resolveNext: (() => void) | null = null
 
-      // Start the streaming request
+      // Start the streaming request with event-driven chunk handling
       const streamPromise = window.ai.streamChat(
         formattedMessages,
         undefined, // provider - will use default from settings
         (chunk: string) => {
-          chunks.push(chunk)
+          chunkQueue.push(chunk)
+          fullContent += chunk
+          if (resolveNext) {
+            const resolve = resolveNext
+            resolveNext = null
+            resolve()
+          }
         },
         () => {
-          isComplete = true
+          completed = true
+          if (resolveNext) {
+            const resolve = resolveNext
+            resolveNext = null
+            resolve()
+          }
         },
-        (error: string) => {
-          hasError = true
-          errorMessage = error
+        (err: string) => {
+          error = err
+          if (resolveNext) {
+            const resolve = resolveNext
+            resolveNext = null
+            resolve()
+          }
         }
       )
 
-      // Process chunks as they arrive
-      let processedIndex = 0
-      while (!isComplete && !hasError && !abortSignal.aborted) {
-        // Check for new chunks
-        if (chunks.length > processedIndex) {
-          const newChunks = chunks.slice(processedIndex)
-          processedIndex = chunks.length
-
-          for (const chunk of newChunks) {
-            fullContent += chunk
-            yield {
-              content: [{ type: 'text', text: fullContent }]
-            }
+      // Process chunks as they arrive without polling
+      while (!completed && !error && !abortSignal.aborted) {
+        if (chunkQueue.length > 0) {
+          // Consume all available chunks
+          chunkQueue.length = 0
+          yield {
+            content: [{ type: 'text', text: fullContent }]
           }
+        } else {
+          // Wait for next chunk or completion
+          await new Promise<void>((resolve) => {
+            resolveNext = resolve
+          })
         }
-
-        // Small delay to prevent busy waiting
-        await new Promise((resolve) => setTimeout(resolve, 10))
       }
 
-      // Wait for the stream to complete
+      // Handle completion or error
+      if (error) {
+        throw new Error(error)
+      }
+
+      // Wait for the promise to complete and yield final content
       await streamPromise
-
-      // Check for errors after completion
-      if (hasError) {
-        throw new Error(errorMessage)
-      }
-
-      // Handle any final chunks that might have arrived
-      if (chunks.length > processedIndex) {
-        const finalChunks = chunks.slice(processedIndex)
-        for (const chunk of finalChunks) {
-          fullContent += chunk
-        }
+      if (fullContent) {
         yield {
           content: [{ type: 'text', text: fullContent }]
         }
