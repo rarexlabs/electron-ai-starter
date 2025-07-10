@@ -37,9 +37,9 @@ function App(): React.JSX.Element {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Left Column */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             <Card className="shadow-sm">
               <CardContent className="p-6">
                 <div className="text-sm text-gray-600 mb-2">Hello World</div>
