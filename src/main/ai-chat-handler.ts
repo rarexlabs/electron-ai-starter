@@ -2,9 +2,9 @@ import { createOpenAI } from '@ai-sdk/openai'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { streamText, type LanguageModelV1 } from 'ai'
-import { getSetting } from '../settings'
+import { getSetting } from './settings'
 import { mainLogger } from './logger'
-import type { AIProvider, AIMessage, AISettings } from '../../types/ai'
+import type { AIProvider, AIMessage, AISettings } from '../types/ai'
 
 const MODEL_CONFIG = {
   openai: {

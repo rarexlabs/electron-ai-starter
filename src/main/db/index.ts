@@ -4,8 +4,8 @@ import Database from 'better-sqlite3'
 import * as path from 'path'
 import * as fs from 'fs'
 import { sql } from 'drizzle-orm'
-import { mainLogger } from '../lib/logger'
-import { getDatabasePath } from '../lib/paths'
+import { mainLogger } from '../logger'
+import { getDatabasePath } from '../paths'
 
 let db: ReturnType<typeof drizzle> | null = null
 let sqlite: Database.Database | null = null

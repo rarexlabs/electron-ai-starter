@@ -1,10 +1,10 @@
 import { ipcMain, shell } from 'electron'
 import { dirname } from 'path'
-import { getSetting, setSetting, getAllSettings, clearSetting, clearDatabase } from '../settings'
+import { getSetting, setSetting, getAllSettings, clearSetting, clearDatabase } from './settings'
 import { getDatabasePath, getLogPath } from './paths'
 import { mainLogger } from './logger'
 import { streamAIResponse, getAvailableModels, testConnection } from './ai-chat-handler'
-import type { AIProvider, AIMessage, AIStreamSession } from '../../types/ai'
+import type { AIProvider, AIMessage, AIStreamSession } from '../types/ai'
 
 // Track active AI chat sessions
 const activeSessions = new Map<string, AIStreamSession>()

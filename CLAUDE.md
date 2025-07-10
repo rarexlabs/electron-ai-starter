@@ -95,7 +95,7 @@ npm run shadcn [component-name]
   - `renderer.log` - Renderer process logs (UI, React components)
 - **Features**: Automatic error catching, event logging, file rotation (5MB limit)
 - **Usage**:
-  - Main process: `import { mainLogger } from './lib/logger'`
+  - Main process: `import { mainLogger } from './logger'`
   - Renderer process: `import { logger } from '@/lib/logger'`
 
 ## Development Notes
