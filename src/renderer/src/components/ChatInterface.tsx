@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardAction } from '@/components/ui/card'
 import { Send, Bot, User, Loader2 } from 'lucide-react'
 import type { AIMessage, AIProvider, AISettings } from '../../../preload/index.d'
 import { logger } from '@/lib/logger'
@@ -130,19 +130,19 @@ export function ChatInterface({ className = '' }: ChatInterfaceProps): React.JSX
   }, [])
 
   return (
-    <Card className={`flex flex-col h-96 ${className}`}>
-      <CardContent className="flex flex-col h-full p-4">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Bot className="h-5 w-5 text-blue-600" />
-            <h3 className="font-semibold">AI Chat ({currentProvider})</h3>
-          </div>
+    <Card className={`flex flex-col h-96 pb-2 ${className}`}>
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <Bot className="h-5 w-5 text-blue-600" />
+          <CardTitle>AI Chat ({currentProvider})</CardTitle>
+        </div>
+        <CardAction>
           <Button variant="ghost" size="sm" onClick={clearChat} disabled={isStreaming}>
             Clear
           </Button>
-        </div>
-
+        </CardAction>
+      </CardHeader>
+      <CardContent className="flex flex-col flex-1 p-4">
         {/* Messages */}
         <div className="flex-1 overflow-y-auto space-y-3 mb-4">
           {messages.length === 0 && !isStreaming && !error && (
