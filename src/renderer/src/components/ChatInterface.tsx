@@ -131,16 +131,14 @@ export function ChatInterface({ className = '' }: ChatInterfaceProps): React.JSX
 
   return (
     <Card className={`flex flex-col h-96 pb-2 ${className}`}>
-      <CardHeader>
+      <CardHeader className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Bot className="h-5 w-5 text-blue-600" />
           <CardTitle>AI Chat ({currentProvider})</CardTitle>
         </div>
-        <CardAction>
-          <Button variant="ghost" size="sm" onClick={clearChat} disabled={isStreaming}>
-            Clear
-          </Button>
-        </CardAction>
+        <Button variant="ghost" size="sm" onClick={clearChat} disabled={isStreaming}>
+          Clear
+        </Button>
       </CardHeader>
       <CardContent className="flex flex-col flex-1 p-4">
         {/* Messages */}
