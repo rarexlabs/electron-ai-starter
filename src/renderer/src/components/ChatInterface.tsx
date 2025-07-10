@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle, CardAction } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardAction, CardFooter } from '@/components/ui/card'
 import { Send, Bot, User, Loader2 } from 'lucide-react'
 import type { AIMessage, AIProvider, AISettings } from '../../../preload/index.d'
 import { logger } from '@/lib/logger'
@@ -130,7 +130,7 @@ export function ChatInterface({ className = '' }: ChatInterfaceProps): React.JSX
   }, [])
 
   return (
-    <Card className={`flex flex-col h-96 overflow-hidden pb-2 ${className}`}>
+    <Card className={`flex flex-col h-96 overflow-hidden ${className}`}>
       <CardHeader className="flex items-center justify-between">
         <CardTitle className="flex items-center gap-2">
           <Bot className="h-5 w-5 text-blue-600" /> AI Chat Demo
@@ -151,7 +151,7 @@ export function ChatInterface({ className = '' }: ChatInterfaceProps): React.JSX
 
       <CardContent className="flex flex-col flex-1 p-4">
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto space-y-3 mb-4">
+        <div className="flex-1 overflow-y-auto space-y-3">
           {messages.length === 0 && !isStreaming && !error && (
             <div className="text-center text-gray-500 py-8">
               Start a conversation with AI
@@ -201,16 +201,17 @@ export function ChatInterface({ className = '' }: ChatInterfaceProps): React.JSX
 
         {/* Error message */}
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-sm text-red-700">{error}</p>
             <Button variant="outline" size="sm" onClick={() => setError(null)} className="mt-2">
               Dismiss
             </Button>
           </div>
         )}
+      </CardContent>
 
-        {/* Input form */}
-        <form onSubmit={handleSubmit} className="flex gap-2">
+      <CardFooter>
+        <form onSubmit={handleSubmit} className="flex gap-2 w-full">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -226,7 +227,7 @@ export function ChatInterface({ className = '' }: ChatInterfaceProps): React.JSX
             )}
           </Button>
         </form>
-      </CardContent>
+      </CardFooter>
     </Card>
   )
 }
