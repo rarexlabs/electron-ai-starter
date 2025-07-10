@@ -48,6 +48,12 @@ export class SessionManager {
       return
     }
 
+    // Check if session is already aborted to prevent duplicate calls
+    if (session.aborted) {
+      logger.info('🚫 Session already aborted, skipping:', sessionId)
+      return
+    }
+
     logger.info('🚫 Aborting session:', sessionId)
 
     // Update session state

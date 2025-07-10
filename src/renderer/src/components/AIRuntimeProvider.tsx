@@ -20,7 +20,7 @@ const AIModelAdapter: ChatModelAdapter = {
       logger.info('🚀 Starting AI stream with messages:', formattedMessages.length)
 
       // Start streaming through the bridge
-      const { sessionId, stream, abort } = await aiStreamBridge.startStream(
+      const { sessionId, stream } = await aiStreamBridge.startStream(
         formattedMessages,
         undefined, // provider - will use default from settings
         abortSignal
@@ -34,7 +34,6 @@ const AIModelAdapter: ChatModelAdapter = {
         abortSignal.addEventListener('abort', () => {
           logger.info('🚫 Abort signal received, aborting session:', sessionId)
           sessionManager.abortSession(sessionId)
-          abort()
         })
       }
 
