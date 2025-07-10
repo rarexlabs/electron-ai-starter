@@ -16,17 +16,13 @@ declare global {
       getLogPath(): Promise<string>
       openFolder(folderPath: string): Promise<void>
       // AI operations
-      streamAIChat(
-        messages: AIMessage[],
-        provider?: AIProvider,
-        onChunk?: (chunk: string) => void,
-        onEnd?: () => void,
-        onError?: (error: string) => void,
-        onSessionId?: (sessionId: string) => void
-      ): Promise<string>
+      streamAIChat(messages: AIMessage[], provider?: AIProvider): Promise<string>
       abortAIChat(sessionId: string): Promise<void>
       getAIModels(provider: AIProvider): Promise<string[]>
       testAIProviderConnection(provider: AIProvider): Promise<boolean>
+      // Raw IPC event methods for renderer to handle streaming events
+      on(channel: string, listener: (...args: unknown[]) => void): void
+      off(channel: string, listener: (...args: unknown[]) => void): void
     }
   }
 }

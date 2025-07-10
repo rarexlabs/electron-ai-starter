@@ -24,28 +24,8 @@ export class AIStreamBridge {
     try {
       const abortController = new AbortController()
 
-      // Create a promise that resolves when we get the session ID
-      const sessionPromise = new Promise<string>((resolve, reject) => {
-        window.api
-          .streamAIChat(
-            messages,
-            provider,
-            () => {}, // onChunk - handled in stream generator
-            () => {}, // onEnd - handled in stream generator
-            (error) => {
-              // Handle immediate errors
-              reject(new Error(error))
-            },
-            (id) => {
-              // Session ID callback
-              resolve(id)
-            }
-          )
-          .catch(reject)
-      })
-
-      // Wait for session ID
-      const sessionId = await sessionPromise
+      // Get session ID from simplified API
+      const sessionId = await window.api.streamAIChat(messages, provider)
       logger.info('🚀 Stream started with session:', sessionId)
 
       const stream = this.createStreamGenerator(sessionId, abortController.signal)
@@ -106,9 +86,10 @@ export class AIStreamBridge {
     // Promise-based chunk waiting
     let resolveWaiting: (() => void) | null = null
 
-    const handleChunk = (_event: unknown, id: string, chunk: string): void => {
+    const handleChunk = (...args: unknown[]): void => {
+      const [, id, chunk] = args
       if (id === sessionId) {
-        pendingChunks.push(chunk)
+        pendingChunks.push(chunk as string)
         if (resolveWaiting) {
           const resolve = resolveWaiting
           resolveWaiting = null
@@ -117,29 +98,8 @@ export class AIStreamBridge {
       }
     }
 
-    const handleEnd = (_event: unknown, id: string): void => {
-      if (id === sessionId) {
-        completed = true
-        if (resolveWaiting) {
-          const resolve = resolveWaiting
-          resolveWaiting = null
-          resolve()
-        }
-      }
-    }
-
-    const handleError = (_event: unknown, id: string, errorMessage: string): void => {
-      if (id === sessionId) {
-        error = errorMessage
-        if (resolveWaiting) {
-          const resolve = resolveWaiting
-          resolveWaiting = null
-          resolve()
-        }
-      }
-    }
-
-    const handleAborted = (_event: unknown, id: string): void => {
+    const handleEnd = (...args: unknown[]): void => {
+      const [, id] = args
       if (id === sessionId) {
         completed = true
         if (resolveWaiting) {
@@ -150,11 +110,35 @@ export class AIStreamBridge {
       }
     }
 
-    // Set up event listeners
-    window.electron.ipcRenderer.on('ai-chat-chunk', handleChunk)
-    window.electron.ipcRenderer.on('ai-chat-end', handleEnd)
-    window.electron.ipcRenderer.on('ai-chat-error', handleError)
-    window.electron.ipcRenderer.on('ai-chat-aborted', handleAborted)
+    const handleError = (...args: unknown[]): void => {
+      const [, id, errorMessage] = args
+      if (id === sessionId) {
+        error = errorMessage as string
+        if (resolveWaiting) {
+          const resolve = resolveWaiting
+          resolveWaiting = null
+          resolve()
+        }
+      }
+    }
+
+    const handleAborted = (...args: unknown[]): void => {
+      const [, id] = args
+      if (id === sessionId) {
+        completed = true
+        if (resolveWaiting) {
+          const resolve = resolveWaiting
+          resolveWaiting = null
+          resolve()
+        }
+      }
+    }
+
+    // Set up event listeners using exposed IPC methods
+    window.api.on('ai-chat-chunk', handleChunk)
+    window.api.on('ai-chat-end', handleEnd)
+    window.api.on('ai-chat-error', handleError)
+    window.api.on('ai-chat-aborted', handleAborted)
 
     try {
       // Stream processing loop
@@ -202,11 +186,11 @@ export class AIStreamBridge {
       logger.error('Stream generator error for session:', sessionId, streamError)
       throw streamError
     } finally {
-      // Clean up event listeners
-      window.electron.ipcRenderer.removeListener('ai-chat-chunk', handleChunk)
-      window.electron.ipcRenderer.removeListener('ai-chat-end', handleEnd)
-      window.electron.ipcRenderer.removeListener('ai-chat-error', handleError)
-      window.electron.ipcRenderer.removeListener('ai-chat-aborted', handleAborted)
+      // Clean up event listeners using exposed IPC methods
+      window.api.off('ai-chat-chunk', handleChunk)
+      window.api.off('ai-chat-end', handleEnd)
+      window.api.off('ai-chat-error', handleError)
+      window.api.off('ai-chat-aborted', handleAborted)
 
       // Clean up from active streams
       const streamData = this.activeStreams.get(sessionId)

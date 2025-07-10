@@ -46,67 +46,8 @@ const unifiedAPI = {
   },
 
   // AI operations
-  streamAIChat: (
-    messages: AIMessage[],
-    provider?: AIProvider,
-    onChunk?: (chunk: string) => void,
-    onEnd?: () => void,
-    onError?: (error: string) => void,
-    onSessionId?: (sessionId: string) => void
-  ): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      ipcRenderer
-        .invoke('stream-ai-chat', messages, provider)
-        .then((sessionId) => {
-          let fullResponse = ''
-
-          // Call the onSessionId callback with the session ID
-          onSessionId?.(sessionId)
-
-          const cleanup = (): void => {
-            ipcRenderer.removeListener('ai-chat-chunk', handleChunk)
-            ipcRenderer.removeListener('ai-chat-end', handleEnd)
-            ipcRenderer.removeListener('ai-chat-error', handleError)
-            ipcRenderer.removeListener('ai-chat-aborted', handleAborted)
-          }
-
-          const createHandler =
-            (callback: (id: string, ...args: unknown[]) => void) =>
-            (_event: unknown, id: string, ...args: unknown[]) => {
-              if (id === sessionId) callback(id, ...args)
-            }
-
-          const handleChunk = createHandler((_, chunk) => {
-            fullResponse += chunk as string
-            onChunk?.(chunk as string)
-          })
-
-          const handleEnd = createHandler(() => {
-            cleanup()
-            onEnd?.()
-            resolve(fullResponse)
-          })
-
-          const handleError = createHandler((_, error) => {
-            cleanup()
-            onError?.(error as string)
-            reject(new Error(error as string))
-          })
-
-          const handleAborted = createHandler(() => {
-            cleanup()
-            reject(new Error('Request was aborted'))
-          })
-
-          ipcRenderer.on('ai-chat-chunk', handleChunk)
-          ipcRenderer.on('ai-chat-end', handleEnd)
-          ipcRenderer.on('ai-chat-error', handleError)
-          ipcRenderer.on('ai-chat-aborted', handleAborted)
-        })
-        .catch((error) => {
-          reject(error)
-        })
-    })
+  streamAIChat: (messages: AIMessage[], provider?: AIProvider): Promise<string> => {
+    return ipcRenderer.invoke('stream-ai-chat', messages, provider)
   },
 
   abortAIChat: (sessionId: string): Promise<void> => {
@@ -119,6 +60,15 @@ const unifiedAPI = {
 
   testAIProviderConnection: (provider: AIProvider): Promise<boolean> => {
     return ipcRenderer.invoke('test-ai-provider-connection', provider)
+  },
+
+  // Raw IPC event methods for renderer to handle streaming events
+  on: (channel: string, listener: (...args: unknown[]) => void): void => {
+    ipcRenderer.on(channel, listener)
+  },
+
+  off: (channel: string, listener: (...args: unknown[]) => void): void => {
+    ipcRenderer.removeListener(channel, listener)
   }
 }
 
