@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
-import { getDatabase, closeDatabase, removeDatabaseFile } from '../connection'
-import { settings } from '../schema'
+import { getDatabase, closeDatabase, removeDatabaseFile } from './db/connection'
+import { settings } from './db/schema'
 import { app } from 'electron'
 
 export async function getSetting(

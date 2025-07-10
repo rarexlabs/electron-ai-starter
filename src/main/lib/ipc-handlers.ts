@@ -1,12 +1,6 @@
 import { ipcMain, shell } from 'electron'
 import { dirname } from 'path'
-import {
-  getSetting,
-  setSetting,
-  getAllSettings,
-  clearSetting,
-  clearDatabase
-} from '../db/services/settings'
+import { getSetting, setSetting, getAllSettings, clearSetting, clearDatabase } from '../settings'
 import { getDatabasePath, getLogPath } from './paths'
 import { mainLogger } from './logger'
 import { streamAIResponse, getAvailableModels, testConnection } from './ai-chat-handler'
