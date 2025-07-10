@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Send, Bot, User, Loader2 } from 'lucide-react'
-import type { AIMessage, AIProvider } from '../../../preload/index.d'
+import type { AIMessage, AIProvider, AISettings } from '../../../preload/index.d'
 import { logger } from '@/lib/logger'
 
 interface ChatMessage extends AIMessage {
@@ -31,9 +31,9 @@ export function ChatInterface({
   useEffect(() => {
     const loadProvider = async (): Promise<void> => {
       try {
-        const aiSettings = (await window.database.getSetting('ai')) || {}
+        const aiSettings = ((await window.database.getSetting('ai')) as AISettings) || {}
         const savedProvider = aiSettings.default_provider
-        setCurrentProvider((savedProvider as AIProvider) || provider)
+        setCurrentProvider(savedProvider || provider)
       } catch (err) {
         logger.error('Failed to load provider:', err)
         setCurrentProvider(provider)

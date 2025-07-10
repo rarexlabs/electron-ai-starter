@@ -4,13 +4,7 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { streamText, type LanguageModelV1 } from 'ai'
 import { getSetting } from '../db/services/settings'
 import { mainLogger } from './logger'
-
-export type AIProvider = 'openai' | 'anthropic' | 'google'
-
-export interface AIMessage {
-  role: 'user' | 'assistant' | 'system'
-  content: string
-}
+import type { AIProvider, AIMessage, AISettings } from '../../types/ai'
 
 const MODEL_CONFIG = {
   openai: {
@@ -53,7 +47,7 @@ export async function* streamAIResponse(
   messages: AIMessage[],
   provider?: AIProvider
 ): AsyncGenerator<string, void, unknown> {
-  const aiSettings = (await getSetting('ai')) || {}
+  const aiSettings = ((await getSetting('ai')) as AISettings) || {}
   const currentProvider = provider || aiSettings.default_provider || 'openai'
 
   try {

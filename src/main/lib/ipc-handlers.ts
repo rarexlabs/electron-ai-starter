@@ -3,13 +3,8 @@ import { dirname } from 'path'
 import { getSetting, setSetting, getAllSettings, clearDatabase } from '../db/services/settings'
 import { getDatabasePath, getLogPath } from './paths'
 import { mainLogger } from './logger'
-import {
-  streamAIResponse,
-  getAvailableModels,
-  testConnection,
-  type AIProvider,
-  type AIMessage
-} from './ai-chat-handler'
+import { streamAIResponse, getAvailableModels, testConnection } from './ai-chat-handler'
+import type { AIProvider, AIMessage } from '../../types/ai'
 
 export function setupIpcHandlers(): void {
   // Database IPC handlers

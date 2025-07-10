@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { CheckCircle, Loader2, Settings } from 'lucide-react'
-import type { AIProvider } from '../../../preload/index.d'
+import type { AIProvider, AISettings } from '../../../preload/index.d'
 import { logger } from '@/lib/logger'
 
 interface AIQuickSettingsProps {
@@ -34,8 +34,8 @@ export function AIQuickSettings({
 
   const loadSettings = useCallback(async (): Promise<void> => {
     try {
-      const aiSettings = (await window.database.getSetting('ai')) || {}
-      const currentProvider = (aiSettings.default_provider as AIProvider) || 'openai'
+      const aiSettings = ((await window.database.getSetting('ai')) as AISettings) || {}
+      const currentProvider = aiSettings.default_provider || 'openai'
       setSelectedProvider(currentProvider)
       await loadProviderSettings(currentProvider, aiSettings)
     } catch (error) {
@@ -57,9 +57,9 @@ export function AIQuickSettings({
 
   const loadProviderSettings = async (
     provider: AIProvider,
-    aiSettings?: Record<string, unknown>
+    aiSettings?: AISettings
   ): Promise<void> => {
-    const settings = aiSettings || (await window.database.getSetting('ai')) || {}
+    const settings = aiSettings || ((await window.database.getSetting('ai')) as AISettings) || {}
     const availableModels = await window.ai.getModels(provider)
 
     setApiKey(settings[`${provider}_api_key`] || '')

@@ -1,11 +1,6 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
 
-export type AIProvider = 'openai' | 'anthropic' | 'google'
-
-export interface AIMessage {
-  role: 'user' | 'assistant' | 'system'
-  content: string
-}
+export type { AIProvider, AIMessage, AISettings } from '../types/ai'
 
 declare global {
   interface Window {
