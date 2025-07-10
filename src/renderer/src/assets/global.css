@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@import '@assistant-ui/styles/index.css';
+@import '@assistant-ui/styles/markdown.css';
 
 @custom-variant dark (&:is(.dark *));
 

@@ -24,8 +24,6 @@ export function ChatPage({ onBack }: ChatPageProps): React.JSX.Element {
               <h1 className="text-lg font-semibold">AI Assistant</h1>
             </div>
           </div>
-
-          <div className="text-sm text-muted-foreground">Placeholder Mode</div>
         </div>
       </header>
 
