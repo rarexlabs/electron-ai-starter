@@ -14,15 +14,15 @@ import { CheckCircle, Loader2 } from 'lucide-react'
 import type { AIProvider, AISettings } from '../../../preload/index.d'
 import { logger } from '@/lib/logger'
 
-interface AIQuickSettingsProps {
+interface AISettingsProps {
   onProviderChange?: (provider: AIProvider) => void
   className?: string
 }
 
-export function AIQuickSettings({
+export function AISettings({
   onProviderChange,
   className = ''
-}: AIQuickSettingsProps): React.JSX.Element {
+}: AISettingsProps): React.JSX.Element {
   const [selectedProvider, setSelectedProvider] = useState<AIProvider>('openai')
   const [apiKey, setApiKey] = useState('')
   const [model, setModel] = useState('')
