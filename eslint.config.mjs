@@ -11,6 +11,7 @@ export default tseslint.config(
       '**/dist',
       '**/out',
       'src/renderer/src/components/ui/**',
+      'src/renderer/src/components/assistant-ui/**',
       'plans/**',
       'src/main/db/migrations/**',
       'prompts/**'
