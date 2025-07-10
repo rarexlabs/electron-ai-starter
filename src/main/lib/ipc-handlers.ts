@@ -131,7 +131,9 @@ export function setupIpcHandlers(): void {
   ipcMain.handle('ai-chat-abort', async (_, sessionId: string) => {
     const session = activeSessions.get(sessionId)
     if (session) {
-      mainLogger.info(`🚫 ABORT REQUESTED - Aborting AI chat session: ${sessionId} (${session.provider})`)
+      mainLogger.info(
+        `🚫 ABORT REQUESTED - Aborting AI chat session: ${sessionId} (${session.provider})`
+      )
       mainLogger.info(`🚫 Triggering AbortController.abort() to cancel AI provider request`)
       session.abortController.abort()
       activeSessions.delete(sessionId)

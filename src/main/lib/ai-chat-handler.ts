@@ -53,15 +53,17 @@ export async function* streamAIResponse(
 
   try {
     const model = await createModel(currentProvider)
-    
+
     // Add abort signal listener for logging
     if (abortSignal) {
       abortSignal.addEventListener('abort', () => {
-        mainLogger.info(`🚫 ABORT SIGNAL RECEIVED - Cancelling AI provider request for ${currentProvider}`)
+        mainLogger.info(
+          `🚫 ABORT SIGNAL RECEIVED - Cancelling AI provider request for ${currentProvider}`
+        )
         mainLogger.info('🚫 This should prevent further token consumption from the AI provider')
       })
     }
-    
+
     const result = streamText({
       model,
       messages,
@@ -80,7 +82,7 @@ export async function* streamAIResponse(
       }
       yield chunk
     }
-    
+
     mainLogger.info(`✅ AI response streaming completed successfully with ${currentProvider}`)
   } catch (error) {
     if (error instanceof Error && (error.message === 'AbortError' || error.name === 'AbortError')) {

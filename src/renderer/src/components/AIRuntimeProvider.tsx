@@ -2,6 +2,8 @@ import { AssistantRuntimeProvider, useLocalRuntime } from '@assistant-ui/react'
 import type { ChatModelAdapter, ThreadMessage } from '@assistant-ui/react'
 import { ReactNode } from 'react'
 import { logger } from '@/lib/logger'
+import { aiStreamBridge } from '@/lib/ipc-bridge'
+import { sessionManager } from '@/lib/session-manager'
 
 const AIModelAdapter: ChatModelAdapter = {
   async *run({ messages, abortSignal }) {
@@ -15,115 +17,60 @@ const AIModelAdapter: ChatModelAdapter = {
           .join('')
       }))
 
-      let fullContent = ''
-      const chunkQueue: string[] = []
-      let completed = false
-      let error: string | null = null
-      let resolveNext: (() => void) | null = null
-      let aborted = false
+      logger.info('🚀 Starting AI stream with messages:', formattedMessages.length)
 
-      let sessionId: string | null = null
-      
-      // Set up abort signal listener to resolve pending promises
-      const abortListener = () => {
-        logger.info('🚫 RENDERER: Abort signal received in AIRuntimeProvider')
-        aborted = true
-        if (resolveNext) {
-          const resolve = resolveNext
-          resolveNext = null
-          resolve()
-        }
-        // If we have a session ID, send abort request to main process
-        if (sessionId) {
-          logger.info('🚫 RENDERER: Sending abort request to main process for session:', sessionId)
-          window.ai.abortChat(sessionId).catch((error) => {
-            logger.error('Failed to abort chat session:', error)
-          })
-        }
-      }
-
-      if (abortSignal) {
-        abortSignal.addEventListener('abort', abortListener)
-      }
-
-      // Start the streaming request with event-driven chunk handling
-      const streamPromise = window.ai.streamChat(
+      // Start streaming through the bridge
+      const { sessionId, stream, abort } = await aiStreamBridge.startStream(
         formattedMessages,
         undefined, // provider - will use default from settings
-        (chunk: string) => {
-          chunkQueue.push(chunk)
-          fullContent += chunk
-          if (resolveNext) {
-            const resolve = resolveNext
-            resolveNext = null
-            resolve()
-          }
-        },
-        () => {
-          completed = true
-          if (resolveNext) {
-            const resolve = resolveNext
-            resolveNext = null
-            resolve()
-          }
-        },
-        (err: string) => {
-          error = err
-          if (resolveNext) {
-            const resolve = resolveNext
-            resolveNext = null
-            resolve()
-          }
-        },
-        (id: string) => {
-          // Session ID callback - store it for abort functionality
-          sessionId = id
-        }
+        abortSignal
       )
 
-      // Process chunks as they arrive without polling
-      while (!completed && !error && !aborted && !abortSignal.aborted) {
-        if (chunkQueue.length > 0) {
-          // Consume all available chunks
-          chunkQueue.length = 0
-          yield {
-            content: [{ type: 'text', text: fullContent }]
+      // Create session for tracking
+      const sessionAbortController = sessionManager.createSession(sessionId)
+
+      // Set up abort signal forwarding
+      if (abortSignal) {
+        abortSignal.addEventListener('abort', () => {
+          logger.info('🚫 Abort signal received, aborting session:', sessionId)
+          sessionManager.abortSession(sessionId)
+          abort()
+        })
+      }
+
+      let fullContent = ''
+
+      try {
+        // Process streaming chunks
+        for await (const chunk of stream) {
+          // Check if aborted during streaming
+          if (abortSignal?.aborted || sessionAbortController.signal.aborted) {
+            logger.info('🚫 Stream aborted during processing')
+            break
           }
-        } else {
-          // Wait for next chunk or completion
-          await new Promise<void>((resolve) => {
-            resolveNext = resolve
-            // Also resolve if aborted to prevent hanging
-            if (abortSignal.aborted || aborted) {
-              resolve()
-            }
-          })
-        }
-      }
 
-      // Clean up abort listener
-      if (abortSignal && abortListener) {
-        abortSignal.removeEventListener('abort', abortListener)
-      }
-
-      // Handle abort signal
-      if (abortSignal.aborted || aborted) {
-        throw new Error('Request was aborted')
-      }
-
-      // Handle completion or error
-      if (error) {
-        throw new Error(error)
-      }
-
-      // Wait for the promise to complete and yield final content only if not aborted
-      if (!abortSignal.aborted && !aborted) {
-        await streamPromise
-        if (fullContent) {
+          fullContent += chunk
           yield {
             content: [{ type: 'text', text: fullContent }]
           }
         }
+
+        // Mark session as completed
+        sessionManager.completeSession(sessionId)
+        logger.info('✅ Stream completed successfully')
+      } catch (streamError) {
+        const errorMessage = streamError instanceof Error ? streamError.message : 'Stream error'
+        sessionManager.errorSession(sessionId, errorMessage)
+        throw streamError
+      } finally {
+        // Clean up session
+        sessionManager.cleanupSession(sessionId)
+      }
+
+      // Handle abort case
+      if (abortSignal?.aborted || sessionAbortController.signal.aborted) {
+        logger.info('🚫 Stream was aborted - exiting gracefully')
+        return
       }
     } catch (error) {
       // Handle errors gracefully
@@ -131,10 +78,13 @@ const AIModelAdapter: ChatModelAdapter = {
 
       // Don't show error message for abort - it's expected behavior
       if (errorMessage === 'Request was aborted') {
-        logger.info('🚫 RENDERER: Stream was aborted - this is expected behavior')
+        logger.info('🚫 Stream was aborted - this is expected behavior')
         return // Exit gracefully without yielding error content
       }
 
+      logger.error('❌ AI stream error:', errorMessage)
+
+      // Yield appropriate error messages
       if (errorMessage.includes('API key') || errorMessage.includes('api key')) {
         yield {
           content: [
