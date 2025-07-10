@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm'
-import { getDatabase, closeDatabase, removeDatabaseFile } from './db/connection'
+import { getDatabase, closeDatabase, removeDatabaseFile } from './db'
 import { settings } from './db/schema'
 import { app } from 'electron'
 
