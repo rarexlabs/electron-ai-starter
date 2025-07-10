@@ -2,11 +2,11 @@ import { createOpenAI } from '@ai-sdk/openai'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { streamText, type LanguageModelV1 } from 'ai'
-import { getSetting } from './settings'
-import { mainLogger } from './logger'
-import type { AIProvider, AIMessage, AISettings } from '../types/ai'
+import { getSetting } from '../settings'
+import { mainLogger } from '../logger'
+import type { AIProvider } from '../../types/ai'
 
-const MODEL_CONFIG = {
+export const MODEL_CONFIG = {
   openai: {
     default: 'gpt-4o',
     available: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo'],
@@ -30,7 +30,7 @@ const MODEL_CONFIG = {
   }
 }
 
-async function createModel(provider: AIProvider): Promise<LanguageModelV1> {
+export async function createModel(provider: AIProvider): Promise<LanguageModelV1> {
   const aiSettings = (await getSetting('ai')) || {}
   const apiKey = aiSettings[`${provider}_api_key`]
   const model = aiSettings[`${provider}_model`]
@@ -41,57 +41,6 @@ async function createModel(provider: AIProvider): Promise<LanguageModelV1> {
 
   const config = MODEL_CONFIG[provider]
   return config.createModel(apiKey, model || config.default)
-}
-
-export async function* streamAIResponse(
-  messages: AIMessage[],
-  provider?: AIProvider,
-  abortSignal?: AbortSignal
-): AsyncGenerator<string, void, unknown> {
-  const aiSettings = ((await getSetting('ai')) as AISettings) || {}
-  const currentProvider = provider || aiSettings.default_provider || 'openai'
-
-  try {
-    const model = await createModel(currentProvider)
-
-    // Add abort signal listener for logging
-    if (abortSignal) {
-      abortSignal.addEventListener('abort', () => {
-        mainLogger.info(
-          `🚫 ABORT SIGNAL RECEIVED - Cancelling AI provider request for ${currentProvider}`
-        )
-        mainLogger.info('🚫 This should prevent further token consumption from the AI provider')
-      })
-    }
-
-    const result = streamText({
-      model,
-      messages,
-      temperature: 0.7,
-      maxTokens: 1000,
-      abortSignal
-    })
-
-    mainLogger.info(`AI response streaming started with ${currentProvider}`)
-
-    for await (const chunk of result.textStream) {
-      // Check if aborted during streaming
-      if (abortSignal?.aborted) {
-        mainLogger.info(`🚫 Stream aborted during chunk processing - stopping iteration`)
-        throw new Error('AbortError')
-      }
-      yield chunk
-    }
-
-    mainLogger.info(`✅ AI response streaming completed successfully with ${currentProvider}`)
-  } catch (error) {
-    if (error instanceof Error && (error.message === 'AbortError' || error.name === 'AbortError')) {
-      mainLogger.info(`🚫 AI stream was aborted for ${currentProvider}`)
-    } else {
-      mainLogger.error('AI chat error:', error)
-    }
-    throw error
-  }
 }
 
 export async function getAvailableModels(provider: AIProvider): Promise<string[]> {
