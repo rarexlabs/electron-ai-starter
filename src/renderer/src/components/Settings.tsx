@@ -10,6 +10,7 @@ import {
   CardDescription,
   CardFooter
 } from '@/components/ui/card'
+import { AIQuickSettings } from './AIQuickSettings'
 
 interface SettingsProps {
   onBack: () => void
@@ -150,6 +151,9 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
               </div>
             </CardContent>
           </Card>
+
+          {/* AI Settings */}
+          <AIQuickSettings className="shadow-sm" />
 
           {/* Database Management */}
           <Card className="shadow-sm">

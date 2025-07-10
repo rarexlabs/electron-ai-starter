@@ -5,13 +5,10 @@ import { Button } from '@/components/ui/button'
 import { Settings } from '@/components/Settings'
 import { DummyDataManager } from '@/components/DummyDataManager'
 import { ChatInterface } from '@/components/ChatInterface'
-import { AIQuickSettings } from '@/components/AIQuickSettings'
 import log from 'electron-log/renderer'
-import type { AIProvider } from '../../../src/preload/index.d'
 
 function App(): React.JSX.Element {
   const [currentPage, setCurrentPage] = useState<'home' | 'settings'>('home')
-  const [currentProvider, setCurrentProvider] = useState<AIProvider>('openai')
 
   const handleSettingsClick = (): void => {
     log.info('Settings page opened')
@@ -55,8 +52,7 @@ function App(): React.JSX.Element {
 
           {/* Right Column - AI Chat */}
           <div className="space-y-4">
-            <AIQuickSettings onProviderChange={setCurrentProvider} />
-            <ChatInterface provider={currentProvider} />
+            <ChatInterface />
           </div>
         </div>
       </div>

@@ -10,7 +10,7 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { CheckCircle, Loader2, Settings } from 'lucide-react'
+import { CheckCircle, Loader2 } from 'lucide-react'
 import type { AIProvider, AISettings } from '../../../preload/index.d'
 import { logger } from '@/lib/logger'
 
@@ -29,7 +29,6 @@ export function AIQuickSettings({
   const [models, setModels] = useState<string[]>([])
   const [isTesting, setIsTesting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [showSettings, setShowSettings] = useState(false)
   const [connectionTestSuccess, setConnectionTestSuccess] = useState(false)
 
   const loadSettings = useCallback(async (): Promise<void> => {
@@ -112,7 +111,6 @@ export function AIQuickSettings({
 
       await window.database.setSetting('ai', updatedSettings)
       await testConnection()
-      setShowSettings(false)
     } catch (error) {
       logger.error('Failed to save settings:', error)
     } finally {
@@ -130,39 +128,11 @@ export function AIQuickSettings({
     loadModels()
   }, [selectedProvider, loadModels])
 
-  if (!showSettings) {
-    return (
-      <Card className={className}>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-lg">AI Assistant</CardTitle>
-              <CardDescription>Using {selectedProvider}</CardDescription>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowSettings(true)}
-              className="flex items-center gap-2"
-            >
-              <Settings className="h-4 w-4" />
-              Configure
-            </Button>
-          </div>
-        </CardHeader>
-      </Card>
-    )
-  }
-
   return (
     <Card className={className}>
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">Configure AI Assistant</CardTitle>
-          <Button variant="outline" size="sm" onClick={() => setShowSettings(false)}>
-            Done
-          </Button>
-        </div>
+        <CardTitle className="text-lg">AI Assistant</CardTitle>
+        <CardDescription>Configure your AI provider and model settings</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4">

@@ -12,35 +12,31 @@ interface ChatMessage extends AIMessage {
 }
 
 interface ChatInterfaceProps {
-  provider?: AIProvider
   className?: string
 }
 
-export function ChatInterface({
-  provider = 'openai',
-  className = ''
-}: ChatInterfaceProps): React.JSX.Element {
+export function ChatInterface({ className = '' }: ChatInterfaceProps): React.JSX.Element {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [currentProvider, setCurrentProvider] = useState<AIProvider>(provider)
+  const [currentProvider, setCurrentProvider] = useState<AIProvider>('openai')
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  // Load current provider from settings and update when prop changes
+  // Load current provider from settings
   useEffect(() => {
     const loadProvider = async (): Promise<void> => {
       try {
         const aiSettings = ((await window.database.getSetting('ai')) as AISettings) || {}
         const savedProvider = aiSettings.default_provider
-        setCurrentProvider(savedProvider || provider)
+        setCurrentProvider(savedProvider || 'openai')
       } catch (err) {
         logger.error('Failed to load provider:', err)
-        setCurrentProvider(provider)
+        setCurrentProvider('openai')
       }
     }
     loadProvider()
-  }, [provider])
+  }, [])
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
