@@ -5,8 +5,8 @@ export type { AIProvider, AIMessage, AISettings } from '../types/ai'
 declare global {
   interface Window {
     electron: ElectronAPI
-    api: unknown
-    database: {
+    api: {
+      // Settings operations
       getSetting(key: string): Promise<unknown>
       setSetting(key: string, value: unknown): Promise<void>
       getAllSettings(): Promise<Record<string, unknown>>
@@ -15,9 +15,8 @@ declare global {
       getDatabasePath(): Promise<string>
       getLogPath(): Promise<string>
       openFolder(folderPath: string): Promise<void>
-    }
-    ai: {
-      streamChat(
+      // AI operations
+      streamAIChat(
         messages: AIMessage[],
         provider?: AIProvider,
         onChunk?: (chunk: string) => void,
@@ -25,9 +24,9 @@ declare global {
         onError?: (error: string) => void,
         onSessionId?: (sessionId: string) => void
       ): Promise<string>
-      abortChat(sessionId: string): Promise<void>
-      getModels(provider: AIProvider): Promise<string[]>
-      testConnection(provider: AIProvider): Promise<boolean>
+      abortAIChat(sessionId: string): Promise<void>
+      getAIModels(provider: AIProvider): Promise<string[]>
+      testAIProviderConnection(provider: AIProvider): Promise<boolean>
     }
   }
 }

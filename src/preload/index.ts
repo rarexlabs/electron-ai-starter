@@ -2,9 +2,6 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import log from 'electron-log/preload'
 
-// Custom APIs for renderer
-const api = {}
-
 // AI Chat API types
 export type AIProvider = 'openai' | 'anthropic' | 'google'
 
@@ -13,8 +10,9 @@ export interface AIMessage {
   content: string
 }
 
-// Database API implementation using secure IPC
-const databaseAPI = {
+// Unified API implementation using secure IPC
+const unifiedAPI = {
+  // Settings operations
   getSetting: (key: string): Promise<unknown> => {
     return ipcRenderer.invoke('get-setting', key)
   },
@@ -45,12 +43,10 @@ const databaseAPI = {
 
   openFolder: (folderPath: string): Promise<void> => {
     return ipcRenderer.invoke('open-folder', folderPath)
-  }
-}
+  },
 
-// AI Chat API implementation using secure IPC
-const aiAPI = {
-  streamChat: (
+  // AI operations
+  streamAIChat: (
     messages: AIMessage[],
     provider?: AIProvider,
     onChunk?: (chunk: string) => void,
@@ -60,7 +56,7 @@ const aiAPI = {
   ): Promise<string> => {
     return new Promise((resolve, reject) => {
       ipcRenderer
-        .invoke('ai-chat-stream', messages, provider)
+        .invoke('stream-ai-chat', messages, provider)
         .then((sessionId) => {
           let fullResponse = ''
 
@@ -113,16 +109,16 @@ const aiAPI = {
     })
   },
 
-  abortChat: (sessionId: string): Promise<void> => {
-    return ipcRenderer.invoke('ai-chat-abort', sessionId)
+  abortAIChat: (sessionId: string): Promise<void> => {
+    return ipcRenderer.invoke('abort-ai-chat', sessionId)
   },
 
-  getModels: (provider: AIProvider): Promise<string[]> => {
-    return ipcRenderer.invoke('ai-get-models', provider)
+  getAIModels: (provider: AIProvider): Promise<string[]> => {
+    return ipcRenderer.invoke('get-ai-models', provider)
   },
 
-  testConnection: (provider: AIProvider): Promise<boolean> => {
-    return ipcRenderer.invoke('ai-test-connection', provider)
+  testAIProviderConnection: (provider: AIProvider): Promise<boolean> => {
+    return ipcRenderer.invoke('test-ai-provider-connection', provider)
   }
 }
 
@@ -132,9 +128,7 @@ const aiAPI = {
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
-    contextBridge.exposeInMainWorld('api', api)
-    contextBridge.exposeInMainWorld('database', databaseAPI)
-    contextBridge.exposeInMainWorld('ai', aiAPI)
+    contextBridge.exposeInMainWorld('api', unifiedAPI)
   } catch (error) {
     log.error('Context bridge error:', error)
   }
@@ -142,9 +136,5 @@ if (process.contextIsolated) {
   // @ts-ignore (define in dts)
   window.electron = electronAPI
   // @ts-ignore (define in dts)
-  window.api = api
-  // @ts-ignore (define in dts)
-  window.database = databaseAPI
-  // @ts-ignore (define in dts)
-  window.ai = aiAPI
+  window.api = unifiedAPI
 }

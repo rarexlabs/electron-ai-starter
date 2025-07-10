@@ -34,7 +34,7 @@ export function AISettings({
 
   const loadSettings = useCallback(async (): Promise<void> => {
     try {
-      const aiSettings = ((await window.database.getSetting('ai')) as AISettings) || {}
+      const aiSettings = ((await window.api.getSetting('ai')) as AISettings) || {}
       const currentProvider = aiSettings.default_provider || 'openai'
       setSelectedProvider(currentProvider)
       await loadProviderSettings(currentProvider, aiSettings)
@@ -45,7 +45,7 @@ export function AISettings({
 
   const loadModels = useCallback(async (): Promise<void> => {
     try {
-      const availableModels = await window.ai.getModels(selectedProvider)
+      const availableModels = await window.api.getAIModels(selectedProvider)
       setModels(availableModels)
       if (!model && availableModels.length > 0) {
         setModel(availableModels[0])
@@ -59,8 +59,8 @@ export function AISettings({
     provider: AIProvider,
     aiSettings?: AISettings
   ): Promise<void> => {
-    const settings = aiSettings || ((await window.database.getSetting('ai')) as AISettings) || {}
-    const availableModels = await window.ai.getModels(provider)
+    const settings = aiSettings || ((await window.api.getSetting('ai')) as AISettings) || {}
+    const availableModels = await window.api.getAIModels(provider)
 
     setApiKey(settings[`${provider}_api_key`] || '')
     setModel(settings[`${provider}_model`] || availableModels[0] || 'gpt-4o')
@@ -78,15 +78,15 @@ export function AISettings({
     setIsTesting(true)
     setConnectionTestSuccess(false)
     try {
-      const currentAiSettings = (await window.database.getSetting('ai')) || {}
+      const currentAiSettings = (await window.api.getSetting('ai')) || {}
       const updatedSettings = {
         ...currentAiSettings,
         [`${selectedProvider}_api_key`]: apiKey,
         [`${selectedProvider}_model`]: model
       }
 
-      await window.database.setSetting('ai', updatedSettings)
-      const connected = await window.ai.testConnection(selectedProvider)
+      await window.api.setSetting('ai', updatedSettings)
+      const connected = await window.api.testAIProviderConnection(selectedProvider)
 
       if (connected) {
         setConnectionTestSuccess(true)
@@ -102,7 +102,7 @@ export function AISettings({
   const saveSettings = async (): Promise<void> => {
     setIsSaving(true)
     try {
-      const currentAiSettings = (await window.database.getSetting('ai')) || {}
+      const currentAiSettings = (await window.api.getSetting('ai')) || {}
       const updatedSettings = {
         ...currentAiSettings,
         default_provider: selectedProvider,
@@ -110,7 +110,7 @@ export function AISettings({
         [`${selectedProvider}_model`]: model
       }
 
-      await window.database.setSetting('ai', updatedSettings)
+      await window.api.setSetting('ai', updatedSettings)
       await testConnection()
     } catch (error) {
       logger.error('Failed to save settings:', error)
@@ -128,7 +128,7 @@ export function AISettings({
 
     setIsClearing(true)
     try {
-      await window.database.clearSetting('ai')
+      await window.api.clearSetting('ai')
       setSelectedProvider('openai')
       setApiKey('')
       setModel('')

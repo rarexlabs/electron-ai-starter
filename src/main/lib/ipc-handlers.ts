@@ -68,7 +68,7 @@ export function setupIpcHandlers(): void {
   })
 
   // AI Chat IPC handlers
-  ipcMain.handle('ai-chat-stream', async (event, messages: AIMessage[], provider?: AIProvider) => {
+  ipcMain.handle('stream-ai-chat', async (event, messages: AIMessage[], provider?: AIProvider) => {
     const sessionId = Date.now().toString()
     const abortController = new AbortController()
 
@@ -128,7 +128,7 @@ export function setupIpcHandlers(): void {
   })
 
   // AI Chat abort handler
-  ipcMain.handle('ai-chat-abort', async (_, sessionId: string) => {
+  ipcMain.handle('abort-ai-chat', async (_, sessionId: string) => {
     const session = activeSessions.get(sessionId)
     if (session) {
       mainLogger.info(
@@ -143,7 +143,7 @@ export function setupIpcHandlers(): void {
     }
   })
 
-  ipcMain.handle('ai-get-models', async (_, provider: AIProvider) => {
+  ipcMain.handle('get-ai-models', async (_, provider: AIProvider) => {
     try {
       return await getAvailableModels(provider)
     } catch (error) {
@@ -152,7 +152,7 @@ export function setupIpcHandlers(): void {
     }
   })
 
-  ipcMain.handle('ai-test-connection', async (_, provider: AIProvider) => {
+  ipcMain.handle('test-ai-provider-connection', async (_, provider: AIProvider) => {
     try {
       return await testConnection(provider)
     } catch (error) {

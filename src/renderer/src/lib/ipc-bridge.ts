@@ -26,8 +26,8 @@ export class AIStreamBridge {
 
       // Create a promise that resolves when we get the session ID
       const sessionPromise = new Promise<string>((resolve, reject) => {
-        window.ai
-          .streamChat(
+        window.api
+          .streamAIChat(
             messages,
             provider,
             () => {}, // onChunk - handled in stream generator
@@ -83,7 +83,7 @@ export class AIStreamBridge {
           logger.info('🚫 Aborting stream:', sessionId)
           abortController.abort()
           try {
-            await window.ai.abortChat(sessionId)
+            await window.api.abortAIChat(sessionId)
           } catch (error) {
             logger.error('Failed to abort chat session:', error)
           }

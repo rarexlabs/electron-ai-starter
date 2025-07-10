@@ -67,7 +67,7 @@ export class SessionManager {
 
     // Send abort to main process
     try {
-      await window.ai.abortChat(sessionId)
+      await window.api.abortAIChat(sessionId)
     } catch (error) {
       logger.error('Failed to abort chat session:', error)
     }
