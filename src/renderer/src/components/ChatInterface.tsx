@@ -130,7 +130,7 @@ export function ChatInterface({ className = '' }: ChatInterfaceProps): React.JSX
   }, [])
 
   return (
-    <Card className={`flex flex-col h-96 pb-2 ${className}`}>
+    <Card className={`flex flex-col h-96 overflow-hidden pb-2 ${className}`}>
       <CardHeader className="flex items-center justify-between">
         <CardTitle className="flex items-center gap-2">
           <Bot className="h-5 w-5 text-blue-600" /> AI Chat Demo
