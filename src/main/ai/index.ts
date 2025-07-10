@@ -12,7 +12,7 @@ export * from './config'
 export * from './stream'
 
 // Main orchestration function for AI chat processing
-export async function processAIChat(
+export async function streamAIChat(
   messages: AIMessage[],
   provider?: AIProvider,
   send?: (channel: string, ...args: unknown[]) => void
