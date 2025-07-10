@@ -1,6 +1,12 @@
 import { ipcMain, shell } from 'electron'
 import { dirname } from 'path'
-import { getSetting, setSetting, getAllSettings, clearDatabase } from '../db/services/settings'
+import {
+  getSetting,
+  setSetting,
+  getAllSettings,
+  clearSetting,
+  clearDatabase
+} from '../db/services/settings'
 import { getDatabasePath, getLogPath } from './paths'
 import { mainLogger } from './logger'
 import { streamAIResponse, getAvailableModels, testConnection } from './ai-chat-handler'
@@ -18,6 +24,10 @@ export function setupIpcHandlers(): void {
 
   ipcMain.handle('get-all-settings', async () => {
     return getAllSettings()
+  })
+
+  ipcMain.handle('clear-setting', async (_, key: string) => {
+    return clearSetting(key)
   })
 
   ipcMain.handle('clear-database', async () => {

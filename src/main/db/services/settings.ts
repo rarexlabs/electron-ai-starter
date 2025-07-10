@@ -47,6 +47,14 @@ export async function getAllSettings(
   )
 }
 
+export async function clearSetting(
+  key: string,
+  db?: ReturnType<typeof getDatabase>
+): Promise<void> {
+  const database = db || getDatabase()
+  await database.delete(settings).where(eq(settings.key, key))
+}
+
 export async function clearDatabase(): Promise<void> {
   closeDatabase()
   removeDatabaseFile()

@@ -15,16 +15,20 @@ export interface AIMessage {
 
 // Database API implementation using secure IPC
 const databaseAPI = {
-  getSetting: (namespace: string, key: string): Promise<string | null> => {
-    return ipcRenderer.invoke('get-setting', namespace, key)
+  getSetting: (key: string): Promise<unknown> => {
+    return ipcRenderer.invoke('get-setting', key)
   },
 
-  setSetting: (namespace: string, key: string, value: string): Promise<void> => {
-    return ipcRenderer.invoke('set-setting', namespace, key, value)
+  setSetting: (key: string, value: unknown): Promise<void> => {
+    return ipcRenderer.invoke('set-setting', key, value)
   },
 
-  getSettingsByNamespace: (namespace: string): Promise<Record<string, string>> => {
-    return ipcRenderer.invoke('get-settings-by-namespace', namespace)
+  getAllSettings: (): Promise<Record<string, unknown>> => {
+    return ipcRenderer.invoke('get-all-settings')
+  },
+
+  clearSetting: (key: string): Promise<void> => {
+    return ipcRenderer.invoke('clear-setting', key)
   },
 
   clearDatabase: (): Promise<void> => {

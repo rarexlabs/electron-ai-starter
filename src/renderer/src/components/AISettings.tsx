@@ -10,7 +10,7 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { CheckCircle, Loader2 } from 'lucide-react'
+import { CheckCircle, Loader2, Trash2 } from 'lucide-react'
 import type { AIProvider, AISettings } from '../../../preload/index.d'
 import { logger } from '@/lib/logger'
 
@@ -30,6 +30,7 @@ export function AISettings({
   const [isTesting, setIsTesting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [connectionTestSuccess, setConnectionTestSuccess] = useState(false)
+  const [isClearing, setIsClearing] = useState(false)
 
   const loadSettings = useCallback(async (): Promise<void> => {
     try {
@@ -118,6 +119,30 @@ export function AISettings({
     }
   }
 
+  const clearSettings = async (): Promise<void> => {
+    const confirmed = confirm(
+      'Clear all AI settings?\n\nThis will remove all API keys and reset settings to defaults. This action cannot be undone.'
+    )
+
+    if (!confirmed) return
+
+    setIsClearing(true)
+    try {
+      await window.database.clearSetting('ai')
+      setSelectedProvider('openai')
+      setApiKey('')
+      setModel('')
+      setModels([])
+      setConnectionTestSuccess(false)
+      onProviderChange?.('openai')
+      logger.info('AI settings cleared successfully')
+    } catch (error) {
+      logger.error('Failed to clear AI settings:', error)
+    } finally {
+      setIsClearing(false)
+    }
+  }
+
   // Load settings on component mount
   useEffect(() => {
     loadSettings()
@@ -179,27 +204,43 @@ export function AISettings({
         </div>
 
         <div className="flex items-center justify-between">
-          <Button
-            onClick={() => testConnection()}
-            disabled={!apiKey || isTesting}
-            variant={connectionTestSuccess ? 'default' : 'outline'}
-            size="sm"
-            className={connectionTestSuccess ? 'bg-green-600 hover:bg-green-700 text-white' : ''}
-          >
-            {isTesting ? (
-              <>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => testConnection()}
+              disabled={!apiKey || isTesting}
+              variant={connectionTestSuccess ? 'default' : 'outline'}
+              size="sm"
+              className={connectionTestSuccess ? 'bg-green-600 hover:bg-green-700 text-white' : ''}
+            >
+              {isTesting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Testing...
+                </>
+              ) : connectionTestSuccess ? (
+                <>
+                  <CheckCircle className="h-4 w-4" />
+                  Connection Successful!
+                </>
+              ) : (
+                'Test Connection'
+              )}
+            </Button>
+
+            <Button
+              onClick={clearSettings}
+              disabled={isClearing}
+              variant="outline"
+              size="sm"
+              className="text-red-600 hover:text-red-700"
+            >
+              {isClearing ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Testing...
-              </>
-            ) : connectionTestSuccess ? (
-              <>
-                <CheckCircle className="h-4 w-4" />
-                Connection Successful!
-              </>
-            ) : (
-              'Test Connection'
-            )}
-          </Button>
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
 
           <Button onClick={saveSettings} disabled={!apiKey || isSaving} size="sm">
             {isSaving ? (

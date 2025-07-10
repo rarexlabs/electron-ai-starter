@@ -10,6 +10,7 @@ declare global {
       getSetting(key: string): Promise<unknown>
       setSetting(key: string, value: unknown): Promise<void>
       getAllSettings(): Promise<Record<string, unknown>>
+      clearSetting(key: string): Promise<void>
       clearDatabase(): Promise<void>
       getDatabasePath(): Promise<string>
       getLogPath(): Promise<string>
