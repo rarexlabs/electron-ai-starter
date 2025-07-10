@@ -122,12 +122,10 @@ Feel free to test more features!`
   }
 }
 
-export function PlaceholderRuntimeProvider({ children }: PlaceholderRuntimeProviderProps): React.JSX.Element {
+export function PlaceholderRuntimeProvider({
+  children
+}: PlaceholderRuntimeProviderProps): React.JSX.Element {
   const runtime = useLocalRuntime(mockAdapter)
 
-  return (
-    <AssistantRuntimeProvider runtime={runtime}>
-      {children}
-    </AssistantRuntimeProvider>
-  )
+  return <AssistantRuntimeProvider runtime={runtime}>{children}</AssistantRuntimeProvider>
 }

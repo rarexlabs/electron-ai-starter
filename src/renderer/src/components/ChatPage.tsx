@@ -1,7 +1,7 @@
 import { ArrowLeft, MessageCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Thread } from '@/components/assistant-ui/thread'
-import { PlaceholderRuntimeProvider } from '@/components/PlaceholderRuntimeProvider'
+import { AIRuntimeProvider } from '@/components/AIRuntimeProvider'
 
 interface ChatPageProps {
   onBack: () => void
@@ -29,9 +29,9 @@ export function ChatPage({ onBack }: ChatPageProps): React.JSX.Element {
 
       {/* Chat Interface */}
       <main className="flex-1 overflow-hidden">
-        <PlaceholderRuntimeProvider>
+        <AIRuntimeProvider>
           <Thread />
-        </PlaceholderRuntimeProvider>
+        </AIRuntimeProvider>
       </main>
     </div>
   )
