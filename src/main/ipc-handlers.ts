@@ -61,7 +61,7 @@ export function setupIpcHandlers(): void {
   // AI Chat IPC handlers
   ipcMain.handle('stream-ai-chat', async (event, messages, provider?: AIProvider) => {
     try {
-      return await processAIChat(messages, provider, event)
+      return await processAIChat(messages, provider, event.sender.send.bind(event.sender))
     } catch (error) {
       mainLogger.error('AI chat stream error:', error)
       throw error

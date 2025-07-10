@@ -81,40 +81,40 @@ export function cleanupStreamSession(sessionId: string): void {
 export function handleStreamError(
   error: unknown,
   sessionId: string,
-  event: Electron.IpcMainInvokeEvent
+  send: (channel: string, ...args: unknown[]) => void
 ): void {
   const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
 
   // Check if error is due to abort
   if (error instanceof Error && error.name === 'AbortError') {
     mainLogger.info(`🚫 AI chat stream was aborted for session: ${sessionId}`)
-    event.sender.send('ai-chat-aborted', sessionId)
+    send('ai-chat-aborted', sessionId)
   } else {
     mainLogger.error('AI chat stream error:', error)
-    event.sender.send('ai-chat-error', sessionId, errorMessage)
+    send('ai-chat-error', sessionId, errorMessage)
   }
 }
 
 export async function processAIStream(
   session: AIStreamSession,
-  event: Electron.IpcMainInvokeEvent,
+  send: (channel: string, ...args: unknown[]) => void,
   streamGenerator: AsyncGenerator<string, void, unknown>
 ): Promise<void> {
   try {
     for await (const chunk of streamGenerator) {
       // Check if session was aborted
       if (session.abortController.signal.aborted) {
-        event.sender.send('ai-chat-aborted', session.id)
+        send('ai-chat-aborted', session.id)
         break
       }
-      event.sender.send('ai-chat-chunk', session.id, chunk)
+      send('ai-chat-chunk', session.id, chunk)
     }
     // Signal end of stream if not aborted
     if (!session.abortController.signal.aborted) {
-      event.sender.send('ai-chat-end', session.id)
+      send('ai-chat-end', session.id)
     }
   } catch (error) {
-    handleStreamError(error, session.id, event)
+    handleStreamError(error, session.id, send)
   } finally {
     // Clean up session
     cleanupStreamSession(session.id)

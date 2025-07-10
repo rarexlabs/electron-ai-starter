@@ -15,13 +15,13 @@ export * from './stream'
 export async function processAIChat(
   messages: AIMessage[],
   provider?: AIProvider,
-  event?: Electron.IpcMainInvokeEvent
+  send?: (channel: string, ...args: unknown[]) => void
 ): Promise<string> {
   // Create and store session
   const session = createStreamSession(messages, provider)
 
-  // If no event provided, just return session ID (for non-IPC usage)
-  if (!event) {
+  // If no send function provided, just return session ID (for non-IPC usage)
+  if (!send) {
     return session.id
   }
 
@@ -29,7 +29,7 @@ export async function processAIChat(
   const streamGenerator = streamAIResponse(messages, provider, session.abortController.signal)
 
   // Process stream chunks asynchronously
-  processAIStream(session, event, streamGenerator)
+  processAIStream(session, send, streamGenerator)
 
   return session.id
 }
