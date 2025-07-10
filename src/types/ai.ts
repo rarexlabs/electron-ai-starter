@@ -11,3 +11,11 @@ export interface AISettings {
   anthropic_api_key?: string
   google_api_key?: string
 }
+
+export interface AIStreamSession {
+  id: string
+  provider: AIProvider
+  messages: AIMessage[]
+  abortController: AbortController
+  createdAt: Date
+}

@@ -22,8 +22,10 @@ declare global {
         provider?: AIProvider,
         onChunk?: (chunk: string) => void,
         onEnd?: () => void,
-        onError?: (error: string) => void
+        onError?: (error: string) => void,
+        onSessionId?: (sessionId: string) => void
       ): Promise<string>
+      abortChat(sessionId: string): Promise<void>
       getModels(provider: AIProvider): Promise<string[]>
       testConnection(provider: AIProvider): Promise<boolean>
     }

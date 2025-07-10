@@ -45,27 +45,49 @@ async function createModel(provider: AIProvider): Promise<LanguageModelV1> {
 
 export async function* streamAIResponse(
   messages: AIMessage[],
-  provider?: AIProvider
+  provider?: AIProvider,
+  abortSignal?: AbortSignal
 ): AsyncGenerator<string, void, unknown> {
   const aiSettings = ((await getSetting('ai')) as AISettings) || {}
   const currentProvider = provider || aiSettings.default_provider || 'openai'
 
   try {
     const model = await createModel(currentProvider)
-    const result = await streamText({
+    
+    // Add abort signal listener for logging
+    if (abortSignal) {
+      abortSignal.addEventListener('abort', () => {
+        mainLogger.info(`🚫 ABORT SIGNAL RECEIVED - Cancelling AI provider request for ${currentProvider}`)
+        mainLogger.info('🚫 This should prevent further token consumption from the AI provider')
+      })
+    }
+    
+    const result = streamText({
       model,
       messages,
       temperature: 0.7,
-      maxTokens: 1000
+      maxTokens: 1000,
+      abortSignal
     })
 
     mainLogger.info(`AI response streaming started with ${currentProvider}`)
 
     for await (const chunk of result.textStream) {
+      // Check if aborted during streaming
+      if (abortSignal?.aborted) {
+        mainLogger.info(`🚫 Stream aborted during chunk processing - stopping iteration`)
+        throw new Error('AbortError')
+      }
       yield chunk
     }
+    
+    mainLogger.info(`✅ AI response streaming completed successfully with ${currentProvider}`)
   } catch (error) {
-    mainLogger.error('AI chat error:', error)
+    if (error instanceof Error && (error.message === 'AbortError' || error.name === 'AbortError')) {
+      mainLogger.info(`🚫 AI stream was aborted for ${currentProvider}`)
+    } else {
+      mainLogger.error('AI chat error:', error)
+    }
     throw error
   }
 }

@@ -1,6 +1,7 @@
 import { AssistantRuntimeProvider, useLocalRuntime } from '@assistant-ui/react'
 import type { ChatModelAdapter, ThreadMessage } from '@assistant-ui/react'
 import { ReactNode } from 'react'
+import { logger } from '@/lib/logger'
 
 const AIModelAdapter: ChatModelAdapter = {
   async *run({ messages, abortSignal }) {
@@ -19,6 +20,31 @@ const AIModelAdapter: ChatModelAdapter = {
       let completed = false
       let error: string | null = null
       let resolveNext: (() => void) | null = null
+      let aborted = false
+
+      let sessionId: string | null = null
+      
+      // Set up abort signal listener to resolve pending promises
+      const abortListener = () => {
+        logger.info('🚫 RENDERER: Abort signal received in AIRuntimeProvider')
+        aborted = true
+        if (resolveNext) {
+          const resolve = resolveNext
+          resolveNext = null
+          resolve()
+        }
+        // If we have a session ID, send abort request to main process
+        if (sessionId) {
+          logger.info('🚫 RENDERER: Sending abort request to main process for session:', sessionId)
+          window.ai.abortChat(sessionId).catch((error) => {
+            logger.error('Failed to abort chat session:', error)
+          })
+        }
+      }
+
+      if (abortSignal) {
+        abortSignal.addEventListener('abort', abortListener)
+      }
 
       // Start the streaming request with event-driven chunk handling
       const streamPromise = window.ai.streamChat(
@@ -48,11 +74,15 @@ const AIModelAdapter: ChatModelAdapter = {
             resolveNext = null
             resolve()
           }
+        },
+        (id: string) => {
+          // Session ID callback - store it for abort functionality
+          sessionId = id
         }
       )
 
       // Process chunks as they arrive without polling
-      while (!completed && !error && !abortSignal.aborted) {
+      while (!completed && !error && !aborted && !abortSignal.aborted) {
         if (chunkQueue.length > 0) {
           // Consume all available chunks
           chunkQueue.length = 0
@@ -63,8 +93,22 @@ const AIModelAdapter: ChatModelAdapter = {
           // Wait for next chunk or completion
           await new Promise<void>((resolve) => {
             resolveNext = resolve
+            // Also resolve if aborted to prevent hanging
+            if (abortSignal.aborted || aborted) {
+              resolve()
+            }
           })
         }
+      }
+
+      // Clean up abort listener
+      if (abortSignal && abortListener) {
+        abortSignal.removeEventListener('abort', abortListener)
+      }
+
+      // Handle abort signal
+      if (abortSignal.aborted || aborted) {
+        throw new Error('Request was aborted')
       }
 
       // Handle completion or error
@@ -72,16 +116,24 @@ const AIModelAdapter: ChatModelAdapter = {
         throw new Error(error)
       }
 
-      // Wait for the promise to complete and yield final content
-      await streamPromise
-      if (fullContent) {
-        yield {
-          content: [{ type: 'text', text: fullContent }]
+      // Wait for the promise to complete and yield final content only if not aborted
+      if (!abortSignal.aborted && !aborted) {
+        await streamPromise
+        if (fullContent) {
+          yield {
+            content: [{ type: 'text', text: fullContent }]
+          }
         }
       }
     } catch (error) {
       // Handle errors gracefully
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred'
+
+      // Don't show error message for abort - it's expected behavior
+      if (errorMessage === 'Request was aborted') {
+        logger.info('🚫 RENDERER: Stream was aborted - this is expected behavior')
+        return // Exit gracefully without yielding error content
+      }
 
       if (errorMessage.includes('API key') || errorMessage.includes('api key')) {
         yield {

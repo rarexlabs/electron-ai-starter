@@ -55,7 +55,8 @@ const aiAPI = {
     provider?: AIProvider,
     onChunk?: (chunk: string) => void,
     onEnd?: () => void,
-    onError?: (error: string) => void
+    onError?: (error: string) => void,
+    onSessionId?: (sessionId: string) => void
   ): Promise<string> => {
     return new Promise((resolve, reject) => {
       ipcRenderer
@@ -63,10 +64,14 @@ const aiAPI = {
         .then((sessionId) => {
           let fullResponse = ''
 
+          // Call the onSessionId callback with the session ID
+          onSessionId?.(sessionId)
+
           const cleanup = (): void => {
             ipcRenderer.removeListener('ai-chat-chunk', handleChunk)
             ipcRenderer.removeListener('ai-chat-end', handleEnd)
             ipcRenderer.removeListener('ai-chat-error', handleError)
+            ipcRenderer.removeListener('ai-chat-aborted', handleAborted)
           }
 
           const createHandler =
@@ -92,14 +97,24 @@ const aiAPI = {
             reject(new Error(error as string))
           })
 
+          const handleAborted = createHandler(() => {
+            cleanup()
+            reject(new Error('Request was aborted'))
+          })
+
           ipcRenderer.on('ai-chat-chunk', handleChunk)
           ipcRenderer.on('ai-chat-end', handleEnd)
           ipcRenderer.on('ai-chat-error', handleError)
+          ipcRenderer.on('ai-chat-aborted', handleAborted)
         })
         .catch((error) => {
           reject(error)
         })
     })
+  },
+
+  abortChat: (sessionId: string): Promise<void> => {
+    return ipcRenderer.invoke('ai-chat-abort', sessionId)
   },
 
   getModels: (provider: AIProvider): Promise<string[]> => {
