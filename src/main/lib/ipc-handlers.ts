@@ -15,6 +15,70 @@ import type { AIProvider, AIMessage, AIStreamSession } from '../../types/ai'
 // Track active AI chat sessions
 const activeSessions = new Map<string, AIStreamSession>()
 
+// Helper functions for AI chat handling
+function createAISession(messages: AIMessage[], provider?: AIProvider): AIStreamSession {
+  const sessionId = Date.now().toString()
+  const abortController = new AbortController()
+
+  const session: AIStreamSession = {
+    id: sessionId,
+    provider: provider || 'openai',
+    messages,
+    abortController,
+    createdAt: new Date()
+  }
+
+  activeSessions.set(sessionId, session)
+  return session
+}
+
+function cleanupSession(sessionId: string): void {
+  activeSessions.delete(sessionId)
+}
+
+function handleStreamError(
+  error: unknown,
+  sessionId: string,
+  event: Electron.IpcMainInvokeEvent
+): void {
+  const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+
+  // Check if error is due to abort
+  if (error instanceof Error && error.name === 'AbortError') {
+    mainLogger.info(`🚫 AI chat stream was aborted for session: ${sessionId}`)
+    event.sender.send('ai-chat-aborted', sessionId)
+  } else {
+    mainLogger.error('AI chat stream error:', error)
+    event.sender.send('ai-chat-error', sessionId, errorMessage)
+  }
+}
+
+async function processAIStream(
+  session: AIStreamSession,
+  event: Electron.IpcMainInvokeEvent,
+  streamGenerator: AsyncGenerator<string, void, unknown>
+): Promise<void> {
+  try {
+    for await (const chunk of streamGenerator) {
+      // Check if session was aborted
+      if (session.abortController.signal.aborted) {
+        event.sender.send('ai-chat-aborted', session.id)
+        break
+      }
+      event.sender.send('ai-chat-chunk', session.id, chunk)
+    }
+    // Signal end of stream if not aborted
+    if (!session.abortController.signal.aborted) {
+      event.sender.send('ai-chat-end', session.id)
+    }
+  } catch (error) {
+    handleStreamError(error, session.id, event)
+  } finally {
+    // Clean up session
+    cleanupSession(session.id)
+  }
+}
+
 export function setupIpcHandlers(): void {
   // Database IPC handlers
   ipcMain.handle('get-setting', async (_, key: string) => {
@@ -69,60 +133,19 @@ export function setupIpcHandlers(): void {
 
   // AI Chat IPC handlers
   ipcMain.handle('stream-ai-chat', async (event, messages: AIMessage[], provider?: AIProvider) => {
-    const sessionId = Date.now().toString()
-    const abortController = new AbortController()
-
     try {
       // Create and store session
-      const session: AIStreamSession = {
-        id: sessionId,
-        provider: provider || 'openai',
-        messages,
-        abortController,
-        createdAt: new Date()
-      }
-      activeSessions.set(sessionId, session)
+      const session = createAISession(messages, provider)
 
       // Start streaming in the background
-      const streamGenerator = streamAIResponse(messages, provider, abortController.signal)
+      const streamGenerator = streamAIResponse(messages, provider, session.abortController.signal)
 
-      // Process stream chunks
-      ;(async () => {
-        try {
-          for await (const chunk of streamGenerator) {
-            // Check if session was aborted
-            if (abortController.signal.aborted) {
-              event.sender.send('ai-chat-aborted', sessionId)
-              break
-            }
-            event.sender.send('ai-chat-chunk', sessionId, chunk)
-          }
-          // Signal end of stream if not aborted
-          if (!abortController.signal.aborted) {
-            event.sender.send('ai-chat-end', sessionId)
-          }
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      // Process stream chunks asynchronously
+      processAIStream(session, event, streamGenerator)
 
-          // Check if error is due to abort
-          if (error instanceof Error && error.name === 'AbortError') {
-            mainLogger.info(`🚫 AI chat stream was aborted for session: ${sessionId}`)
-            event.sender.send('ai-chat-aborted', sessionId)
-          } else {
-            mainLogger.error('AI chat stream error:', error)
-            event.sender.send('ai-chat-error', sessionId, errorMessage)
-          }
-        } finally {
-          // Clean up session
-          activeSessions.delete(sessionId)
-        }
-      })()
-
-      return sessionId
+      return session.id
     } catch (error) {
       mainLogger.error('AI chat stream error:', error)
-      // Clean up session on error
-      activeSessions.delete(sessionId)
       throw error
     }
   })
@@ -136,7 +159,7 @@ export function setupIpcHandlers(): void {
       )
       mainLogger.info(`🚫 Triggering AbortController.abort() to cancel AI provider request`)
       session.abortController.abort()
-      activeSessions.delete(sessionId)
+      cleanupSession(sessionId)
       mainLogger.info(`🚫 Session ${sessionId} cleaned up and removed from active sessions`)
     } else {
       mainLogger.warn(`❌ Attempted to abort non-existent session: ${sessionId}`)
