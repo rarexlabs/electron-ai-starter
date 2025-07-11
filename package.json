@@ -1,7 +1,7 @@
 {
   "name": "electron-ai-starter",
-  "version": "1.0.0",
-  "description": "A modern Electron application template with React, TypeScript, Tailwind CSS, and AI chat integration",
+  "version": "0.1.0",
+  "description": "This template provides everything you need to build desktop applications with AI capabilities.",
   "main": "./out/main/index.js",
   "author": "Your Name",
   "homepage": "https://your-domain.com",
