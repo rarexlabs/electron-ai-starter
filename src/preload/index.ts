@@ -16,8 +16,8 @@ export interface AIConfig {
   apiKey: string
 }
 
-// Unified API implementation using secure IPC
-const unifiedAPI = {
+// API implementation using secure IPC
+const API = {
   // Settings operations
   getSetting: (key: string): Promise<unknown> => {
     return ipcRenderer.invoke('get-setting', key)
@@ -84,7 +84,7 @@ const unifiedAPI = {
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
-    contextBridge.exposeInMainWorld('api', unifiedAPI)
+    contextBridge.exposeInMainWorld('api', API)
   } catch (error) {
     log.error('Context bridge error:', error)
   }
@@ -92,5 +92,5 @@ if (process.contextIsolated) {
   // @ts-ignore (define in dts)
   window.electron = electronAPI
   // @ts-ignore (define in dts)
-  window.api = unifiedAPI
+  window.api = API
 }
