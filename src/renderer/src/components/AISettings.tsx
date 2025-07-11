@@ -38,6 +38,7 @@ export function AISettings({
   const [connectionTestSuccess, setConnectionTestSuccess] = useState(false)
   const [connectionTestError, setConnectionTestError] = useState(false)
   const [isClearing, setIsClearing] = useState(false)
+  const [saveSuccess, setSaveSuccess] = useState(false)
 
   const loadSettings = useCallback(async (): Promise<void> => {
     try {
@@ -112,6 +113,7 @@ export function AISettings({
 
   const saveSettings = async (): Promise<void> => {
     setIsSaving(true)
+    setSaveSuccess(false)
     try {
       const currentAiSettings = (await window.api.getSetting('ai')) || {}
       const updatedSettings = {
@@ -122,7 +124,8 @@ export function AISettings({
       }
 
       await window.api.setSetting('ai', updatedSettings)
-      await testConnection()
+      setSaveSuccess(true)
+      setTimeout(() => setSaveSuccess(false), 3000)
     } catch (error) {
       logger.error('Failed to save settings:', error)
     } finally {
@@ -146,6 +149,7 @@ export function AISettings({
       setModels([])
       setConnectionTestSuccess(false)
       setConnectionTestError(false)
+      setSaveSuccess(false)
       onProviderChange?.('openai')
       logger.info('AI settings cleared successfully')
     } catch (error) {
@@ -265,11 +269,22 @@ export function AISettings({
             </Button>
           </div>
 
-          <Button onClick={saveSettings} disabled={!apiKey || isSaving} size="sm">
+          <Button 
+            onClick={saveSettings} 
+            disabled={!apiKey || isSaving} 
+            size="sm"
+            variant={saveSuccess ? 'default' : 'default'}
+            className={saveSuccess ? 'bg-green-600 hover:bg-green-700 text-white' : ''}
+          >
             {isSaving ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Saving...
+              </>
+            ) : saveSuccess ? (
+              <>
+                <CheckCircle className="h-4 w-4" />
+                Settings Saved!
               </>
             ) : (
               'Save Settings'
