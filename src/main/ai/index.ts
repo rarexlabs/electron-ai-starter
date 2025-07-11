@@ -47,6 +47,6 @@ export async function streamText(
 }
 
 // Utility function to abort a chat session
-export function abortAIChat(sessionId: string): boolean {
+export function abortStream(sessionId: string): boolean {
   return sessionStore.abortSession(sessionId)
 }

@@ -3,7 +3,7 @@ import { dirname } from 'path'
 import { getSetting, setSetting, getAllSettings, clearSetting, clearDatabase } from './settings'
 import { getDatabasePath, getLogPath } from './paths'
 import { mainLogger } from './logger'
-import { streamText, abortAIChat, listAvailableModel, testConnection } from './ai'
+import { streamText, abortStream, listAvailableModel, testConnection } from './ai'
 import type { AIProvider, AIConfig, AISettings } from '@common/types'
 import { FACTORY } from './ai/factory'
 
@@ -97,7 +97,7 @@ export function setupIpcHandlers(): void {
   })
 
   ipcMain.handle('abort-ai-chat', async (_, sessionId: string) => {
-    const success = abortAIChat(sessionId)
+    const success = abortStream(sessionId)
     if (success) {
       mainLogger.info(`🚫 AI chat session ${sessionId} successfully aborted`)
     } else {
