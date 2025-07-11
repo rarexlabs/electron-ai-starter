@@ -71,3 +71,11 @@ $ npm run format
 # Lint code
 $ npm run lint
 ```
+
+## Future Roadmap
+
+### 🔄 Backend Process
+- **Utility Process for Backend Tasks** - Implement Electron utility processes to prevent CPU-bound operations from [blocking the main process] (https://www.electronjs.org/docs/latest/tutorial/performance#3-blocking-the-main-process)
+
+### 🤖 Advanced AI Capabilities  
+- **Mastra Integration for Agentic Workflows** - Integrate Mastra framework to add production-ready agentic capabilities including workflows, agent memory, RAG pipelines, and evaluation systems while maintaining compatibility with existing AI SDK setup
