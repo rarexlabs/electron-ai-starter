@@ -2,18 +2,18 @@ import { streamText } from 'ai'
 import { mainLogger } from '@main/logger'
 import { createModel } from './factory'
 import type { AIMessage, AIConfig } from '@common/types'
-import type { StreamSession, StreamSessionStore } from './stream-session-store'
+import type { StreamSession } from './stream-session-store'
 
 function isAbortError(error: unknown): boolean {
   return error instanceof Error && (error.message === 'AbortError' || error.name === 'AbortError')
 }
 
-export async function streamAIToSession(
-  session: StreamSession,
-  messages: AIMessage[],
+export async function streamSessionText(
   config: AIConfig,
+  messages: AIMessage[],
+  session: StreamSession,
   send: (channel: string, ...args: unknown[]) => void,
-  store: StreamSessionStore
+  cb: () => void
 ): Promise<void> {
   try {
     const model = createModel(config.provider, config.apiKey, config.model)
@@ -65,7 +65,7 @@ export async function streamAIToSession(
       send('ai-chat-error', session.id, errorMessage)
     }
   } finally {
-    // Clean up session
-    store.cleanupSession(session.id)
+    // Execute caller-provided cleanup
+    cb()
   }
 }

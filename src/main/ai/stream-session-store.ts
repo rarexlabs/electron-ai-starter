@@ -18,7 +18,7 @@ export class StreamSession {
 export class StreamSessionStore {
   private activeStreamSessions = new Map<string, StreamSession>()
 
-  createSession(): StreamSession {
+  startSession(): StreamSession {
     const sessionId = Date.now().toString()
     const session = new StreamSession(sessionId)
 
@@ -34,13 +34,13 @@ export class StreamSessionStore {
     const session = this.activeStreamSessions.get(sessionId)
     if (session) {
       session.abort()
-      this.cleanupSession(sessionId)
+      this.endSession(sessionId)
       return true
     }
     return false
   }
 
-  cleanupSession(sessionId: string): void {
+  endSession(sessionId: string): void {
     this.activeStreamSessions.delete(sessionId)
   }
 }

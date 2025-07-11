@@ -1,8 +1,8 @@
 import type { AIMessage, AIConfig } from '@common/types'
-import { streamAIToSession } from './stream'
+import { streamSessionText } from './stream'
 import { sessionStore } from './stream-session-store'
 import { createModel } from './factory'
-import { streamText } from 'ai'
+import { streamText as _streamText } from 'ai'
 import { mainLogger } from '@main/logger'
 
 export { listAvailableModel } from './factory'
@@ -10,7 +10,7 @@ export { listAvailableModel } from './factory'
 export async function testConnection(config: AIConfig): Promise<boolean> {
   try {
     const aiModel = createModel(config.provider, config.apiKey, config.model)
-    const result = streamText({
+    const result = _streamText({
       model: aiModel,
       messages: [{ role: 'user', content: 'Test' }],
       maxTokens: 5
@@ -30,16 +30,18 @@ export async function testConnection(config: AIConfig): Promise<boolean> {
 }
 
 // Main orchestration function for AI chat processing
-export async function streamAIChat(
-  messages: AIMessage[],
+export async function streamText(
   config: AIConfig,
+  messages: AIMessage[],
   send: (channel: string, ...args: unknown[]) => void
 ): Promise<string> {
   // Create and store session
-  const session = sessionStore.createSession()
+  const session = sessionStore.startSession()
 
   // Start streaming directly to session (handles everything in one function)
-  streamAIToSession(session, messages, config, send, sessionStore)
+  streamSessionText(config, messages, session, send, () => {
+    sessionStore.endSession(session.id)
+  })
 
   return session.id
 }

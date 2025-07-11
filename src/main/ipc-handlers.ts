@@ -3,7 +3,7 @@ import { dirname } from 'path'
 import { getSetting, setSetting, getAllSettings, clearSetting, clearDatabase } from './settings'
 import { getDatabasePath, getLogPath } from './paths'
 import { mainLogger } from './logger'
-import { streamAIChat, abortAIChat, listAvailableModel, testConnection } from './ai'
+import { streamText, abortAIChat, listAvailableModel, testConnection } from './ai'
 import type { AIProvider, AIConfig, AISettings } from '@common/types'
 import { FACTORY } from './ai/factory'
 
@@ -89,7 +89,7 @@ export function setupIpcHandlers(): void {
         apiKey
       }
 
-      return await streamAIChat(messages, config, event.sender.send.bind(event.sender))
+      return await streamText(config, messages, event.sender.send.bind(event.sender))
     } catch (error) {
       mainLogger.error('AI chat stream error:', error)
       throw error
