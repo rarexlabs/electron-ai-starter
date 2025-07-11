@@ -6,7 +6,7 @@ export interface StreamingResult {
   isAborted: () => boolean
 }
 
-export class AIChatStream {
+export class AIChatManager {
   private activeStreams = new Map<
     string,
     {
@@ -17,7 +17,7 @@ export class AIChatStream {
     }
   >()
 
-  async start(messages: AIMessage[], abortSignal?: AbortSignal): Promise<StreamingResult> {
+  async streamResponse(messages: AIMessage[], abortSignal?: AbortSignal): Promise<StreamingResult> {
     try {
       const abortController = new AbortController()
 
@@ -256,4 +256,4 @@ export class AIChatStream {
 }
 
 // Singleton instance
-export const aiChatStream = new AIChatStream()
+export const aiChatManager = new AIChatManager()

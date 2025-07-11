@@ -16,7 +16,7 @@ declare global {
       getLogPath(): Promise<string>
       openFolder(folderPath: string): Promise<void>
       // AI operations
-      streamAIChat(messages: AIMessage[], provider?: AIProvider): Promise<string>
+      streamAIChat(messages: AIMessage[]): Promise<string>
       abortAIChat(sessionId: string): Promise<void>
       getAIModels(provider: AIProvider): Promise<string[]>
       testAIProviderConnection(config: AIConfig): Promise<boolean>

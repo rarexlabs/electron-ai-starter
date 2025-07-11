@@ -2,7 +2,7 @@ import { AssistantRuntimeProvider, useLocalRuntime } from '@assistant-ui/react'
 import type { ChatModelAdapter, ThreadMessage } from '@assistant-ui/react'
 import { ReactNode } from 'react'
 import { logger } from '@/lib/logger'
-import { aiChatStream } from '@renderer/lib/ai-chat-stream'
+import { aiChatManager } from '@renderer/lib/ai-chat-manager'
 
 const AIModelAdapter: ChatModelAdapter = {
   async *run({ messages, abortSignal }) {
@@ -15,16 +15,11 @@ const AIModelAdapter: ChatModelAdapter = {
         .join('')
     }))
 
-    logger.info('🚀 Starting AI stream with messages:', formattedMessages.length)
-
-    // Start streaming through the bridge - all session management is handled internally
-    const { stream, isAborted } = await aiChatStream.start(formattedMessages, abortSignal)
+    logger.info('🚀 Starting AI stream with message count: ', formattedMessages.length)
+    const { stream, isAborted } = await aiChatManager.streamResponse(formattedMessages, abortSignal)
 
     let fullContent = ''
-
-    // Process streaming chunks
     for await (const chunk of stream) {
-      // Check if aborted during streaming
       if (isAborted()) {
         logger.info('🚫 Stream aborted during processing')
         return
