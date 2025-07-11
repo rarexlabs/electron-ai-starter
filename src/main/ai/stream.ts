@@ -54,13 +54,13 @@ export async function* streamAIResponse(
   }
 }
 
-export function createStreamSession(messages: AIMessage[], provider?: AIProvider): AIStreamSession {
+export function createStreamSession(messages: AIMessage[], provider: AIProvider): AIStreamSession {
   const sessionId = Date.now().toString()
   const abortController = new AbortController()
 
   const session: AIStreamSession = {
     id: sessionId,
-    provider: provider || 'openai',
+    provider: provider,
     messages,
     abortController,
     createdAt: new Date()
