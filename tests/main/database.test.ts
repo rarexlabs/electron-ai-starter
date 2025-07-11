@@ -186,7 +186,7 @@ describe('Database Operations', () => {
 
     it('should use memory journal mode for in-memory database', async () => {
       const db = getTestDatabase()
-      const journalMode = await db.get(`PRAGMA journal_mode`) as { journal_mode: string }
+      const journalMode = (await db.get(`PRAGMA journal_mode`)) as { journal_mode: string }
       expect(journalMode.journal_mode).toBe('memory')
     })
   })

@@ -20,4 +20,3 @@ export interface AISettings {
   google_api_key?: string
   google_model?: string
 }
-

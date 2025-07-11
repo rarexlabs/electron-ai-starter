@@ -1,8 +1,5 @@
 import type { AIMessage, AIConfig } from '@common/types'
-import {
-  sendAIStreamChunk,
-  streamAIResponse
-} from './stream'
+import { streamAIToSession } from './stream'
 import { sessionStore } from './stream-session-store'
 import { createModel } from './factory'
 import { streamText } from 'ai'
@@ -41,11 +38,8 @@ export async function streamAIChat(
   // Create and store session
   const session = sessionStore.createSession()
 
-  // Start streaming in the background
-  const streamGenerator = streamAIResponse(messages, config, session.abortSignal)
-
-  // Process stream chunks asynchronously
-  sendAIStreamChunk(session, streamGenerator, send, sessionStore)
+  // Start streaming directly to session (handles everything in one function)
+  streamAIToSession(session, messages, config, send, sessionStore)
 
   return session.id
 }
