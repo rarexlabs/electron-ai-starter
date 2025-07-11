@@ -2,7 +2,7 @@ import { AssistantRuntimeProvider, useLocalRuntime } from '@assistant-ui/react'
 import type { ChatModelAdapter, ThreadMessage } from '@assistant-ui/react'
 import { ReactNode } from 'react'
 import { logger } from '@/lib/logger'
-import { aiStreamBridge } from '@/lib/ipc-bridge'
+import { aiChatStream } from '@/lib/ipc-bridge'
 
 const AIModelAdapter: ChatModelAdapter = {
   async *run({ messages, abortSignal }) {
@@ -18,7 +18,7 @@ const AIModelAdapter: ChatModelAdapter = {
     logger.info('🚀 Starting AI stream with messages:', formattedMessages.length)
 
     // Start streaming through the bridge - all session management is handled internally
-    const { stream, isAborted } = await aiStreamBridge.startStream(formattedMessages, abortSignal)
+    const { stream, isAborted } = await aiChatStream.start(formattedMessages, abortSignal)
 
     let fullContent = ''
 
