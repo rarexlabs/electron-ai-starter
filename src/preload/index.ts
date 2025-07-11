@@ -10,6 +10,12 @@ export interface AIMessage {
   content: string
 }
 
+export interface AIConfig {
+  provider: AIProvider
+  model: string
+  apiKey: string
+}
+
 // Unified API implementation using secure IPC
 const unifiedAPI = {
   // Settings operations
@@ -58,8 +64,8 @@ const unifiedAPI = {
     return ipcRenderer.invoke('get-ai-models', provider)
   },
 
-  testAIProviderConnection: (provider: AIProvider): Promise<boolean> => {
-    return ipcRenderer.invoke('test-ai-provider-connection', provider)
+  testAIProviderConnection: (config: AIConfig): Promise<boolean> => {
+    return ipcRenderer.invoke('test-ai-provider-connection', config)
   },
 
   // Raw IPC event methods for renderer to handle streaming events

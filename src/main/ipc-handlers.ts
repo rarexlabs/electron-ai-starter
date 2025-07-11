@@ -116,30 +116,8 @@ export function setupIpcHandlers(): void {
     }
   })
 
-  ipcMain.handle('test-ai-provider-connection', async (_, provider: AIProvider) => {
+  ipcMain.handle('test-ai-provider-connection', async (_, config: AIConfig) => {
     try {
-      // Get AI settings from database
-      const aiSettings = ((await getSetting('ai')) as AISettings) || {}
-
-      // Get API key for the provider
-      const apiKeyField = `${provider}_api_key` as keyof AISettings
-      const apiKey = aiSettings[apiKeyField] as string
-
-      if (!apiKey) {
-        throw new Error(`API key not found for provider: ${provider}`)
-      }
-
-      // Get model for the provider
-      const modelField = `${provider}_model` as keyof AISettings
-      const model = (aiSettings[modelField] as string) || FACTORY[provider].default
-
-      // Create config object
-      const config: AIConfig = {
-        provider,
-        model,
-        apiKey
-      }
-
       return await testConnection(config)
     } catch (error) {
       mainLogger.error('AI connection test failed:', error)

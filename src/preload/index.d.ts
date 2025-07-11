@@ -1,6 +1,6 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
 
-export type { AIProvider, AIMessage, AISettings } from '../types/ai'
+export type { AIProvider, AIMessage, AISettings, AIConfig } from '../types/ai'
 
 declare global {
   interface Window {
@@ -19,7 +19,7 @@ declare global {
       streamAIChat(messages: AIMessage[], provider?: AIProvider): Promise<string>
       abortAIChat(sessionId: string): Promise<void>
       getAIModels(provider: AIProvider): Promise<string[]>
-      testAIProviderConnection(provider: AIProvider): Promise<boolean>
+      testAIProviderConnection(config: AIConfig): Promise<boolean>
       // Raw IPC event methods for renderer to handle streaming events
       on(channel: string, listener: (...args: unknown[]) => void): void
       off(channel: string, listener: (...args: unknown[]) => void): void

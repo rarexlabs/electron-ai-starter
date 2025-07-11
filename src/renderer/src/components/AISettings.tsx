@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { CheckCircle, Loader2, Trash2 } from 'lucide-react'
-import type { AIProvider, AISettings } from '../../../preload/index.d'
+import type { AIProvider, AISettings, AIConfig } from '../../../preload/index.d'
 import { logger } from '@/lib/logger'
 
 interface AISettingsProps {
@@ -78,15 +78,13 @@ export function AISettings({
     setIsTesting(true)
     setConnectionTestSuccess(false)
     try {
-      const currentAiSettings = (await window.api.getSetting('ai')) || {}
-      const updatedSettings = {
-        ...currentAiSettings,
-        [`${selectedProvider}_api_key`]: apiKey,
-        [`${selectedProvider}_model`]: model
+      const config: AIConfig = {
+        provider: selectedProvider,
+        model: model,
+        apiKey: apiKey
       }
 
-      await window.api.setSetting('ai', updatedSettings)
-      const connected = await window.api.testAIProviderConnection(selectedProvider)
+      const connected = await window.api.testAIProviderConnection(config)
 
       if (connected) {
         setConnectionTestSuccess(true)
