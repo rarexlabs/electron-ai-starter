@@ -21,7 +21,7 @@ const AIModelAdapter: ChatModelAdapter = {
     let fullContent = ''
     for await (const chunk of stream) {
       if (abortSignal?.aborted) {
-        logger.info('❎ Stream aborted during processing')
+        logger.info('Stream aborted during processing')
         return
       }
 

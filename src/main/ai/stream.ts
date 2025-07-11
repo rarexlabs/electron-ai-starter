@@ -21,7 +21,7 @@ export async function streamSessionText(
     // Add abort signal listener for logging
     session.abortSignal.addEventListener('abort', () => {
       mainLogger.info(
-        `❎ ABORT SIGNAL RECEIVED - Cancelling AI provider request for ${config.provider} (session: ${session.id})`
+        `ABORT SIGNAL RECEIVED - Cancelling AI provider request for ${config.provider} (session: ${session.id})`
       )
     })
 
@@ -40,7 +40,7 @@ export async function streamSessionText(
     for await (const chunk of result.textStream) {
       // Check if session was aborted
       if (session.abortSignal.aborted) {
-        mainLogger.info(`❎ Stream aborted during chunk processing for session: ${session.id}`)
+        mainLogger.info(`Stream aborted during chunk processing for session: ${session.id}`)
         send('ai-chat-aborted', session.id)
         return
       }
@@ -56,7 +56,7 @@ export async function streamSessionText(
     }
   } catch (error) {
     if (isAbortError(error)) {
-      mainLogger.info(`❎ AI chat stream was aborted for session: ${session.id}`)
+      mainLogger.info(`AI chat stream was aborted for session: ${session.id}`)
       send('ai-chat-aborted', session.id)
     } else {
       mainLogger.error('AI chat stream error:', error)

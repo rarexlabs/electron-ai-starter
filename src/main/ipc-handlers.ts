@@ -99,7 +99,7 @@ export function setupIpcHandlers(): void {
   ipcMain.handle('abort-ai-chat', async (_, sessionId: string) => {
     const success = abortStream(sessionId)
     if (success) {
-      mainLogger.info(`🚫 AI chat session ${sessionId} successfully aborted`)
+      mainLogger.info(`AI chat session ${sessionId} successfully aborted`)
     } else {
       mainLogger.warn(`❌ Attempted to abort non-existent session: ${sessionId}`)
     }
