@@ -1,11 +1,6 @@
 import { logger } from '@/lib/logger'
 import type { AIMessage } from '../../../types/ai'
 
-export interface StreamingResult {
-  stream: AsyncGenerator<string, void, unknown>
-  isAborted: () => boolean
-}
-
 export class AIChatManager {
   private activeStreams = new Map<
     string,
@@ -17,7 +12,10 @@ export class AIChatManager {
     }
   >()
 
-  async streamResponse(messages: AIMessage[], abortSignal?: AbortSignal): Promise<StreamingResult> {
+  async streamResponse(
+    messages: AIMessage[],
+    abortSignal?: AbortSignal
+  ): Promise<AsyncGenerator<string, void, unknown>> {
     try {
       const abortController = new AbortController()
 
@@ -31,10 +29,7 @@ export class AIChatManager {
 
       const stream = this.createStreamGenerator(sessionId, abortController.signal)
 
-      return {
-        stream,
-        isAborted: () => this.getSession(sessionId)?.status === 'aborted'
-      }
+      return stream
     } catch (error) {
       logger.error('Failed to start stream:', error)
       throw error
@@ -74,17 +69,6 @@ export class AIChatManager {
     }
 
     return sessionState
-  }
-
-  private getSession(sessionId: string):
-    | {
-        cleanup: () => void
-        abortController: AbortController
-        status: 'active' | 'completed' | 'aborted' | 'error'
-        error: string | null
-      }
-    | undefined {
-    return this.activeStreams.get(sessionId)
   }
 
   private updateSessionState(

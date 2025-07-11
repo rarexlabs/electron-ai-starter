@@ -16,11 +16,11 @@ const AIModelAdapter: ChatModelAdapter = {
     }))
 
     logger.info('🚀 Starting AI stream with message count: ', formattedMessages.length)
-    const { stream, isAborted } = await aiChatManager.streamResponse(formattedMessages, abortSignal)
+    const stream = await aiChatManager.streamResponse(formattedMessages, abortSignal)
 
     let fullContent = ''
     for await (const chunk of stream) {
-      if (isAborted()) {
+      if (abortSignal?.aborted) {
         logger.info('🚫 Stream aborted during processing')
         return
       }
