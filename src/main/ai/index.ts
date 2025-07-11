@@ -1,4 +1,4 @@
-import type { AIProvider, AIMessage } from '../../types/ai'
+import type { AIMessage, AIConfig } from '../../types/ai'
 import {
   createStreamSession,
   cleanupStreamSession,
@@ -12,24 +12,24 @@ import { mainLogger } from '../logger'
 
 export { listAvailableModel } from './factory'
 
-export async function testConnection(provider: AIProvider): Promise<boolean> {
+export async function testConnection(config: AIConfig): Promise<boolean> {
   try {
-    const model = await createModel(provider)
+    const aiModel = createModel(config.provider, config.apiKey, config.model)
     const result = streamText({
-      model,
+      model: aiModel,
       messages: [{ role: 'user', content: 'Test' }],
       maxTokens: 5
     })
 
     for await (const chunk of result.textStream) {
       if (chunk?.length > 0) {
-        mainLogger.info(`Connection test successful for ${provider}`)
+        mainLogger.info(`Connection test successful for ${config.provider}`)
         return true
       }
     }
     return false
   } catch (error) {
-    mainLogger.error(`Connection test failed for ${provider}:`, error)
+    mainLogger.error(`Connection test failed for ${config.provider}:`, error)
     return false
   }
 }
@@ -37,19 +37,14 @@ export async function testConnection(provider: AIProvider): Promise<boolean> {
 // Main orchestration function for AI chat processing
 export async function streamAIChat(
   messages: AIMessage[],
-  provider?: AIProvider,
-  send?: (channel: string, ...args: unknown[]) => void
+  config: AIConfig,
+  send: (channel: string, ...args: unknown[]) => void
 ): Promise<string> {
   // Create and store session
-  const session = createStreamSession(messages, provider)
-
-  // If no send function provided, just return session ID (for non-IPC usage)
-  if (!send) {
-    return session.id
-  }
+  const session = createStreamSession(messages, config.provider)
 
   // Start streaming in the background
-  const streamGenerator = streamAIResponse(messages, provider, session.abortController.signal)
+  const streamGenerator = streamAIResponse(messages, config, session.abortController.signal)
 
   // Process stream chunks asynchronously
   processAIStream(session, send, streamGenerator)

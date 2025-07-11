@@ -1,28 +1,24 @@
 import { streamText } from 'ai'
-import { getSetting } from '../settings'
 import { mainLogger } from '../logger'
 import { createModel } from './factory'
-import type { AIProvider, AIMessage, AIStreamSession, AISettings } from '../../types/ai'
+import type { AIProvider, AIMessage, AIStreamSession, AIConfig } from '../../types/ai'
 
 // Track active streaming sessions
 export const activeStreamSessions = new Map<string, AIStreamSession>()
 
 export async function* streamAIResponse(
   messages: AIMessage[],
-  provider?: AIProvider,
+  config: AIConfig,
   abortSignal?: AbortSignal
 ): AsyncGenerator<string, void, unknown> {
-  const aiSettings = ((await getSetting('ai')) as AISettings) || {}
-  const currentProvider = provider || aiSettings.default_provider || 'openai'
-
   try {
-    const model = await createModel(currentProvider)
+    const model = createModel(config.provider, config.apiKey, config.model)
 
     // Add abort signal listener for logging
     if (abortSignal) {
       abortSignal.addEventListener('abort', () => {
         mainLogger.info(
-          `🚫 ABORT SIGNAL RECEIVED - Cancelling AI provider request for ${currentProvider}`
+          `🚫 ABORT SIGNAL RECEIVED - Cancelling AI provider request for ${config.provider}`
         )
         mainLogger.info('🚫 This should prevent further token consumption from the AI provider')
       })
@@ -36,7 +32,7 @@ export async function* streamAIResponse(
       abortSignal
     })
 
-    mainLogger.info(`AI response streaming started with ${currentProvider}`)
+    mainLogger.info(`AI response streaming started with ${config.provider}`)
 
     for await (const chunk of result.textStream) {
       // Check if aborted during streaming
@@ -47,10 +43,10 @@ export async function* streamAIResponse(
       yield chunk
     }
 
-    mainLogger.info(`✅ AI response streaming completed successfully with ${currentProvider}`)
+    mainLogger.info(`✅ AI response streaming completed successfully with ${config.provider}`)
   } catch (error) {
     if (error instanceof Error && (error.message === 'AbortError' || error.name === 'AbortError')) {
-      mainLogger.info(`🚫 AI stream was aborted for ${currentProvider}`)
+      mainLogger.info(`🚫 AI stream was aborted for ${config.provider}`)
     } else {
       mainLogger.error('AI chat error:', error)
     }

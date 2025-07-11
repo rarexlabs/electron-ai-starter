@@ -1,7 +1,6 @@
 import { createOpenAI } from '@ai-sdk/openai'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
-import { getSetting } from '../settings'
 import type { AIProvider } from '../../types/ai'
 import type { LanguageModelV1 } from 'ai'
 
@@ -33,15 +32,7 @@ export async function listAvailableModel(provider: AIProvider): Promise<string[]
   return FACTORY[provider]?.available || []
 }
 
-export async function createModel(provider: AIProvider): Promise<LanguageModelV1> {
-  const aiSettings = (await getSetting('ai')) || {}
-  const apiKey = aiSettings[`${provider}_api_key`]
-  const model = aiSettings[`${provider}_model`]
-
-  if (!apiKey) {
-    throw new Error(`API key not found for ${provider}`)
-  }
-
+export function createModel(provider: AIProvider, apiKey: string, model: string): LanguageModelV1 {
   const config = FACTORY[provider]
-  return config.createModel(apiKey, model || config.default)
+  return config.createModel(apiKey, model)
 }

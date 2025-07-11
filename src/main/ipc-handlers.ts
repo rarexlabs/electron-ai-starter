@@ -4,7 +4,8 @@ import { getSetting, setSetting, getAllSettings, clearSetting, clearDatabase } f
 import { getDatabasePath, getLogPath } from './paths'
 import { mainLogger } from './logger'
 import { streamAIChat, abortAIChat, listAvailableModel, testConnection } from './ai'
-import type { AIProvider } from '../types/ai'
+import type { AIProvider, AIConfig, AISettings } from '../types/ai'
+import { FACTORY } from './ai/factory'
 
 export function setupIpcHandlers(): void {
   // Database IPC handlers
@@ -61,7 +62,32 @@ export function setupIpcHandlers(): void {
   // AI Chat IPC handlers
   ipcMain.handle('stream-ai-chat', async (event, messages, provider?: AIProvider) => {
     try {
-      return await streamAIChat(messages, provider, event.sender.send.bind(event.sender))
+      // Get AI settings from database
+      const aiSettings = ((await getSetting('ai')) as AISettings) || {}
+
+      // Determine which provider to use
+      const selectedProvider = provider || aiSettings.default_provider || 'openai'
+
+      // Get API key for the selected provider
+      const apiKeyField = `${selectedProvider}_api_key` as keyof AISettings
+      const apiKey = aiSettings[apiKeyField] as string
+
+      if (!apiKey) {
+        throw new Error(`API key not found for provider: ${selectedProvider}`)
+      }
+
+      // Get model for the selected provider
+      const modelField = `${selectedProvider}_model` as keyof AISettings
+      const model = (aiSettings[modelField] as string) || FACTORY[selectedProvider].default
+
+      // Create config object
+      const config: AIConfig = {
+        provider: selectedProvider,
+        model,
+        apiKey
+      }
+
+      return await streamAIChat(messages, config, event.sender.send.bind(event.sender))
     } catch (error) {
       mainLogger.error('AI chat stream error:', error)
       throw error
@@ -89,7 +115,29 @@ export function setupIpcHandlers(): void {
 
   ipcMain.handle('test-ai-provider-connection', async (_, provider: AIProvider) => {
     try {
-      return await testConnection(provider)
+      // Get AI settings from database
+      const aiSettings = ((await getSetting('ai')) as AISettings) || {}
+
+      // Get API key for the provider
+      const apiKeyField = `${provider}_api_key` as keyof AISettings
+      const apiKey = aiSettings[apiKeyField] as string
+
+      if (!apiKey) {
+        throw new Error(`API key not found for provider: ${provider}`)
+      }
+
+      // Get model for the provider
+      const modelField = `${provider}_model` as keyof AISettings
+      const model = (aiSettings[modelField] as string) || FACTORY[provider].default
+
+      // Create config object
+      const config: AIConfig = {
+        provider,
+        model,
+        apiKey
+      }
+
+      return await testConnection(config)
     } catch (error) {
       mainLogger.error('AI connection test failed:', error)
       return false
