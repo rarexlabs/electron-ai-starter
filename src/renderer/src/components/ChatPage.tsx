@@ -1,7 +1,7 @@
 import { ArrowLeft, MessageCircle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Thread } from '@/components/assistant-ui/thread'
-import { AIRuntimeProvider } from '@/components/AIRuntimeProvider'
+import { Button } from '@renderer/components/ui/button'
+import { Thread } from '@renderer/components/assistant-ui/thread'
+import { AIRuntimeProvider } from '@renderer/components/AIRuntimeProvider'
 
 interface ChatPageProps {
   onBack: () => void

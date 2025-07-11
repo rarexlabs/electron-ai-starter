@@ -1,7 +1,7 @@
 import { AssistantRuntimeProvider, useLocalRuntime } from '@assistant-ui/react'
 import type { ChatModelAdapter, ThreadMessage } from '@assistant-ui/react'
 import { ReactNode } from 'react'
-import { logger } from '@/lib/logger'
+import { logger } from '@renderer/lib/logger'
 import { streamResponse } from '@renderer/lib/ai-chat'
 
 const AIModelAdapter: ChatModelAdapter = {

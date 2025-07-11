@@ -3,8 +3,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Save } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { logger } from '@/lib/logger'
+import { Button } from '@renderer/components/ui/button'
+import { logger } from '@renderer/lib/logger'
 import {
   Card,
   CardContent,
@@ -12,7 +12,7 @@ import {
   CardTitle,
   CardDescription,
   CardFooter
-} from '@/components/ui/card'
+} from '@renderer/components/ui/card'
 import {
   Form,
   FormControl,
@@ -20,8 +20,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
+} from '@renderer/components/ui/form'
+import { Input } from '@renderer/components/ui/input'
 
 const dummyDataSchema = z.object({
   settingA: z

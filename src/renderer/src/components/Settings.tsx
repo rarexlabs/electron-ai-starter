@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { ArrowLeft, Trash2, FolderOpen } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { logger } from '@/lib/logger'
+import { Button } from '@renderer/components/ui/button'
+import { logger } from '@renderer/lib/logger'
 import {
   Card,
   CardContent,
@@ -9,7 +9,7 @@ import {
   CardTitle,
   CardDescription,
   CardFooter
-} from '@/components/ui/card'
+} from '@renderer/components/ui/card'
 import { AISettings } from './AISettings'
 
 interface SettingsProps {

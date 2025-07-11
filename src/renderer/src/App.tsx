@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Settings as SettingsIcon, MessageCircle } from 'lucide-react'
-import { Card, CardContent, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Settings } from '@/components/Settings'
-import { DummyDataManager } from '@/components/DummyDataManager'
-import { ChatPage } from '@/components/ChatPage'
+import { Card, CardContent, CardDescription } from '@renderer/components/ui/card'
+import { Button } from '@renderer/components/ui/button'
+import { Settings } from '@renderer/components/Settings'
+import { DummyDataManager } from '@renderer/components/DummyDataManager'
+import { ChatPage } from '@renderer/components/ChatPage'
 import log from 'electron-log/renderer'
 
 function App(): React.JSX.Element {

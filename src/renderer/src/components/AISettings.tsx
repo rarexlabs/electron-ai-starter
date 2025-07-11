@@ -1,18 +1,18 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Button } from '@renderer/components/ui/button'
+import { Input } from '@renderer/components/ui/input'
+import { Label } from '@renderer/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from '@/components/ui/select'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+} from '@renderer/components/ui/select'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@renderer/components/ui/card'
 import { CheckCircle, Loader2, Trash2 } from 'lucide-react'
 import type { AIProvider, AISettings, AIConfig } from '@common/types'
-import { logger } from '@/lib/logger'
+import { logger } from '@renderer/lib/logger'
 
 interface AISettingsProps {
   onProviderChange?: (provider: AIProvider) => void

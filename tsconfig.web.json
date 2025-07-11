@@ -15,10 +15,6 @@
       "@renderer/*": [
         "src/renderer/src/*"
       ],
-      "@/*": ["src/renderer/src/*"],
-      "@/components/*": ["src/renderer/src/components/*"],
-      "@/lib/*": ["src/renderer/src/lib/*"],
-      "@/utils/*": ["src/renderer/src/lib/utils/*"],
       "@common/*": ["src/common/*"]
     }
   }
