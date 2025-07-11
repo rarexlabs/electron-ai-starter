@@ -11,6 +11,5 @@ out
 !.env.example
 
 tmp
-!tmp/.keep
 
 .serena
