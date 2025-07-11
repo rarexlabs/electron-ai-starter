@@ -1,7 +1,7 @@
 import { streamText } from 'ai'
 import { mainLogger } from '@main/logger'
 import { createModel } from './factory'
-import type { AIProvider, AIMessage, AIStreamSession, AIConfig } from '@common/types'
+import type { AIMessage, AIStreamSession, AIConfig } from '@common/types'
 
 // Track active streaming sessions
 export const activeStreamSessions = new Map<string, AIStreamSession>()
@@ -54,14 +54,12 @@ export async function* streamAIResponse(
   }
 }
 
-export function createStreamSession(messages: AIMessage[], provider: AIProvider): AIStreamSession {
+export function createStreamSession(): AIStreamSession {
   const sessionId = Date.now().toString()
   const abortController = new AbortController()
 
   const session: AIStreamSession = {
     id: sessionId,
-    provider: provider,
-    messages,
     abortController,
     createdAt: new Date()
   }

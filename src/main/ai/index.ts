@@ -41,7 +41,7 @@ export async function streamAIChat(
   send: (channel: string, ...args: unknown[]) => void
 ): Promise<string> {
   // Create and store session
-  const session = createStreamSession(messages, config.provider)
+  const session = createStreamSession()
 
   // Start streaming in the background
   const streamGenerator = streamAIResponse(messages, config, session.abortController.signal)

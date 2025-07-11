@@ -23,8 +23,6 @@ export interface AISettings {
 
 export interface AIStreamSession {
   id: string
-  provider: AIProvider
-  messages: AIMessage[]
   abortController: AbortController
   createdAt: Date
 }
