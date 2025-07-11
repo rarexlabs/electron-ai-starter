@@ -28,6 +28,16 @@ A modern, full-featured Electron application template with TypeScript, React, Dr
 - **[Vercel AI SDK](https://github.com/vercel/ai)** - Unified interface for OpenAI, Anthropic, and Google AI providers
 - **[Assistant UI](https://github.com/Yonom/assistant-ui)** - Production-ready chat interface with streaming support
 
+## Screenshots
+
+| Home | AI Chat |
+|------|---------|
+| ![Home](resources/home.png) | ![AI Chat](resources/ai.png) |
+
+| Database | Settings |
+|----------|----------|
+| ![Database](resources/data.png) | ![Settings](resources/settings.png) |
+
 ## Get Started
 
 Fork & clone first, then:
