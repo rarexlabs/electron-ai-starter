@@ -2,7 +2,7 @@ import type { AIMessage, AIConfig } from '../../types/ai'
 import {
   createStreamSession,
   cleanupStreamSession,
-  processAIStream,
+  sendAIStreamChunk,
   streamAIResponse,
   activeStreamSessions
 } from './stream'
@@ -47,7 +47,7 @@ export async function streamAIChat(
   const streamGenerator = streamAIResponse(messages, config, session.abortController.signal)
 
   // Process stream chunks asynchronously
-  processAIStream(session, send, streamGenerator)
+  sendAIStreamChunk(session, streamGenerator, send)
 
   return session.id
 }
