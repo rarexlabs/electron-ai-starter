@@ -5,29 +5,29 @@ A modern, full-featured Electron application template with TypeScript, React, Dr
 ## Features
 
 ### 🔧 Build Tooling
-- **Electron + Vite** - Lightning-fast development with hot reload and optimized production builds
-- **SWC** - Ultra-fast TypeScript/JavaScript compilation for maximum speed
-- **Cross-Platform** - Build for Windows, macOS, and Linux with electron-builder
+- **[Electron](https://github.com/electron/electron) + [Vite](https://github.com/vitejs/vite)** - Lightning-fast development with hot reload and optimized production builds
+- **[SWC](https://github.com/swc-project/swc)** - Ultra-fast TypeScript/JavaScript compilation for maximum speed
+- **Cross-Platform** - Build for Windows, macOS, and Linux with [electron-builder](https://github.com/electron-userland/electron-builder)
 
 ### 🛠️ Development Tooling
-- **TypeScript** - Full type safety across main and renderer processes
-- **ESLint** - Code linting with TypeScript and React configurations
-- **Prettier** - Automated code formatting for consistent style
-- **Electron Log** - Unified logging across main and renderer processes
-- **Vitest** - Fast unit testing with TypeScript support
+- **[TypeScript](https://github.com/microsoft/TypeScript)** - Full type safety across main and renderer processes
+- **[ESLint](https://github.com/eslint/eslint)** - Code linting with TypeScript and React configurations
+- **[Prettier](https://github.com/prettier/prettier)** - Automated code formatting for consistent style
+- **[Electron Log](https://github.com/megahertz/electron-log)** - Unified logging across main and renderer processes
+- **[Vitest](https://github.com/vitest-dev/vitest)** - Fast unit testing with TypeScript support
 
 ### 🗄️ Database
-- **better-sqlite3 + Drizzle ORM** - Type-safe database operations with auto-migrations
+- **[better-sqlite3](https://github.com/WiseLibs/better-sqlite3) + [Drizzle ORM](https://github.com/drizzle-team/drizzle-orm)** - Type-safe database operations with auto-migrations
 - **Environment-based paths** - Development and production database separation
 
 ### 🎨 UI & Design
-- **React 19** - Latest React with full TypeScript support
-- **Tailwind CSS 4** - Modern styling with CSS variables and theming
-- **Shadcn/ui** - Beautiful, accessible component library (New York style)
+- **[React](https://github.com/facebook/react) 19** - Latest React with full TypeScript support
+- **[Tailwind CSS](https://github.com/tailwindlabs/tailwindcss) 4** - Modern styling with CSS variables and theming
+- **[Shadcn/ui](https://github.com/shadcn-ui/ui)** - Beautiful, accessible component library (New York style)
 
 ### 🤖 AI Integration
-- **Vercel AI SDK** - Unified interface for OpenAI, Anthropic, and Google AI providers
-- **Assistant UI** - Production-ready chat interface with streaming support
+- **[Vercel AI SDK](https://github.com/vercel/ai)** - Unified interface for OpenAI, Anthropic, and Google AI providers
+- **[Assistant UI](https://github.com/Yonom/assistant-ui)** - Production-ready chat interface with streaming support
 - **Settings Management** - Secure API key storage and connection testing
 
 ## Get Started
