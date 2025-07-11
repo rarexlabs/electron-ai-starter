@@ -65,6 +65,8 @@ export function setupIpcHandlers(): void {
       // Get AI settings from database
       const aiSettings = await getSetting<AISettings>('ai')
 
+      if (!aiSettings) throw new Error(`No AI setting has been created`)
+
       if (!aiSettings.default_provider)
         throw new Error(`No default AI provider founder in the settings`)
 
