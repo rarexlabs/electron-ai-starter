@@ -63,7 +63,7 @@ export function setupIpcHandlers(): void {
   ipcMain.handle('stream-ai-chat', async (event, messages, provider?: AIProvider) => {
     try {
       // Get AI settings from database
-      const aiSettings = ((await getSetting('ai')) as AISettings) || {}
+      const aiSettings = await getSetting<AISettings>('ai')
 
       // Determine which provider to use
       const selectedProvider = provider || aiSettings.default_provider || 'openai'

@@ -3,10 +3,7 @@ import { getDatabase, closeDatabase, removeDatabaseFile } from './db'
 import { settings } from './db/schema'
 import { app } from 'electron'
 
-export async function getSetting(
-  key: string,
-  db?: ReturnType<typeof getDatabase>
-): Promise<unknown> {
+export async function getSetting<T>(key: string, db?: ReturnType<typeof getDatabase>): Promise<T> {
   const database = db || getDatabase()
   const result = await database
     .select({ value: settings.value })
@@ -14,7 +11,7 @@ export async function getSetting(
     .where(eq(settings.key, key))
     .limit(1)
 
-  return result[0]?.value || null
+  return result[0]?.value as T
 }
 
 export async function setSetting(
