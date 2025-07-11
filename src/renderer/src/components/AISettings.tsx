@@ -9,7 +9,13 @@ import {
   SelectTrigger,
   SelectValue
 } from '@renderer/components/ui/select'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@renderer/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@renderer/components/ui/card'
 import { CheckCircle, Loader2, Trash2 } from 'lucide-react'
 import type { AIProvider, AISettings, AIConfig } from '@common/types'
 import { logger } from '@renderer/lib/logger'
