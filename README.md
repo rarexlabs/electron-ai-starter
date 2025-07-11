@@ -7,7 +7,6 @@ A modern, full-featured Electron application template with TypeScript, React, Dr
 ### 🔧 Build Tooling
 - **[Electron](https://github.com/electron/electron) + [Vite](https://github.com/vitejs/vite)** - Lightning-fast development with hot reload and optimized production builds
 - **[SWC](https://github.com/swc-project/swc)** - Ultra-fast TypeScript/JavaScript compilation for maximum speed
-- **Cross-Platform** - Build for Windows, macOS, and Linux with [electron-builder](https://github.com/electron-userland/electron-builder)
 
 ### 🛠️ Development Tooling
 - **[TypeScript](https://github.com/microsoft/TypeScript)** - Full type safety across main and renderer processes
@@ -28,7 +27,6 @@ A modern, full-featured Electron application template with TypeScript, React, Dr
 ### 🤖 AI Integration
 - **[Vercel AI SDK](https://github.com/vercel/ai)** - Unified interface for OpenAI, Anthropic, and Google AI providers
 - **[Assistant UI](https://github.com/Yonom/assistant-ui)** - Production-ready chat interface with streaming support
-- **Settings Management** - Secure API key storage and connection testing
 
 ## Get Started
 
