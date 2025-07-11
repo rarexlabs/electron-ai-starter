@@ -1,1 +1,0 @@
-Take a look at the current code changes, simplify them while maintaining functionality and best practices. Do not force simplify if not needed.

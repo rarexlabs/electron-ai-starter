@@ -1,1 +1,0 @@
-Write a concise commit message that do not include any claude branding and commit the current changes to git.
