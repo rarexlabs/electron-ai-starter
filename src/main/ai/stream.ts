@@ -2,9 +2,7 @@ import { streamText } from 'ai'
 import { mainLogger } from '@main/logger'
 import { createModel } from './factory'
 import type { AIMessage, AIStreamSession, AIConfig } from '@common/types'
-
-// Track active streaming sessions
-export const activeStreamSessions = new Map<string, AIStreamSession>()
+import type { StreamSessionStore } from './stream-session-store'
 
 export async function* streamAIResponse(
   messages: AIMessage[],
@@ -54,23 +52,6 @@ export async function* streamAIResponse(
   }
 }
 
-export function createStreamSession(): AIStreamSession {
-  const sessionId = Date.now().toString()
-  const abortController = new AbortController()
-
-  const session: AIStreamSession = {
-    id: sessionId,
-    abortController,
-    createdAt: new Date()
-  }
-
-  activeStreamSessions.set(sessionId, session)
-  return session
-}
-
-export function cleanupStreamSession(sessionId: string): void {
-  activeStreamSessions.delete(sessionId)
-}
 
 export function handleStreamError(
   error: unknown,
@@ -92,7 +73,8 @@ export function handleStreamError(
 export async function sendAIStreamChunk(
   session: AIStreamSession,
   streamGenerator: AsyncGenerator<string, void, unknown>,
-  send: (channel: string, ...args: unknown[]) => void
+  send: (channel: string, ...args: unknown[]) => void,
+  store: StreamSessionStore
 ): Promise<void> {
   try {
     for await (const chunk of streamGenerator) {
@@ -111,6 +93,6 @@ export async function sendAIStreamChunk(
     handleStreamError(error, session.id, send)
   } finally {
     // Clean up session
-    cleanupStreamSession(session.id)
+    store.cleanupSession(session.id)
   }
 }

@@ -1,11 +1,9 @@
 import type { AIMessage, AIConfig } from '@common/types'
 import {
-  createStreamSession,
-  cleanupStreamSession,
   sendAIStreamChunk,
-  streamAIResponse,
-  activeStreamSessions
+  streamAIResponse
 } from './stream'
+import { sessionStore } from './stream-session-store'
 import { createModel } from './factory'
 import { streamText } from 'ai'
 import { mainLogger } from '@main/logger'
@@ -41,24 +39,18 @@ export async function streamAIChat(
   send: (channel: string, ...args: unknown[]) => void
 ): Promise<string> {
   // Create and store session
-  const session = createStreamSession()
+  const session = sessionStore.createSession()
 
   // Start streaming in the background
   const streamGenerator = streamAIResponse(messages, config, session.abortController.signal)
 
   // Process stream chunks asynchronously
-  sendAIStreamChunk(session, streamGenerator, send)
+  sendAIStreamChunk(session, streamGenerator, send, sessionStore)
 
   return session.id
 }
 
 // Utility function to abort a chat session
 export function abortAIChat(sessionId: string): boolean {
-  const session = activeStreamSessions.get(sessionId)
-  if (session) {
-    session.abortController.abort()
-    cleanupStreamSession(sessionId)
-    return true
-  }
-  return false
+  return sessionStore.abortSession(sessionId)
 }
