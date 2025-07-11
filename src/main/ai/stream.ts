@@ -1,7 +1,7 @@
 import { streamText } from 'ai'
-import { mainLogger } from '../logger'
+import { mainLogger } from '@main/logger'
 import { createModel } from './factory'
-import type { AIProvider, AIMessage, AIStreamSession, AIConfig } from '../../types/ai'
+import type { AIProvider, AIMessage, AIStreamSession, AIConfig } from '@common/types'
 
 // Track active streaming sessions
 export const activeStreamSessions = new Map<string, AIStreamSession>()

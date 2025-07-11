@@ -1,9 +1,15 @@
 {
   "extends": "@electron-toolkit/tsconfig/tsconfig.node.json",
-  "include": ["electron.vite.config.*", "src/main/**/*", "src/preload/**/*", "src/tests/**/*", "src/types/**/*"],
+  "include": ["electron.vite.config.*", "src/main/**/*", "src/preload/**/*", "src/tests/**/*", "src/common/**/*"],
   "compilerOptions": {
     "composite": true,
     "types": ["electron-vite/node"],
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@main/*": ["src/main/*"],
+      "@common/*": ["src/common/*"],
+      "@resources/*": ["resources/*"]
+    }
   }
 }

@@ -1,6 +1,6 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
 
-export type { AIProvider, AIMessage, AISettings, AIConfig } from '../types/ai'
+export type { AIProvider, AIMessage, AISettings, AIConfig } from '../common/types'
 
 declare global {
   interface Window {

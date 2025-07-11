@@ -1,7 +1,7 @@
 import { createOpenAI } from '@ai-sdk/openai'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
-import type { AIProvider } from '../../types/ai'
+import type { AIProvider } from '@common/types'
 import type { LanguageModelV1 } from 'ai'
 
 export const FACTORY = {

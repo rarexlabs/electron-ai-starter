@@ -1,5 +1,5 @@
 import { logger } from '@/lib/logger'
-import type { AIMessage } from '../../../types/ai'
+import type { AIMessage } from '../../../common/types'
 
 export async function streamResponse(
   messages: AIMessage[],

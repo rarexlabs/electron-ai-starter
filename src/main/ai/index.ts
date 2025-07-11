@@ -1,4 +1,4 @@
-import type { AIMessage, AIConfig } from '../../types/ai'
+import type { AIMessage, AIConfig } from '@common/types'
 import {
   createStreamSession,
   cleanupStreamSession,
@@ -8,7 +8,7 @@ import {
 } from './stream'
 import { createModel } from './factory'
 import { streamText } from 'ai'
-import { mainLogger } from '../logger'
+import { mainLogger } from '@main/logger'
 
 export { listAvailableModel } from './factory'
 

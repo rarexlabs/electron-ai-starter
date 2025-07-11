@@ -1,7 +1,7 @@
 import { app, shell, BrowserWindow, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import icon from '../../resources/icon.png?asset'
+import icon from '@resources/icon.png?asset'
 import { getDatabase, closeDatabase, runMigrations, testDatabaseConnection } from './db'
 import { initializeLogging, mainLogger } from './logger'
 import { setupIpcHandlers } from './ipc-handlers'

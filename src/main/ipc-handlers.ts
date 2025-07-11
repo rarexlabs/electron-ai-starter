@@ -4,7 +4,7 @@ import { getSetting, setSetting, getAllSettings, clearSetting, clearDatabase } f
 import { getDatabasePath, getLogPath } from './paths'
 import { mainLogger } from './logger'
 import { streamAIChat, abortAIChat, listAvailableModel, testConnection } from './ai'
-import type { AIProvider, AIConfig, AISettings } from '../types/ai'
+import type { AIProvider, AIConfig, AISettings } from '@common/types'
 import { FACTORY } from './ai/factory'
 
 export function setupIpcHandlers(): void {
