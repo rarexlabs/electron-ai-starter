@@ -209,7 +209,7 @@ describe('Settings Service Pattern', () => {
     await setSetting('test.number', 42, db)
     expect(await getSetting('test.number', db)).toBe(42)
 
-    expect(await getSetting('test.nonexistent', db)).toBe(null)
+    expect(await getSetting('test.nonexistent', db)).toBe(undefined)
   })
 
   it('should support getAllSettings function', async () => {
