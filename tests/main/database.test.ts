@@ -180,13 +180,13 @@ describe('Database Operations', () => {
       const tableInfo = await db.all(`PRAGMA table_info(settings)`)
 
       expect(tableInfo).toHaveLength(2)
-      const columnNames = tableInfo.map((col: { name: string }) => col.name)
+      const columnNames = (tableInfo as { name: string }[]).map((col) => col.name)
       expect(columnNames).toEqual(['key', 'value'])
     })
 
     it('should use memory journal mode for in-memory database', async () => {
       const db = getTestDatabase()
-      const journalMode = await db.get(`PRAGMA journal_mode`)
+      const journalMode = await db.get(`PRAGMA journal_mode`) as { journal_mode: string }
       expect(journalMode.journal_mode).toBe('memory')
     })
   })
