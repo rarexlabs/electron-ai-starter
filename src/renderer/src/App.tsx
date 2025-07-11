@@ -43,36 +43,60 @@ function App(): React.JSX.Element {
   }
 
   return (
-    <div className="h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">Electron Starter</h1>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={handleChatClick} className="flex items-center gap-2">
-              <MessageCircle className="h-4 w-4" />
-              Chat
-            </Button>
-            <Button variant="outline" onClick={handleDummyDataClick} className="flex items-center gap-2">
-              <Database className="h-4 w-4" />
-              Dummy Data
-            </Button>
-            <Button variant="ghost" size="icon" onClick={handleSettingsClick} className="h-9 w-9">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900 relative overflow-hidden">
+      {/* Animated background particles */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-20 left-20 w-72 h-72 bg-blue-400/20 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+        <div className="absolute top-40 right-20 w-72 h-72 bg-purple-400/20 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-1000"></div>
+        <div className="absolute -bottom-8 left-40 w-72 h-72 bg-pink-400/20 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-2000"></div>
+      </div>
+
+      <div className="relative z-10 p-8">
+        <div className="max-w-6xl mx-auto">
+          {/* Settings button positioned absolutely */}
+          <div className="absolute top-8 right-8">
+            <Button variant="ghost" size="icon" onClick={handleSettingsClick} className="h-9 w-9 backdrop-blur-sm bg-white/10 hover:bg-white/20 transition-all duration-300">
               <SettingsIcon className="h-4 w-4" />
             </Button>
           </div>
-        </div>
 
-        <div className="space-y-6">
-          <Card className="shadow-sm">
-            <CardContent className="p-6">
-              <div className="text-sm text-gray-600 mb-2">Hello World</div>
-              <CardDescription>
-                Welcome to your Electron starter with AI chat capabilities. Configure your AI
-                providers in settings, then click the Chat button above to start a conversation.
-                Use the Dummy Data button to manage test database settings.
-              </CardDescription>
-            </CardContent>
-          </Card>
+          {/* Hero Section */}
+          <div className="text-center pt-16 pb-20">
+            <div className="space-y-6">
+              <h1 className="text-6xl md:text-7xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent">
+                Electron AI Starter
+              </h1>
+              <div className="text-2xl md:text-3xl font-semibold text-gray-700 dark:text-gray-200">
+                Stop scaffolding, start building!
+              </div>
+              <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+                Modern desktop apps with TypeScript, React, AI & Database - ready in minutes
+              </p>
+            </div>
+          </div>
+
+          {/* Demo Section */}
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-8">Explore Template Features</h2>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Button 
+                variant="outline" 
+                onClick={handleChatClick} 
+                className="flex items-center gap-2 backdrop-blur-sm bg-white/50 hover:bg-white/80 border-2 border-blue-200 hover:border-blue-400 transition-all duration-300"
+              >
+                <MessageCircle className="h-4 w-4" />
+                Chat Demo
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleDummyDataClick} 
+                className="flex items-center gap-2 backdrop-blur-sm bg-white/50 hover:bg-white/80 border-2 border-purple-200 hover:border-purple-400 transition-all duration-300"
+              >
+                <Database className="h-4 w-4" />
+                Database Demo
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
