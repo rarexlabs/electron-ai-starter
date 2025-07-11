@@ -20,11 +20,7 @@ const AIModelAdapter: ChatModelAdapter = {
       logger.info('🚀 Starting AI stream with messages:', formattedMessages.length)
 
       // Start streaming through the bridge
-      const { sessionId, stream } = await aiStreamBridge.startStream(
-        formattedMessages,
-        undefined, // provider - will use default from settings
-        abortSignal
-      )
+      const { sessionId, stream } = await aiStreamBridge.startStream(formattedMessages, abortSignal)
 
       // Create session for tracking
       const sessionAbortController = sessionManager.createSession(sessionId)

@@ -46,8 +46,8 @@ const unifiedAPI = {
   },
 
   // AI operations
-  streamAIChat: (messages: AIMessage[], provider?: AIProvider): Promise<string> => {
-    return ipcRenderer.invoke('stream-ai-chat', messages, provider)
+  streamAIChat: (messages: AIMessage[]): Promise<string> => {
+    return ipcRenderer.invoke('stream-ai-chat', messages)
   },
 
   abortAIChat: (sessionId: string): Promise<void> => {

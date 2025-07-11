@@ -60,13 +60,16 @@ export function setupIpcHandlers(): void {
   })
 
   // AI Chat IPC handlers
-  ipcMain.handle('stream-ai-chat', async (event, messages, provider?: AIProvider) => {
+  ipcMain.handle('stream-ai-chat', async (event, messages) => {
     try {
       // Get AI settings from database
       const aiSettings = await getSetting<AISettings>('ai')
 
+      if (!aiSettings.default_provider)
+        throw new Error(`No default AI provider founder in the settings`)
+
       // Determine which provider to use
-      const selectedProvider = provider || aiSettings.default_provider || 'openai'
+      const selectedProvider = aiSettings.default_provider!
 
       // Get API key for the selected provider
       const apiKeyField = `${selectedProvider}_api_key` as keyof AISettings

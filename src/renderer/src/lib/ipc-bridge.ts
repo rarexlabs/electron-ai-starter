@@ -1,5 +1,5 @@
 import { logger } from '@/lib/logger'
-import type { AIProvider, AIMessage } from '../../../types/ai'
+import type { AIMessage } from '../../../types/ai'
 
 export interface StreamingResult {
   sessionId: string
@@ -16,16 +16,12 @@ export class AIStreamBridge {
     }
   >()
 
-  async startStream(
-    messages: AIMessage[],
-    provider?: AIProvider,
-    abortSignal?: AbortSignal
-  ): Promise<StreamingResult> {
+  async startStream(messages: AIMessage[], abortSignal?: AbortSignal): Promise<StreamingResult> {
     try {
       const abortController = new AbortController()
 
       // Get session ID from simplified API
-      const sessionId = await window.api.streamAIChat(messages, provider)
+      const sessionId = await window.api.streamAIChat(messages)
       logger.info('🚀 Stream started with session:', sessionId)
 
       const stream = this.createStreamGenerator(sessionId, abortController.signal)
