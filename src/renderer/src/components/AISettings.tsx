@@ -16,7 +16,7 @@ import {
   CardHeader,
   CardTitle
 } from '@renderer/components/ui/card'
-import { CheckCircle, Loader2, Trash2 } from 'lucide-react'
+import { CheckCircle, Loader2, Trash2, XCircle } from 'lucide-react'
 import type { AIProvider, AISettings, AIConfig } from '@common/types'
 import { logger } from '@renderer/lib/logger'
 
@@ -36,6 +36,7 @@ export function AISettings({
   const [isTesting, setIsTesting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [connectionTestSuccess, setConnectionTestSuccess] = useState(false)
+  const [connectionTestError, setConnectionTestError] = useState(false)
   const [isClearing, setIsClearing] = useState(false)
 
   const loadSettings = useCallback(async (): Promise<void> => {
@@ -83,6 +84,7 @@ export function AISettings({
 
     setIsTesting(true)
     setConnectionTestSuccess(false)
+    setConnectionTestError(false)
     try {
       const config: AIConfig = {
         provider: selectedProvider,
@@ -95,9 +97,14 @@ export function AISettings({
       if (connected) {
         setConnectionTestSuccess(true)
         setTimeout(() => setConnectionTestSuccess(false), 3000)
+      } else {
+        setConnectionTestError(true)
+        setTimeout(() => setConnectionTestError(false), 3000)
       }
     } catch (error) {
       logger.error(`Failed to test ${selectedProvider} connection:`, error)
+      setConnectionTestError(true)
+      setTimeout(() => setConnectionTestError(false), 5000)
     } finally {
       setIsTesting(false)
     }
@@ -138,6 +145,7 @@ export function AISettings({
       setModel('')
       setModels([])
       setConnectionTestSuccess(false)
+      setConnectionTestError(false)
       onProviderChange?.('openai')
       logger.info('AI settings cleared successfully')
     } catch (error) {
@@ -212,9 +220,15 @@ export function AISettings({
             <Button
               onClick={() => testConnection()}
               disabled={!apiKey || isTesting}
-              variant={connectionTestSuccess ? 'default' : 'outline'}
+              variant={connectionTestSuccess ? 'default' : connectionTestError ? 'destructive' : 'outline'}
               size="sm"
-              className={connectionTestSuccess ? 'bg-green-600 hover:bg-green-700 text-white' : ''}
+              className={
+                connectionTestSuccess 
+                  ? 'bg-green-600 hover:bg-green-700 text-white' 
+                  : connectionTestError 
+                  ? 'bg-orange-500 hover:bg-orange-600 text-white' 
+                  : ''
+              }
             >
               {isTesting ? (
                 <>
@@ -225,6 +239,11 @@ export function AISettings({
                 <>
                   <CheckCircle className="h-4 w-4" />
                   Connection Successful!
+                </>
+              ) : connectionTestError ? (
+                <>
+                  <XCircle className="h-4 w-4" />
+                  Connection Failed
                 </>
               ) : (
                 'Test Connection'
