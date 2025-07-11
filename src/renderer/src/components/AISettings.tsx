@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { CheckCircle, Loader2, Trash2 } from 'lucide-react'
-import type { AIProvider, AISettings, AIConfig } from '../../../preload/index.d'
+import type { AIProvider, AISettings, AIConfig } from '@common/types'
 import { logger } from '@/lib/logger'
 
 interface AISettingsProps {
