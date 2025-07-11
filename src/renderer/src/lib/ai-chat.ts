@@ -45,7 +45,7 @@ async function* streamGenerator(
           break
         case 'aborted':
           completed = true
-          logger.info('🚫 Stream aborted for session:', sessionId)
+          logger.info('❎ Stream aborted for session:', sessionId)
           break
       }
 
@@ -64,7 +64,7 @@ async function* streamGenerator(
 
   // Handle external abort signal
   const handleAbortSignal = async (): Promise<void> => {
-    logger.info('🚫 External abort signal received, aborting stream')
+    logger.info('❎ External abort signal received, aborting stream')
     try {
       await window.api.abortAIChat(sessionId)
     } catch (abortError) {
