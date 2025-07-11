@@ -35,6 +35,7 @@ A modern, full-featured Electron application template with TypeScript, React, Dr
 ```bash
 $ git clone <repository-url>
 $ cd electron-ai-starter
+$ cp .env.example .env
 $ npm install
 ```
 
