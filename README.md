@@ -30,9 +30,9 @@ A modern, full-featured Electron application template with TypeScript, React, Dr
 
 ## Get Started
 
+Fork & clone first, then:
+
 ```bash
-$ git clone git@github.com:rarexlabs/electron-ai-starter.git
-$ cd electron-ai-starter
 $ cp .env.example .env
 $ npm install
 ```
