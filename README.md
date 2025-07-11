@@ -1,46 +1,40 @@
-# Electron Starter Template
+# Electron AI Starter Template
 
-A modern, full-featured Electron application template with React, TypeScript, and a complete development stack. This template provides everything you need to build cross-platform desktop applications with a professional foundation.
+A modern, full-featured Electron application template with TypeScript, React, Drizzle ORM and Vercel AI SDK. This template provides everything you need to build desktop applications with AI capabilities. Stop scaffolding, start building!
 
 ## Features
 
-- **Modern Electron Architecture** - Two-process architecture with secure IPC communication
-- **React 19** - Latest React with TypeScript for the renderer process
+### 🔧 Build Tooling
+- **Electron + Vite** - Lightning-fast development with hot reload and optimized production builds
+- **SWC** - Ultra-fast TypeScript/JavaScript compilation for maximum speed
+- **Cross-Platform** - Build for Windows, macOS, and Linux with electron-builder
+
+### 🛠️ Development Tooling
+- **TypeScript** - Full type safety across main and renderer processes
+- **ESLint** - Code linting with TypeScript and React configurations
+- **Prettier** - Automated code formatting for consistent style
+- **Electron Log** - Unified logging across main and renderer processes
+- **Vitest** - Fast unit testing with TypeScript support
+
+### 🗄️ Database
+- **better-sqlite3 + Drizzle ORM** - Type-safe database operations with auto-migrations
+- **Environment-based paths** - Development and production database separation
+
+### 🎨 UI & Design
+- **React 19** - Latest React with full TypeScript support
 - **Tailwind CSS 4** - Modern styling with CSS variables and theming
-- **Shadcn/ui Components** - Beautiful, accessible UI components (New York style)
-- **Database Ready** - SQLite with Drizzle ORM and better-sqlite3
-- **Development Tools** - Hot reload, TypeScript checking, and code formatting
-- **Cross-Platform Building** - Build for Windows, macOS, and Linux
+- **Shadcn/ui** - Beautiful, accessible component library (New York style)
 
-## Tech Stack
+### 🤖 AI Integration
+- **Vercel AI SDK** - Unified interface for OpenAI, Anthropic, and Google AI providers
+- **Assistant UI** - Production-ready chat interface with streaming support
+- **Settings Management** - Secure API key storage and connection testing
 
-### Frontend
-
-- **React 19** with TypeScript
-- **Tailwind CSS 4** for styling
-- **Shadcn/ui** component library
-- **Lucide React** for icons
-
-### Backend
-
-- **Electron** with electron-vite bundler
-- **SQLite** database with Drizzle ORM
-- **better-sqlite3** for database operations
-- **electron-log** for unified logging across processes
-
-### Development Tools
-
-- **TypeScript** with separate configs for Node.js and web
-- **ESLint** for code linting
-- **Prettier** for code formatting
-- **Drizzle Kit** for database migrations
-- **SWC** for fast TypeScript/JavaScript compilation
-
-## Project Setup
-
-### Install
+## Get Started
 
 ```bash
+$ git clone <repository-url>
+$ cd electron-ai-starter
 $ npm install
 ```
 
@@ -62,9 +56,6 @@ $ npm run shadcn add [component-name]
 # Generate database migrations
 $ npm run drizzle-kit generate
 
-# Run database migrations
-$ npm run drizzle-kit migrate
-
 # Reset development database
 $ npm run db:reset
 ```
@@ -72,56 +63,12 @@ $ npm run db:reset
 ### Code Quality
 
 ```bash
-# Lint code
-$ npm run lint
+# Type check
+$ npm run typecheck
 
 # Format code
 $ npm run format
 
-# Type check
-$ npm run typecheck
+# Lint code
+$ npm run lint
 ```
-
-### Build
-
-```bash
-# Development build
-$ npm run build
-
-# Platform-specific builds
-$ npm run build:win    # Windows
-$ npm run build:mac    # macOS
-$ npm run build:linux  # Linux
-```
-
-## Architecture
-
-This template uses Electron's two-process architecture:
-
-- **Main Process** (`src/main/`) - Node.js backend with system access
-- **Renderer Process** (`src/renderer/`) - React frontend application
-- **Preload Scripts** (`src/preload/`) - Secure IPC bridge between processes
-
-### Path Aliases
-
-Pre-configured path aliases for cleaner imports:
-
-- `@renderer` → `src/renderer/src`
-- `@` → `src/renderer/src`
-- `@/components` → `src/renderer/src/components`
-- `@/lib` → `src/renderer/src/lib`
-- `@/utils` → `src/renderer/src/lib/utils`
-
-### Database Configuration
-
-- **Development**: `./tmp/app.db`
-- **Production**: Electron's userData directory
-- **WAL mode** enabled for performance
-- **Auto-migration** on application startup
-
-## Getting Started
-
-1. Clone this template
-2. Run `npm install`
-3. Start development with `npm run dev`
-4. Begin building your Electron app!

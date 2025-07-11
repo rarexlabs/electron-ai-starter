@@ -79,10 +79,10 @@ npm run shadcn [component-name]
 ### Database Configuration
 
 - **SQLite database** with environment-based path configuration (`DB_PATH`)
-- **Development database**: `./tmp/electron-starter.db`
+- **Development database**: `./tmp/electron-ai-starter.db`
 - **Production database**: Electron's userData directory
 - **Database commands**:
-  - `npm run dk` - Drizzle Kit operations (generate, migrate, etc.)
+  - `npm run drizzle-kit` - Drizzle Kit operations (generate, migrate, etc.)
   - `npm run db:reset` - Reset development database with fresh schema
 
 ### Logging Configuration
@@ -112,11 +112,3 @@ npm run shadcn [component-name]
 - When adding commit messages, keep the message very concise and do not add any claude related message.
 - Prefer to use `git add .` when committing changes
 
-## Project Management
-
-### Epic and Feature Planning Structure
-
-- **Epic Organization**: Each epic has its own subfolder under `plans/` (e.g., `plans/smart-file-renamer/`)
-- **Epic Definition**: The `epic.md` file in each epic folder contains the overall epic scope, user value, and high-level feature breakdown
-- **Feature Implementation Plans**: Individual feature implementation plans are stored as separate `.md` files in the same epic folder (e.g., `foundation.md`, `folder-selection.md`)
-- **Planning Workflow**: Start with the epic overview, then create detailed implementation plans for each feature as needed
