@@ -2,7 +2,7 @@ import { AssistantRuntimeProvider, useLocalRuntime } from '@assistant-ui/react'
 import type { ChatModelAdapter, ThreadMessage } from '@assistant-ui/react'
 import { ReactNode } from 'react'
 import { logger } from '@renderer/lib/logger'
-import { streamResponse } from '@renderer/lib/ai-chat'
+import { streamText } from '@renderer/lib/ai'
 
 const AIModelAdapter: ChatModelAdapter = {
   async *run({ messages, abortSignal }) {
@@ -16,7 +16,7 @@ const AIModelAdapter: ChatModelAdapter = {
     }))
 
     logger.info('🚀 Starting AI stream with message count: ', formattedMessages.length)
-    const stream = await streamResponse(formattedMessages, abortSignal)
+    const stream = await streamText(formattedMessages, abortSignal)
 
     let fullContent = ''
     for await (const chunk of stream) {

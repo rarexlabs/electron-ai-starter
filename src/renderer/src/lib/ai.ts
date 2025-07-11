@@ -1,21 +1,21 @@
 import { logger } from '@renderer/lib/logger'
 import type { AIMessage } from '@common/types'
 
-export async function streamResponse(
+export async function streamText(
   messages: AIMessage[],
   abortSignal: AbortSignal
 ): Promise<AsyncGenerator<string, void, unknown>> {
   try {
     const sessionId = await window.api.streamAIChat(messages)
     logger.info('🚀 Stream started with session:', sessionId)
-    return streamGenerator(sessionId, abortSignal)
+    return receiveStream(sessionId, abortSignal)
   } catch (error) {
     logger.error('Failed to start stream:', error)
     throw error
   }
 }
 
-async function* streamGenerator(
+async function* receiveStream(
   sessionId: string,
   abortSignal: AbortSignal
 ): AsyncGenerator<string, void, unknown> {
@@ -109,8 +109,6 @@ async function* streamGenerator(
     if (error) {
       throw new Error(error)
     }
-
-    logger.info('✅ Stream completed for session:', sessionId)
   } catch (streamError) {
     logger.error('Stream generator error for session:', sessionId, streamError)
     throw streamError
