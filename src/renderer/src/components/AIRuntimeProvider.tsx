@@ -2,7 +2,7 @@ import { AssistantRuntimeProvider, useLocalRuntime } from '@assistant-ui/react'
 import type { ChatModelAdapter, ThreadMessage } from '@assistant-ui/react'
 import { ReactNode } from 'react'
 import { logger } from '@/lib/logger'
-import { aiChatStream } from '@/lib/ipc-bridge'
+import { aiChatStream } from '@renderer/lib/ai-chat-stream'
 
 const AIModelAdapter: ChatModelAdapter = {
   async *run({ messages, abortSignal }) {
