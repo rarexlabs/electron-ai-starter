@@ -12,8 +12,7 @@ export class AIStreamBridge {
     {
       cleanup: () => void
       abortController: AbortController
-      isActive: boolean
-      isAborted: boolean
+      status: 'active' | 'completed' | 'aborted' | 'error'
       error: string | null
     }
   >()
@@ -27,45 +26,14 @@ export class AIStreamBridge {
       logger.info('🚀 Stream started with session:', sessionId)
 
       // Initialize session state
-      const sessionState = {
-        cleanup: () => {
-          if (abortSignal) {
-            abortSignal.removeEventListener('abort', abortListener)
-          }
-          this.activeStreams.delete(sessionId)
-        },
-        abortController,
-        isActive: true,
-        isAborted: false,
-        error: null
-      }
-
+      const sessionState = this.createSessionState(sessionId, abortController, abortSignal)
       this.activeStreams.set(sessionId, sessionState)
 
       const stream = this.createStreamGenerator(sessionId, abortController.signal)
 
-      // Link external abort signal to internal abort controller
-      const abortListener = async (): Promise<void> => {
-        logger.info('🚫 External abort signal received, aborting stream')
-        this.markSessionAborted(sessionId)
-        abortController.abort()
-        try {
-          await window.api.abortAIChat(sessionId)
-        } catch (error) {
-          logger.error('Failed to abort chat session:', error)
-        }
-      }
-
-      if (abortSignal) {
-        abortSignal.addEventListener('abort', abortListener)
-      }
-
       return {
         stream,
-        isAborted: () => {
-          const session = this.activeStreams.get(sessionId)
-          return session?.isAborted === true
-        }
+        isAborted: () => this.getSession(sessionId)?.status === 'aborted'
       }
     } catch (error) {
       logger.error('Failed to start stream:', error)
@@ -73,29 +41,72 @@ export class AIStreamBridge {
     }
   }
 
-  private markSessionAborted(sessionId: string): void {
-    const session = this.activeStreams.get(sessionId)
-    if (session) {
-      session.isAborted = true
-      session.isActive = false
-      logger.info('🚫 Session marked as aborted:', sessionId)
+  private createSessionState(
+    sessionId: string,
+    abortController: AbortController,
+    abortSignal?: AbortSignal
+  ): {
+    cleanup: () => void
+    abortController: AbortController
+    status: 'active'
+    error: null
+  } {
+    const abortListener = async (): Promise<void> => {
+      logger.info('🚫 External abort signal received, aborting stream')
+      this.updateSessionState(sessionId, 'aborted')
+      this.abortSession(sessionId, sessionState)
     }
+
+    const sessionState = {
+      cleanup: () => {
+        if (abortSignal) {
+          abortSignal.removeEventListener('abort', abortListener)
+        }
+        this.activeStreams.delete(sessionId)
+      },
+      abortController,
+      status: 'active' as const,
+      error: null
+    }
+
+    if (abortSignal) {
+      abortSignal.addEventListener('abort', abortListener)
+    }
+
+    return sessionState
   }
 
-  private markSessionCompleted(sessionId: string): void {
-    const session = this.activeStreams.get(sessionId)
-    if (session) {
-      session.isActive = false
-      logger.info('✅ Session marked as completed:', sessionId)
-    }
+  private getSession(sessionId: string):
+    | {
+        cleanup: () => void
+        abortController: AbortController
+        status: 'active' | 'completed' | 'aborted' | 'error'
+        error: string | null
+      }
+    | undefined {
+    return this.activeStreams.get(sessionId)
   }
 
-  private markSessionError(sessionId: string, error: string): void {
+  private updateSessionState(
+    sessionId: string,
+    status: 'completed' | 'aborted' | 'error',
+    error?: string
+  ): void {
     const session = this.activeStreams.get(sessionId)
     if (session) {
-      session.isActive = false
-      session.error = error
-      logger.error('❌ Session marked as error:', sessionId, error)
+      session.status = status
+      if (error) {
+        session.error = error
+      }
+
+      const statusEmoji = { completed: '✅', aborted: '🚫', error: '❌' }[status]
+      const logMessage = `${statusEmoji} Session marked as ${status}:`
+
+      if (status === 'error') {
+        logger.error(logMessage, sessionId, error)
+      } else {
+        logger.info(logMessage, sessionId)
+      }
     }
   }
 
@@ -110,10 +121,29 @@ export class AIStreamBridge {
     // Promise-based chunk waiting
     let resolveWaiting: (() => void) | null = null
 
-    const handleChunk = (...args: unknown[]): void => {
-      const [, id, chunk] = args
-      if (id === sessionId) {
-        pendingChunks.push(chunk as string)
+    const createEventHandler = (eventType: 'chunk' | 'end' | 'error' | 'aborted') => {
+      return (...args: unknown[]): void => {
+        const [, id, data] = args
+        if (id !== sessionId) return
+
+        switch (eventType) {
+          case 'chunk':
+            pendingChunks.push(data as string)
+            break
+          case 'end':
+            completed = true
+            this.updateSessionState(sessionId, 'completed')
+            break
+          case 'error':
+            error = data as string
+            this.updateSessionState(sessionId, 'error', error)
+            break
+          case 'aborted':
+            completed = true
+            this.updateSessionState(sessionId, 'aborted')
+            break
+        }
+
         if (resolveWaiting) {
           const resolve = resolveWaiting
           resolveWaiting = null
@@ -122,44 +152,10 @@ export class AIStreamBridge {
       }
     }
 
-    const handleEnd = (...args: unknown[]): void => {
-      const [, id] = args
-      if (id === sessionId) {
-        completed = true
-        this.markSessionCompleted(sessionId)
-        if (resolveWaiting) {
-          const resolve = resolveWaiting
-          resolveWaiting = null
-          resolve()
-        }
-      }
-    }
-
-    const handleError = (...args: unknown[]): void => {
-      const [, id, errorMessage] = args
-      if (id === sessionId) {
-        error = errorMessage as string
-        this.markSessionError(sessionId, error)
-        if (resolveWaiting) {
-          const resolve = resolveWaiting
-          resolveWaiting = null
-          resolve()
-        }
-      }
-    }
-
-    const handleAborted = (...args: unknown[]): void => {
-      const [, id] = args
-      if (id === sessionId) {
-        completed = true
-        this.markSessionAborted(sessionId)
-        if (resolveWaiting) {
-          const resolve = resolveWaiting
-          resolveWaiting = null
-          resolve()
-        }
-      }
-    }
+    const handleChunk = createEventHandler('chunk')
+    const handleEnd = createEventHandler('end')
+    const handleError = createEventHandler('error')
+    const handleAborted = createEventHandler('aborted')
 
     // Set up event listeners using exposed IPC methods
     window.api.on('ai-chat-chunk', handleChunk)
@@ -172,9 +168,7 @@ export class AIStreamBridge {
       while (!completed && !error && !abortSignal.aborted) {
         // Yield any pending chunks
         if (pendingChunks.length > 0) {
-          for (const chunk of pendingChunks) {
-            yield chunk
-          }
+          yield* pendingChunks
           pendingChunks = []
         }
 
@@ -203,9 +197,7 @@ export class AIStreamBridge {
 
       // Final yield of any remaining chunks
       if (pendingChunks.length > 0) {
-        for (const chunk of pendingChunks) {
-          yield chunk
-        }
+        yield* pendingChunks
       }
 
       logger.info('✅ Stream completed for session:', sessionId)
@@ -234,16 +226,27 @@ export class AIStreamBridge {
     logger.info('🧹 Cleaning up all active streams')
     const abortPromises: Promise<void>[] = []
     for (const [sessionId, streamData] of this.activeStreams) {
-      streamData.abortController.abort()
-      abortPromises.push(
-        window.api.abortAIChat(sessionId).catch((error) => {
-          logger.error('Failed to abort chat session during cleanup:', error)
-        })
-      )
-      streamData.cleanup()
+      this.abortSession(sessionId, streamData, abortPromises)
     }
     await Promise.all(abortPromises)
     this.activeStreams.clear()
+  }
+
+  private abortSession(
+    sessionId: string,
+    streamData: {
+      cleanup: () => void
+      abortController: AbortController
+    },
+    abortPromises: Promise<void>[] = []
+  ): void {
+    streamData.abortController.abort()
+    abortPromises.push(
+      window.api.abortAIChat(sessionId).catch((error) => {
+        logger.error('Failed to abort chat session during cleanup:', error)
+      })
+    )
+    streamData.cleanup()
   }
 
   // Get active stream count (for debugging)
