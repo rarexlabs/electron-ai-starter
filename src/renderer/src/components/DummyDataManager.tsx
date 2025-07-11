@@ -143,7 +143,6 @@ export function DummyDataManager(): React.JSX.Element {
           </form>
         </Form>
 
-        {/* Message Display */}
         {message && (
           <div
             className={`mt-4 p-3 rounded-md text-sm ${

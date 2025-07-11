@@ -6,10 +6,8 @@ import { getDatabase, closeDatabase, runMigrations, testDatabaseConnection } fro
 import { initializeLogging, mainLogger } from './logger'
 import { setupIpcHandlers } from './ipc-handlers'
 
-// Initialize logging immediately
 initializeLogging()
 
-// Log app startup as early as possible
 mainLogger.info('🚀 App starting...')
 mainLogger.info('🔧 Main process started')
 
@@ -21,7 +19,6 @@ function initializeDatabase(): void {
     // Run database migrations
     runMigrations()
 
-    // Test the connection
     testDatabaseConnection()
 
     mainLogger.info('✅ Database ready')
@@ -40,7 +37,6 @@ function initializeDatabase(): void {
 }
 
 function createWindow(): void {
-  // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
@@ -117,6 +113,3 @@ app.on('window-all-closed', () => {
 app.on('before-quit', () => {
   closeDatabase()
 })
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.

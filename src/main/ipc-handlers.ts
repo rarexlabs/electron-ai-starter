@@ -8,7 +8,6 @@ import type { AIProvider, AIConfig, AISettings } from '@common/types'
 import { FACTORY } from './ai/factory'
 
 export function setupIpcHandlers(): void {
-  // Database IPC handlers
   ipcMain.handle('get-setting', async (_, key: string) => {
     return getSetting(key)
   })
@@ -29,7 +28,6 @@ export function setupIpcHandlers(): void {
     return clearDatabase()
   })
 
-  // Path IPC handlers
   ipcMain.handle('get-database-path', async () => {
     try {
       const dbPath = getDatabasePath()
@@ -59,7 +57,6 @@ export function setupIpcHandlers(): void {
     }
   })
 
-  // AI Chat IPC handlers
   ipcMain.handle('stream-ai-chat', async (event, messages) => {
     try {
       // Get AI settings from database
@@ -99,7 +96,6 @@ export function setupIpcHandlers(): void {
     }
   })
 
-  // AI Chat abort handler
   ipcMain.handle('abort-ai-chat', async (_, sessionId: string) => {
     const success = abortAIChat(sessionId)
     if (success) {
@@ -127,6 +123,5 @@ export function setupIpcHandlers(): void {
     }
   })
 
-  // IPC test
   ipcMain.on('ping', () => mainLogger.info('pong'))
 }

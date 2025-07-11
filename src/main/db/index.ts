@@ -15,7 +15,6 @@ export function getDatabase(): ReturnType<typeof drizzle> {
     const dbPath = getDatabasePath()
     mainLogger.info(`🗄️ Database: ${path.resolve(path.dirname(dbPath))}`)
 
-    // Ensure directory exists
     const dbDir = path.dirname(dbPath)
     if (!fs.existsSync(dbDir)) {
       fs.mkdirSync(dbDir, { recursive: true })

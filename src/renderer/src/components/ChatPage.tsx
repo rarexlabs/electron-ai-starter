@@ -10,7 +10,6 @@ interface ChatPageProps {
 export function ChatPage({ onBack }: ChatPageProps): React.JSX.Element {
   return (
     <div className="h-screen bg-background flex flex-col">
-      {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-3">
@@ -27,7 +26,6 @@ export function ChatPage({ onBack }: ChatPageProps): React.JSX.Element {
         </div>
       </header>
 
-      {/* Chat Interface */}
       <main className="flex-1 overflow-hidden">
         <AIRuntimeProvider>
           <Thread />

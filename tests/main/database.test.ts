@@ -11,13 +11,11 @@ describe('Database Operations', () => {
     it('should insert and retrieve a setting', async () => {
       const db = getTestDatabase()
 
-      // Insert a setting with JSON value
       await db.insert(settings).values({
         key: 'theme',
         value: { mode: 'dark', accent: 'blue' }
       })
 
-      // Retrieve the setting
       const result = await db
         .select({ value: settings.value })
         .from(settings)
@@ -96,7 +94,6 @@ describe('Database Operations', () => {
     it('should handle non-existent settings gracefully', async () => {
       const db = getTestDatabase()
 
-      // Try to retrieve a setting that doesn't exist
       const result = await db
         .select({ value: settings.value })
         .from(settings)
@@ -116,14 +113,11 @@ describe('Database Operations', () => {
         { key: 'system.version', value: '1.0.0' }
       ])
 
-      // Verify data exists
       const beforeClear = await db.select().from(settings)
       expect(beforeClear).toHaveLength(3)
 
-      // Clear all data
       await db.delete(settings)
 
-      // Verify data is cleared
       const afterClear = await db.select().from(settings)
       expect(afterClear).toHaveLength(0)
     })
@@ -145,7 +139,6 @@ describe('Database Operations', () => {
         })
       ).rejects.toThrow()
 
-      // Verify original value is unchanged
       const result = await db
         .select({ value: settings.value })
         .from(settings)

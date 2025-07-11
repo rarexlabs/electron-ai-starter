@@ -119,7 +119,6 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
   return (
     <div className="h-screen bg-gray-50 p-8 overflow-auto">
       <div className="max-w-2xl mx-auto">
-        {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Button variant="ghost" size="icon" onClick={onBack} disabled={isClearingDatabase}>
             <ArrowLeft className="h-4 w-4" />
@@ -128,7 +127,6 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
         </div>
 
         <div className="space-y-6">
-          {/* File Paths Section */}
           <Card className="shadow-sm">
             <CardHeader>
               <CardTitle>File Locations</CardTitle>
@@ -152,10 +150,8 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
             </CardContent>
           </Card>
 
-          {/* AI Settings */}
           <AISettings className="shadow-sm" />
 
-          {/* Database Management */}
           <Card className="shadow-sm">
             <CardHeader>
               <CardTitle className="text-red-600">Danger Zone</CardTitle>
@@ -186,7 +182,6 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
           </Card>
         </div>
 
-        {/* Message Display */}
         {message && (
           <div
             className={`mt-6 p-4 rounded-md ${
