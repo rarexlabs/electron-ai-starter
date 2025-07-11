@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Settings as SettingsIcon, MessageCircle, Database } from 'lucide-react'
-import { Card, CardContent, CardDescription } from '@renderer/components/ui/card'
 import { Button } from '@renderer/components/ui/button'
 import { Settings } from '@renderer/components/Settings'
 import { DummyDataPage } from '@renderer/components/DummyDataPage'
@@ -55,7 +54,12 @@ function App(): React.JSX.Element {
         <div className="max-w-6xl mx-auto">
           {/* Settings button positioned absolutely */}
           <div className="absolute top-8 right-8">
-            <Button variant="ghost" size="icon" onClick={handleSettingsClick} className="h-9 w-9 backdrop-blur-sm bg-white/10 hover:bg-white/20 transition-all duration-300">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleSettingsClick}
+              className="h-9 w-9 backdrop-blur-sm bg-white/10 hover:bg-white/20 transition-all duration-300"
+            >
               <SettingsIcon className="h-4 w-4" />
             </Button>
           </div>
@@ -70,30 +74,40 @@ function App(): React.JSX.Element {
                 Stop scaffolding, start building!
               </div>
               <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
-                Modern desktop apps with TypeScript, React, AI & Database - ready in minutes
+                Modern desktop apps with TypeScript, React, Sqlite and AI
               </p>
             </div>
           </div>
 
           {/* Demo Section */}
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-8">Explore Template Features</h2>
+            <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-8">
+              Explore Template
+            </h2>
             <div className="flex flex-wrap justify-center gap-4">
-              <Button 
-                variant="outline" 
-                onClick={handleChatClick} 
+              <Button
+                variant="outline"
+                onClick={handleChatClick}
                 className="flex items-center gap-2 backdrop-blur-sm bg-white/50 hover:bg-white/80 border-2 border-blue-200 hover:border-blue-400 transition-all duration-300"
               >
                 <MessageCircle className="h-4 w-4" />
                 Chat Demo
               </Button>
-              <Button 
-                variant="outline" 
-                onClick={handleDummyDataClick} 
+              <Button
+                variant="outline"
+                onClick={handleDummyDataClick}
                 className="flex items-center gap-2 backdrop-blur-sm bg-white/50 hover:bg-white/80 border-2 border-purple-200 hover:border-purple-400 transition-all duration-300"
               >
                 <Database className="h-4 w-4" />
                 Database Demo
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleSettingsClick}
+                className="flex items-center gap-2 backdrop-blur-sm bg-white/50 hover:bg-white/80 border-2 border-green-200 hover:border-green-400 transition-all duration-300"
+              >
+                <SettingsIcon className="h-4 w-4" />
+                Settings
               </Button>
             </div>
           </div>
