@@ -6,7 +6,6 @@ export class AIChatManager {
     string,
     {
       cleanup: () => void
-      abortController: AbortController
       status: 'active' | 'completed' | 'aborted' | 'error'
       error: string | null
     }
@@ -14,20 +13,18 @@ export class AIChatManager {
 
   async streamResponse(
     messages: AIMessage[],
-    abortSignal?: AbortSignal
+    abortSignal: AbortSignal
   ): Promise<AsyncGenerator<string, void, unknown>> {
     try {
-      const abortController = new AbortController()
-
       // Get session ID from simplified API
       const sessionId = await window.api.streamAIChat(messages)
       logger.info('🚀 Stream started with session:', sessionId)
 
       // Initialize session state
-      const sessionState = this.createSessionState(sessionId, abortController, abortSignal)
+      const sessionState = this.createSessionState(sessionId, abortSignal)
       this.activeStreams.set(sessionId, sessionState)
 
-      const stream = this.createStreamGenerator(sessionId, abortController.signal)
+      const stream = this.createStreamGenerator(sessionId, abortSignal)
 
       return stream
     } catch (error) {
@@ -38,35 +35,28 @@ export class AIChatManager {
 
   private createSessionState(
     sessionId: string,
-    abortController: AbortController,
-    abortSignal?: AbortSignal
+    abortSignal: AbortSignal
   ): {
     cleanup: () => void
-    abortController: AbortController
     status: 'active'
     error: null
   } {
     const abortListener = async (): Promise<void> => {
       logger.info('🚫 External abort signal received, aborting stream')
       this.updateSessionState(sessionId, 'aborted')
-      this.abortSession(sessionId, sessionState)
+      this.abortSession(sessionId)
     }
 
     const sessionState = {
       cleanup: () => {
-        if (abortSignal) {
-          abortSignal.removeEventListener('abort', abortListener)
-        }
+        abortSignal.removeEventListener('abort', abortListener)
         this.activeStreams.delete(sessionId)
       },
-      abortController,
       status: 'active' as const,
       error: null
     }
 
-    if (abortSignal) {
-      abortSignal.addEventListener('abort', abortListener)
-    }
+    abortSignal.addEventListener('abort', abortListener)
 
     return sessionState
   }
@@ -205,21 +195,14 @@ export class AIChatManager {
     }
   }
 
-  private abortSession(
-    sessionId: string,
-    streamData: {
-      cleanup: () => void
-      abortController: AbortController
-    },
-    abortPromises: Promise<void>[] = []
-  ): void {
-    streamData.abortController.abort()
-    abortPromises.push(
+  private abortSession(sessionId: string): void {
+    const streamData = this.activeStreams.get(sessionId)
+    if (streamData) {
       window.api.abortAIChat(sessionId).catch((error) => {
         logger.error('Failed to abort chat session during cleanup:', error)
       })
-    )
-    streamData.cleanup()
+      streamData.cleanup()
+    }
   }
 }
 
