@@ -42,7 +42,7 @@ export async function streamAIChat(
   const session = sessionStore.createSession()
 
   // Start streaming in the background
-  const streamGenerator = streamAIResponse(messages, config, session.abortController.signal)
+  const streamGenerator = streamAIResponse(messages, config, session.abortSignal)
 
   // Process stream chunks asynchronously
   sendAIStreamChunk(session, streamGenerator, send, sessionStore)

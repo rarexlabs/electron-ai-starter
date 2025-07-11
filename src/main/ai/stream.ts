@@ -1,8 +1,8 @@
 import { streamText } from 'ai'
 import { mainLogger } from '@main/logger'
 import { createModel } from './factory'
-import type { AIMessage, AIStreamSession, AIConfig } from '@common/types'
-import type { StreamSessionStore } from './stream-session-store'
+import type { AIMessage, AIConfig } from '@common/types'
+import type { StreamSession, StreamSessionStore } from './stream-session-store'
 
 export async function* streamAIResponse(
   messages: AIMessage[],
@@ -71,7 +71,7 @@ export function handleStreamError(
 }
 
 export async function sendAIStreamChunk(
-  session: AIStreamSession,
+  session: StreamSession,
   streamGenerator: AsyncGenerator<string, void, unknown>,
   send: (channel: string, ...args: unknown[]) => void,
   store: StreamSessionStore
@@ -79,14 +79,14 @@ export async function sendAIStreamChunk(
   try {
     for await (const chunk of streamGenerator) {
       // Check if session was aborted
-      if (session.abortController.signal.aborted) {
+      if (session.abortSignal.aborted) {
         send('ai-chat-aborted', session.id)
         break
       }
       send('ai-chat-chunk', session.id, chunk)
     }
     // Signal end of stream if not aborted
-    if (!session.abortController.signal.aborted) {
+    if (!session.abortSignal.aborted) {
       send('ai-chat-end', session.id)
     }
   } catch (error) {

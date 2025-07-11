@@ -21,8 +21,3 @@ export interface AISettings {
   google_model?: string
 }
 
-export interface AIStreamSession {
-  id: string
-  abortController: AbortController
-  createdAt: Date
-}

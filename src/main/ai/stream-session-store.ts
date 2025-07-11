@@ -1,30 +1,39 @@
-import type { AIStreamSession } from '@common/types'
+export class StreamSession {
+  private abortController = new AbortController()
+
+  constructor(
+    public readonly id: string,
+    public readonly createdAt: Date = new Date()
+  ) {}
+
+  get abortSignal(): AbortSignal {
+    return this.abortController.signal
+  }
+
+  abort(): void {
+    this.abortController.abort()
+  }
+}
 
 export class StreamSessionStore {
-  private activeStreamSessions = new Map<string, AIStreamSession>()
+  private activeStreamSessions = new Map<string, StreamSession>()
 
-  createSession(): AIStreamSession {
+  createSession(): StreamSession {
     const sessionId = Date.now().toString()
-    const abortController = new AbortController()
-
-    const session: AIStreamSession = {
-      id: sessionId,
-      abortController,
-      createdAt: new Date()
-    }
+    const session = new StreamSession(sessionId)
 
     this.activeStreamSessions.set(sessionId, session)
     return session
   }
 
-  getSession(sessionId: string): AIStreamSession | undefined {
+  getSession(sessionId: string): StreamSession | undefined {
     return this.activeStreamSessions.get(sessionId)
   }
 
   abortSession(sessionId: string): boolean {
     const session = this.activeStreamSessions.get(sessionId)
     if (session) {
-      session.abortController.abort()
+      session.abort()
       this.cleanupSession(sessionId)
       return true
     }
