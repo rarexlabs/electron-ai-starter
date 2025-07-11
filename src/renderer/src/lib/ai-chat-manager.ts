@@ -2,15 +2,6 @@ import { logger } from '@/lib/logger'
 import type { AIMessage } from '../../../types/ai'
 
 export class AIChatManager {
-  private activeStreams = new Map<
-    string,
-    {
-      cleanup: () => void
-      status: 'active' | 'completed' | 'aborted' | 'error'
-      error: string | null
-    }
-  >()
-
   async streamResponse(
     messages: AIMessage[],
     abortSignal: AbortSignal
@@ -20,67 +11,12 @@ export class AIChatManager {
       const sessionId = await window.api.streamAIChat(messages)
       logger.info('🚀 Stream started with session:', sessionId)
 
-      // Initialize session state
-      const sessionState = this.createSessionState(sessionId, abortSignal)
-      this.activeStreams.set(sessionId, sessionState)
-
       const stream = this.createStreamGenerator(sessionId, abortSignal)
 
       return stream
     } catch (error) {
       logger.error('Failed to start stream:', error)
       throw error
-    }
-  }
-
-  private createSessionState(
-    sessionId: string,
-    abortSignal: AbortSignal
-  ): {
-    cleanup: () => void
-    status: 'active'
-    error: null
-  } {
-    const abortListener = async (): Promise<void> => {
-      logger.info('🚫 External abort signal received, aborting stream')
-      this.updateSessionState(sessionId, 'aborted')
-      this.abortSession(sessionId)
-    }
-
-    const sessionState = {
-      cleanup: () => {
-        abortSignal.removeEventListener('abort', abortListener)
-        this.activeStreams.delete(sessionId)
-      },
-      status: 'active' as const,
-      error: null
-    }
-
-    abortSignal.addEventListener('abort', abortListener)
-
-    return sessionState
-  }
-
-  private updateSessionState(
-    sessionId: string,
-    status: 'completed' | 'aborted' | 'error',
-    error?: string
-  ): void {
-    const session = this.activeStreams.get(sessionId)
-    if (session) {
-      session.status = status
-      if (error) {
-        session.error = error
-      }
-
-      const statusEmoji = { completed: '✅', aborted: '🚫', error: '❌' }[status]
-      const logMessage = `${statusEmoji} Session marked as ${status}:`
-
-      if (status === 'error') {
-        logger.error(logMessage, sessionId, error)
-      } else {
-        logger.info(logMessage, sessionId)
-      }
     }
   }
 
@@ -106,15 +42,15 @@ export class AIChatManager {
             break
           case 'end':
             completed = true
-            this.updateSessionState(sessionId, 'completed')
+            logger.info('✅ Stream completed for session:', sessionId)
             break
           case 'error':
             error = data as string
-            this.updateSessionState(sessionId, 'error', error)
+            logger.error('❌ Stream error for session:', sessionId, error)
             break
           case 'aborted':
             completed = true
-            this.updateSessionState(sessionId, 'aborted')
+            logger.info('🚫 Stream aborted for session:', sessionId)
             break
         }
 
@@ -131,11 +67,22 @@ export class AIChatManager {
     const handleError = createEventHandler('error')
     const handleAborted = createEventHandler('aborted')
 
+    // Handle external abort signal
+    const handleAbortSignal = async (): Promise<void> => {
+      logger.info('🚫 External abort signal received, aborting stream')
+      try {
+        await window.api.abortAIChat(sessionId)
+      } catch (abortError) {
+        logger.error('Failed to abort chat session:', abortError)
+      }
+    }
+
     // Set up event listeners using exposed IPC methods
     window.api.on('ai-chat-chunk', handleChunk)
     window.api.on('ai-chat-end', handleEnd)
     window.api.on('ai-chat-error', handleError)
     window.api.on('ai-chat-aborted', handleAborted)
+    abortSignal.addEventListener('abort', handleAbortSignal)
 
     try {
       // Stream processing loop
@@ -184,24 +131,9 @@ export class AIChatManager {
       window.api.off('ai-chat-end', handleEnd)
       window.api.off('ai-chat-error', handleError)
       window.api.off('ai-chat-aborted', handleAborted)
-
-      // Clean up from active streams
-      const streamData = this.activeStreams.get(sessionId)
-      if (streamData) {
-        streamData.cleanup()
-      }
+      abortSignal.removeEventListener('abort', handleAbortSignal)
 
       logger.info('🧹 Cleaned up stream generator for session:', sessionId)
-    }
-  }
-
-  private abortSession(sessionId: string): void {
-    const streamData = this.activeStreams.get(sessionId)
-    if (streamData) {
-      window.api.abortAIChat(sessionId).catch((error) => {
-        logger.error('Failed to abort chat session during cleanup:', error)
-      })
-      streamData.cleanup()
     }
   }
 }
