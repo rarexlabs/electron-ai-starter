@@ -221,17 +221,6 @@ export class AIChatManager {
     }
   }
 
-  // Utility method to clean up all active streams (for app shutdown)
-  async cleanup(): Promise<void> {
-    logger.info('🧹 Cleaning up all active streams')
-    const abortPromises: Promise<void>[] = []
-    for (const [sessionId, streamData] of this.activeStreams) {
-      this.abortSession(sessionId, streamData, abortPromises)
-    }
-    await Promise.all(abortPromises)
-    this.activeStreams.clear()
-  }
-
   private abortSession(
     sessionId: string,
     streamData: {
@@ -247,11 +236,6 @@ export class AIChatManager {
       })
     )
     streamData.cleanup()
-  }
-
-  // Get active stream count (for debugging)
-  getActiveStreamCount(): number {
-    return this.activeStreams.size
   }
 }
 
