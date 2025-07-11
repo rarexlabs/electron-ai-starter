@@ -1,14 +1,14 @@
 import { useState } from 'react'
-import { Settings as SettingsIcon, MessageCircle } from 'lucide-react'
+import { Settings as SettingsIcon, MessageCircle, Database } from 'lucide-react'
 import { Card, CardContent, CardDescription } from '@renderer/components/ui/card'
 import { Button } from '@renderer/components/ui/button'
 import { Settings } from '@renderer/components/Settings'
-import { DummyDataManager } from '@renderer/components/DummyDataManager'
+import { DummyDataPage } from '@renderer/components/DummyDataPage'
 import { ChatPage } from '@renderer/components/ChatPage'
 import log from 'electron-log/renderer'
 
 function App(): React.JSX.Element {
-  const [currentPage, setCurrentPage] = useState<'home' | 'settings' | 'chat'>('home')
+  const [currentPage, setCurrentPage] = useState<'home' | 'settings' | 'chat' | 'dummyData'>('home')
 
   const handleSettingsClick = (): void => {
     log.info('Settings page opened')
@@ -18,6 +18,11 @@ function App(): React.JSX.Element {
   const handleChatClick = (): void => {
     log.info('Chat page opened')
     setCurrentPage('chat')
+  }
+
+  const handleDummyDataClick = (): void => {
+    log.info('Dummy Data page opened')
+    setCurrentPage('dummyData')
   }
 
   const handleBackToHome = (): void => {
@@ -33,6 +38,10 @@ function App(): React.JSX.Element {
     return <ChatPage onBack={handleBackToHome} />
   }
 
+  if (currentPage === 'dummyData') {
+    return <DummyDataPage onBack={handleBackToHome} />
+  }
+
   return (
     <div className="h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
@@ -42,6 +51,10 @@ function App(): React.JSX.Element {
             <Button variant="outline" onClick={handleChatClick} className="flex items-center gap-2">
               <MessageCircle className="h-4 w-4" />
               Chat
+            </Button>
+            <Button variant="outline" onClick={handleDummyDataClick} className="flex items-center gap-2">
+              <Database className="h-4 w-4" />
+              Dummy Data
             </Button>
             <Button variant="ghost" size="icon" onClick={handleSettingsClick} className="h-9 w-9">
               <SettingsIcon className="h-4 w-4" />
@@ -56,11 +69,10 @@ function App(): React.JSX.Element {
               <CardDescription>
                 Welcome to your Electron starter with AI chat capabilities. Configure your AI
                 providers in settings, then click the Chat button above to start a conversation.
+                Use the Dummy Data button to manage test database settings.
               </CardDescription>
             </CardContent>
           </Card>
-
-          <DummyDataManager />
         </div>
       </div>
     </div>
