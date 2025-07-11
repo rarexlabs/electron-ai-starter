@@ -94,7 +94,7 @@ export function handleStreamError(
 export async function sendAIStreamChunk(
   session: AIStreamSession,
   streamGenerator: AsyncGenerator<string, void, unknown>,
-  send: (channel: string, ...args: unknown[]) => void,
+  send: (channel: string, ...args: unknown[]) => void
 ): Promise<void> {
   try {
     for await (const chunk of streamGenerator) {

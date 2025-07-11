@@ -3,7 +3,6 @@ import type { ChatModelAdapter, ThreadMessage } from '@assistant-ui/react'
 import { ReactNode } from 'react'
 import { logger } from '@/lib/logger'
 import { aiStreamBridge } from '@/lib/ipc-bridge'
-import { sessionManager } from '@/lib/session-manager'
 
 const AIModelAdapter: ChatModelAdapter = {
   async *run({ messages, abortSignal }) {
@@ -19,19 +18,8 @@ const AIModelAdapter: ChatModelAdapter = {
 
       logger.info('🚀 Starting AI stream with messages:', formattedMessages.length)
 
-      // Start streaming through the bridge
-      const { sessionId, stream } = await aiStreamBridge.startStream(formattedMessages, abortSignal)
-
-      // Create session for tracking
-      const sessionAbortController = sessionManager.createSession(sessionId)
-
-      // Set up abort signal forwarding
-      if (abortSignal) {
-        abortSignal.addEventListener('abort', () => {
-          logger.info('🚫 Abort signal received, aborting session:', sessionId)
-          sessionManager.abortSession(sessionId)
-        })
-      }
+      // Start streaming through the bridge - all session management is handled internally
+      const { stream, isAborted } = await aiStreamBridge.startStream(formattedMessages, abortSignal)
 
       let fullContent = ''
 
@@ -39,7 +27,7 @@ const AIModelAdapter: ChatModelAdapter = {
         // Process streaming chunks
         for await (const chunk of stream) {
           // Check if aborted during streaming
-          if (abortSignal?.aborted || sessionAbortController.signal.aborted) {
+          if (isAborted()) {
             logger.info('🚫 Stream aborted during processing')
             break
           }
@@ -50,20 +38,15 @@ const AIModelAdapter: ChatModelAdapter = {
           }
         }
 
-        // Mark session as completed
-        sessionManager.completeSession(sessionId)
         logger.info('✅ Stream completed successfully')
       } catch (streamError) {
         const errorMessage = streamError instanceof Error ? streamError.message : 'Stream error'
-        sessionManager.errorSession(sessionId, errorMessage)
+        logger.error('❌ Stream error:', errorMessage)
         throw streamError
-      } finally {
-        // Clean up session
-        sessionManager.cleanupSession(sessionId)
       }
 
       // Handle abort case
-      if (abortSignal?.aborted || sessionAbortController.signal.aborted) {
+      if (isAborted()) {
         logger.info('🚫 Stream was aborted - exiting gracefully')
         return
       }

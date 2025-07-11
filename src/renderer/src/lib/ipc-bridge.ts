@@ -2,9 +2,8 @@ import { logger } from '@/lib/logger'
 import type { AIMessage } from '../../../types/ai'
 
 export interface StreamingResult {
-  sessionId: string
   stream: AsyncGenerator<string, void, unknown>
-  abort: () => Promise<void>
+  isAborted: () => boolean
 }
 
 export class AIStreamBridge {
@@ -13,6 +12,9 @@ export class AIStreamBridge {
     {
       cleanup: () => void
       abortController: AbortController
+      isActive: boolean
+      isAborted: boolean
+      error: string | null
     }
   >()
 
@@ -24,50 +26,76 @@ export class AIStreamBridge {
       const sessionId = await window.api.streamAIChat(messages)
       logger.info('🚀 Stream started with session:', sessionId)
 
+      // Initialize session state
+      const sessionState = {
+        cleanup: () => {
+          if (abortSignal) {
+            abortSignal.removeEventListener('abort', abortListener)
+          }
+          this.activeStreams.delete(sessionId)
+        },
+        abortController,
+        isActive: true,
+        isAborted: false,
+        error: null
+      }
+
+      this.activeStreams.set(sessionId, sessionState)
+
       const stream = this.createStreamGenerator(sessionId, abortController.signal)
 
       // Link external abort signal to internal abort controller
-      if (abortSignal) {
-        const abortListener = (): void => {
-          logger.info('🚫 External abort signal received, aborting stream')
-          abortController.abort()
+      const abortListener = async (): Promise<void> => {
+        logger.info('🚫 External abort signal received, aborting stream')
+        this.markSessionAborted(sessionId)
+        abortController.abort()
+        try {
+          await window.api.abortAIChat(sessionId)
+        } catch (error) {
+          logger.error('Failed to abort chat session:', error)
         }
-        abortSignal.addEventListener('abort', abortListener)
+      }
 
-        // Store cleanup function
-        this.activeStreams.set(sessionId, {
-          cleanup: () => {
-            abortSignal.removeEventListener('abort', abortListener)
-            this.activeStreams.delete(sessionId)
-          },
-          abortController
-        })
-      } else {
-        // Store cleanup function even without external abort signal
-        this.activeStreams.set(sessionId, {
-          cleanup: () => {
-            this.activeStreams.delete(sessionId)
-          },
-          abortController
-        })
+      if (abortSignal) {
+        abortSignal.addEventListener('abort', abortListener)
       }
 
       return {
-        sessionId,
         stream,
-        abort: async () => {
-          logger.info('🚫 Aborting stream:', sessionId)
-          abortController.abort()
-          try {
-            await window.api.abortAIChat(sessionId)
-          } catch (error) {
-            logger.error('Failed to abort chat session:', error)
-          }
+        isAborted: () => {
+          const session = this.activeStreams.get(sessionId)
+          return session?.isAborted === true
         }
       }
     } catch (error) {
       logger.error('Failed to start stream:', error)
       throw error
+    }
+  }
+
+  private markSessionAborted(sessionId: string): void {
+    const session = this.activeStreams.get(sessionId)
+    if (session) {
+      session.isAborted = true
+      session.isActive = false
+      logger.info('🚫 Session marked as aborted:', sessionId)
+    }
+  }
+
+  private markSessionCompleted(sessionId: string): void {
+    const session = this.activeStreams.get(sessionId)
+    if (session) {
+      session.isActive = false
+      logger.info('✅ Session marked as completed:', sessionId)
+    }
+  }
+
+  private markSessionError(sessionId: string, error: string): void {
+    const session = this.activeStreams.get(sessionId)
+    if (session) {
+      session.isActive = false
+      session.error = error
+      logger.error('❌ Session marked as error:', sessionId, error)
     }
   }
 
@@ -98,6 +126,7 @@ export class AIStreamBridge {
       const [, id] = args
       if (id === sessionId) {
         completed = true
+        this.markSessionCompleted(sessionId)
         if (resolveWaiting) {
           const resolve = resolveWaiting
           resolveWaiting = null
@@ -110,6 +139,7 @@ export class AIStreamBridge {
       const [, id, errorMessage] = args
       if (id === sessionId) {
         error = errorMessage as string
+        this.markSessionError(sessionId, error)
         if (resolveWaiting) {
           const resolve = resolveWaiting
           resolveWaiting = null
@@ -122,6 +152,7 @@ export class AIStreamBridge {
       const [, id] = args
       if (id === sessionId) {
         completed = true
+        this.markSessionAborted(sessionId)
         if (resolveWaiting) {
           const resolve = resolveWaiting
           resolveWaiting = null
@@ -199,12 +230,19 @@ export class AIStreamBridge {
   }
 
   // Utility method to clean up all active streams (for app shutdown)
-  cleanup(): void {
+  async cleanup(): Promise<void> {
     logger.info('🧹 Cleaning up all active streams')
-    for (const [, streamData] of this.activeStreams) {
+    const abortPromises: Promise<void>[] = []
+    for (const [sessionId, streamData] of this.activeStreams) {
       streamData.abortController.abort()
+      abortPromises.push(
+        window.api.abortAIChat(sessionId).catch((error) => {
+          logger.error('Failed to abort chat session during cleanup:', error)
+        })
+      )
       streamData.cleanup()
     }
+    await Promise.all(abortPromises)
     this.activeStreams.clear()
   }
 
