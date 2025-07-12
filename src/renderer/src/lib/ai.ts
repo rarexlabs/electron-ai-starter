@@ -33,21 +33,19 @@ async function* receiveStream(
   let pendingChunks: string[] = []
 
   // Promise-based chunk waiting
-  let resolveWaiting: (() => void) | null = null
+  let resolveYieldLoopBlocker: (() => void) | null = null
 
   // Simplified waiting notification
-  const notifyWaiting = (): void => {
-    if (resolveWaiting) {
-      const resolve = resolveWaiting
-      resolveWaiting = null
-      resolve()
-    }
+  const unblockYieldLoop = (): void => {
+    if (!resolveYieldLoopBlocker) return
+    resolveYieldLoopBlocker()
+    resolveYieldLoopBlocker = null
   }
 
   // Cleaner async waiting mechanism
   const waitForEvent = (): Promise<void> => 
     new Promise<void>((resolve) => {
-      resolveWaiting = resolve
+      resolveYieldLoopBlocker = resolve
       // Immediate resolve if stream is already finished
       if (completed || error || abortSignal.aborted) {
         resolve()
@@ -77,7 +75,7 @@ async function* receiveStream(
           break
       }
 
-      notifyWaiting()
+      unblockYieldLoop()
     }
   }
 
