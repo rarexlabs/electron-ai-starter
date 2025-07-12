@@ -19,7 +19,7 @@ export class StreamSessionStore {
   private activeStreamSessions = new Map<string, StreamSession>()
 
   startSession(): StreamSession {
-    const sessionId = Date.now().toString()
+    const sessionId = crypto.randomUUID()
     const session = new StreamSession(sessionId)
 
     this.activeStreamSessions.set(sessionId, session)
