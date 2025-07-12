@@ -18,16 +18,16 @@ const AIModelAdapter: ChatModelAdapter = {
     logger.info('🚀 Starting AI stream with message count: ', formattedMessages.length)
     const stream = await streamText(formattedMessages, abortSignal)
 
-    let fullContent = ''
+    const contentChunks: string[] = []
     for await (const chunk of stream) {
       if (abortSignal?.aborted) {
         logger.info('Stream aborted during processing')
         return
       }
 
-      fullContent += chunk
+      contentChunks.push(chunk)
       yield {
-        content: [{ type: 'text', text: fullContent }]
+        content: [{ type: 'text', text: contentChunks.join('') }]
       }
     }
 

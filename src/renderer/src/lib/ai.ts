@@ -72,14 +72,14 @@ async function* receiveStream(
     }
   }
 
-  // Set up event listeners using exposed IPC methods
-  window.api.on('ai-chat-chunk', handleChunk)
-  window.api.on('ai-chat-end', handleEnd)
-  window.api.on('ai-chat-error', handleError)
-  window.api.on('ai-chat-aborted', handleAborted)
-  abortSignal.addEventListener('abort', handleAbortSignal)
-
   try {
+    // Set up event listeners using exposed IPC methods
+    window.api.on('ai-chat-chunk', handleChunk)
+    window.api.on('ai-chat-end', handleEnd)
+    window.api.on('ai-chat-error', handleError)
+    window.api.on('ai-chat-aborted', handleAborted)
+    abortSignal.addEventListener('abort', handleAbortSignal)
+
     // Stream processing loop
     while (!completed && !error && !abortSignal.aborted) {
       // Yield any pending chunks
@@ -113,7 +113,7 @@ async function* receiveStream(
     logger.error('Stream generator error for session:', sessionId, streamError)
     throw streamError
   } finally {
-    // Clean up event listeners using exposed IPC methods
+    // Clean up event listeners - safe to call even if not set up
     window.api.off('ai-chat-chunk', handleChunk)
     window.api.off('ai-chat-end', handleEnd)
     window.api.off('ai-chat-error', handleError)
