@@ -1,6 +1,15 @@
 import { logger } from '@renderer/lib/logger'
 import type { AIMessage } from '@common/types'
 
+// Type definitions for better type safety
+type StreamEventArgs = [eventName: string, sessionId: string, data?: string]
+
+// Helper to safely parse event arguments
+const parseEventArgs = (args: unknown[]): StreamEventArgs => {
+  const [eventName, sessionId, data] = args
+  return [eventName as string, sessionId as string, data as string | undefined]
+}
+
 export async function streamText(
   messages: AIMessage[],
   abortSignal: AbortSignal
@@ -26,21 +35,40 @@ async function* receiveStream(
   // Promise-based chunk waiting
   let resolveWaiting: (() => void) | null = null
 
+  // Simplified waiting notification
+  const notifyWaiting = (): void => {
+    if (resolveWaiting) {
+      const resolve = resolveWaiting
+      resolveWaiting = null
+      resolve()
+    }
+  }
+
+  // Cleaner async waiting mechanism
+  const waitForEvent = (): Promise<void> => 
+    new Promise<void>((resolve) => {
+      resolveWaiting = resolve
+      // Immediate resolve if stream is already finished
+      if (completed || error || abortSignal.aborted) {
+        resolve()
+      }
+    })
+
   const createEventHandler = (eventType: 'chunk' | 'end' | 'error' | 'aborted') => {
     return (...args: unknown[]): void => {
-      const [, id, data] = args
+      const [, id, data] = parseEventArgs(args)
       if (id !== sessionId) return
 
       switch (eventType) {
         case 'chunk':
-          pendingChunks.push(data as string)
+          if (data) pendingChunks.push(data)
           break
         case 'end':
           completed = true
           logger.info('✅ Stream completed for session:', sessionId)
           break
         case 'error':
-          error = data as string
+          error = data || 'Unknown error'
           logger.error('❌ Stream error for session:', sessionId, error)
           break
         case 'aborted':
@@ -49,11 +77,7 @@ async function* receiveStream(
           break
       }
 
-      if (resolveWaiting) {
-        const resolve = resolveWaiting
-        resolveWaiting = null
-        resolve()
-      }
+      notifyWaiting()
     }
   }
 
@@ -90,13 +114,7 @@ async function* receiveStream(
 
       // Wait for next chunk, completion, or abort
       if (!completed && !error && !abortSignal.aborted) {
-        await new Promise<void>((resolve) => {
-          resolveWaiting = resolve
-          // Also resolve immediately if already done
-          if (completed || error || abortSignal.aborted) {
-            resolve()
-          }
-        })
+        await waitForEvent()
       }
     }
 
