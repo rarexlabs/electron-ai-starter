@@ -1,7 +1,10 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
-@import '@assistant-ui/styles/index.css';
-@import '@assistant-ui/styles/markdown.css';
+
+@layer assistant-ui, overrides;
+
+@import '@assistant-ui/styles/index.css' layer(assistant-ui);
+@import '@assistant-ui/styles/markdown.css' layer(assistant-ui);
 
 @custom-variant dark (&:is(.dark *));
 
@@ -110,6 +113,12 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer overrides {
+  .aui-button-icon {
+    @apply size-8;
+  }
 }
 
 @layer base {
