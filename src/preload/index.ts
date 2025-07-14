@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import 'electron-log/preload'
+import { Connection } from '../common/connection'
 
 // Create scoped logger for preload process using direct IPC
 const preloadLogger = {
@@ -38,23 +39,15 @@ const preloadLogger = {
   }
 }
 
-// Backend communication state
-let backendPort: MessagePort | null = null
-let communicationSetup = false
+// Backend connection setup
+let backendConnection: Connection | null = null
 
 // Listen for backend MessagePort from main process
 ipcRenderer.on('backend-port', (event) => {
-  if (communicationSetup) {
-    preloadLogger.warn('⚠️ Backend communication already setup, skipping duplicate')
-    return
-  }
-
   const [port] = event.ports
   if (port) {
-    backendPort = port
-    backendPort.start()
-    communicationSetup = true
-    preloadLogger.info('✅ Backend MessagePort received and started')
+    backendConnection = new Connection(port)
+    preloadLogger.info('✅ Backend connection established')
   } else {
     preloadLogger.error('❌ No MessagePort received from main process')
   }
@@ -138,36 +131,92 @@ const API = {
   },
 
   backend: {
-    // Backend process communication
-    ping: (): Promise<string> => {
-      return new Promise((resolve, reject) => {
-        if (!backendPort) {
-          reject(new Error('Backend not connected'))
-          return
-        }
+    // Backend process communication using Connection directly
+    ping: async (): Promise<string> => {
+      if (!backendConnection) {
+        throw new Error('Backend not connected')
+      }
 
-        const timeout = setTimeout(() => {
-          reject(new Error('Backend ping timeout'))
-        }, 5000)
+      const result = await backendConnection.invoke('ping')
+      if (result.status === 'success') {
+        return result.data as string
+      } else {
+        throw new Error(result.error?.toString() || 'Backend ping failed')
+      }
+    },
 
-        const handleResponse = (e: MessageEvent): void => {
-          if (e.data === 'pong') {
-            clearTimeout(timeout)
-            backendPort!.removeEventListener('message', handleResponse)
-            resolve('pong')
-            preloadLogger.info('✅ Received pong from backend')
-          }
-        }
+    // Test backend communication with a message
+    test: async (message: string): Promise<string> => {
+      if (!backendConnection) {
+        throw new Error('Backend not connected')
+      }
 
-        backendPort.addEventListener('message', handleResponse)
-        backendPort.postMessage('ping')
-        preloadLogger.info('📤 Sent ping to backend')
-      })
+      const result = await backendConnection.invoke('test', message)
+      if (result.status === 'success') {
+        return result.data as string
+      } else {
+        throw new Error(result.error?.toString() || 'Backend test failed')
+      }
+    },
+
+    // Test error handling
+    testError: async (): Promise<void> => {
+      if (!backendConnection) {
+        throw new Error('Backend not connected')
+      }
+
+      const result = await backendConnection.invoke('error-test')
+      if (result.status === 'error') {
+        throw new Error(result.error?.toString() || 'Backend error test failed')
+      }
+    },
+
+    // Generic invoke method for custom backend operations
+    invoke: async (channel: string, ...args: unknown[]): Promise<unknown> => {
+      if (!backendConnection) {
+        throw new Error('Backend not connected')
+      }
+
+      const result = await backendConnection.invoke(channel, ...args)
+      if (result.status === 'success') {
+        return result.data
+      } else {
+        throw new Error(result.error?.toString() || `Backend invoke ${channel} failed`)
+      }
+    },
+
+    // Publish events to backend
+    publishEvent: (channel: string, payload: string): void => {
+      if (!backendConnection) {
+        preloadLogger.warn('⚠️ Cannot publish event - backend not connected')
+        return
+      }
+
+      backendConnection.publishEvent(channel, payload)
+    },
+
+    // Listen for events from backend
+    onEvent: (channel: string, callback: (payload: unknown) => void): void => {
+      if (!backendConnection) {
+        preloadLogger.warn('⚠️ Cannot listen for events - backend not connected')
+        return
+      }
+
+      backendConnection.onEvent(channel, callback)
+    },
+
+    // Stop listening for events from backend
+    offEvent: (channel: string): void => {
+      if (!backendConnection) {
+        return
+      }
+
+      backendConnection.offEvent(channel)
     },
 
     // Check if backend is connected
     isConnected: (): boolean => {
-      return backendPort !== null && communicationSetup
+      return backendConnection?.isConnected() === true
     }
   }
 }
