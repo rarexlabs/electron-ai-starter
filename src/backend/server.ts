@@ -9,7 +9,6 @@ import type { MessagePortMain } from 'electron'
  *  2. A list of connections to renderers
  */
 export class Server {
-  private _mainConnection: Connection
   private _rendererConnections: Connection[] = []
 
   /**
