@@ -53,7 +53,7 @@ export class BackendManager {
   async stopBackend(): Promise<void> {
     if (this.backendProcess) {
       mainLogger.info('🛑 Stopping backend process...')
-      
+
       return new Promise<void>((resolve) => {
         if (!this.backendProcess) {
           resolve()
@@ -80,7 +80,7 @@ export class BackendManager {
 
         // Try graceful shutdown first
         this.backendProcess.kill('SIGTERM')
-        
+
         // If still running after 1 second, try SIGINT
         setTimeout(() => {
           if (this.backendProcess) {
