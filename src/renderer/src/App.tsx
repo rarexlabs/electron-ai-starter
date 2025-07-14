@@ -15,7 +15,6 @@ function App(): React.JSX.Element {
   useEffect(() => {
     const connectToBackend = async (): Promise<void> => {
       try {
-        logger.info('🔌 Connecting to backend...')
         await window.connectBackend()
         setBackendConnected(true)
 

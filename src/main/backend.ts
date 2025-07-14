@@ -24,8 +24,17 @@ export class Backend {
     backendPort.start()
     rendererPort.start()
 
-    this._process.postMessage({ message: 'init' }, [backendPort])
-    renderer.postMessage('backend-connected', null, [rendererPort])
+    // send one port to backend tell it it is a connection for renderer
+    const channel = `renderer/${renderer.id}`
+    this._process.postMessage({ channel, message: 'connect-renderer' }, [backendPort])
+
+    this._process.on('message', (e) => {
+      if (e.data.channel !== channel) return
+      if (e.data.message !== 'renderer-connected') return
+
+      // send the other port to renderer and inform backend is connected
+      renderer.postMessage('backend-connected', null, [rendererPort])
+    })
   }
 
   async stop(): Promise<void> {
