@@ -1,5 +1,42 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import 'electron-log/preload'
+
+// Create scoped logger for preload process using direct IPC
+const preloadLogger = {
+  info: (message: string, ...args: any[]) => {
+    ipcRenderer.send('__ELECTRON_LOG__', {
+      data: [message, ...args],
+      level: 'info',
+      scope: 'preload',
+      variables: { processType: 'preload' }
+    })
+  },
+  warn: (message: string, ...args: any[]) => {
+    ipcRenderer.send('__ELECTRON_LOG__', {
+      data: [message, ...args],
+      level: 'warn',
+      scope: 'preload',
+      variables: { processType: 'preload' }
+    })
+  },
+  error: (message: string, ...args: any[]) => {
+    ipcRenderer.send('__ELECTRON_LOG__', {
+      data: [message, ...args],
+      level: 'error',
+      scope: 'preload',
+      variables: { processType: 'preload' }
+    })
+  },
+  debug: (message: string, ...args: any[]) => {
+    ipcRenderer.send('__ELECTRON_LOG__', {
+      data: [message, ...args],
+      level: 'debug',
+      scope: 'preload',
+      variables: { processType: 'preload' }
+    })
+  }
+}
 
 // Backend communication state
 let backendPort: MessagePort | null = null
@@ -8,7 +45,7 @@ let communicationSetup = false
 // Listen for backend MessagePort from main process
 ipcRenderer.on('backend-port', (event) => {
   if (communicationSetup) {
-    __electronLog.warn('⚠️ Backend communication already setup, skipping duplicate')
+    preloadLogger.warn('⚠️ Backend communication already setup, skipping duplicate')
     return
   }
 
@@ -17,9 +54,9 @@ ipcRenderer.on('backend-port', (event) => {
     backendPort = port
     backendPort.start()
     communicationSetup = true
-    __electronLog.info('✅ Backend MessagePort received and started')
+    preloadLogger.info('✅ Backend MessagePort received and started')
   } else {
-    __electronLog.error('❌ No MessagePort received from main process')
+    preloadLogger.error('❌ No MessagePort received from main process')
   }
 })
 
@@ -115,13 +152,13 @@ const API = {
           clearTimeout(timeout)
           backendPort!.removeEventListener('message', handleResponse)
           resolve('pong')
-          __electronLog.info('✅ Received pong from backend')
+          preloadLogger.info('✅ Received pong from backend')
         }
       }
 
       backendPort.addEventListener('message', handleResponse)
       backendPort.postMessage('ping')
-      __electronLog.info('📤 Sent ping to backend')
+      preloadLogger.info('📤 Sent ping to backend')
     })
   },
 
@@ -139,7 +176,7 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('api', API)
   } catch (error) {
-    __electronLog.error('Context bridge error:', error)
+    preloadLogger.error('Context bridge error:', error)
   }
 } else {
   // @ts-ignore (define in dts)

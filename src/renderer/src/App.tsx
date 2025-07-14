@@ -4,7 +4,7 @@ import { Button } from '@renderer/components/ui/button'
 import { Settings } from '@renderer/components/Settings'
 import { DummyDataPage } from '@renderer/components/DummyDataPage'
 import { ChatPage } from '@renderer/components/ChatPage'
-import log from 'electron-log/renderer'
+import { logger } from '@renderer/lib/logger'
 
 function App(): React.JSX.Element {
   const [currentPage, setCurrentPage] = useState<'home' | 'settings' | 'chat' | 'dummyData'>('home')
@@ -19,11 +19,11 @@ function App(): React.JSX.Element {
       pingCompleted = true
 
       try {
-        log.info('🔌 Backend connected, testing communication...')
+        logger.info('🔌 Backend connected, testing communication...')
         const response = await window.api.pingBackend()
-        log.info(`✅ Backend ping successful: ${response}`)
+        logger.info(`✅ Backend ping successful: ${response}`)
       } catch (error) {
-        log.error('❌ Backend ping failed:', error)
+        logger.error('❌ Backend ping failed:', error)
       }
     }
 
@@ -50,22 +50,22 @@ function App(): React.JSX.Element {
   }, [])
 
   const handleSettingsClick = (): void => {
-    log.info('Settings page opened')
+    logger.info('Settings page opened')
     setCurrentPage('settings')
   }
 
   const handleChatClick = (): void => {
-    log.info('Chat page opened')
+    logger.info('Chat page opened')
     setCurrentPage('chat')
   }
 
   const handleDummyDataClick = (): void => {
-    log.info('Dummy Data page opened')
+    logger.info('Dummy Data page opened')
     setCurrentPage('dummyData')
   }
 
   const handleBackToHome = (): void => {
-    log.info('Navigated back to home')
+    logger.info('Navigated back to home')
     setCurrentPage('home')
   }
 

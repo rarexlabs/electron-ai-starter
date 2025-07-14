@@ -20,13 +20,13 @@ export function initializeLogging(): void {
   // Initialize for renderer IPC
   log.initialize()
 
-  // Configure console format with process type
-  log.transports.console.format = '{h}:{i}:{s}.{ms} [{processType}] [{level}] {text}'
+  // Use default console format that includes scope display
 
-  // Configure file transport to route to separate files
+  // Configure file transport to route to separate files based on scope
   log.transports.file.resolvePathFn = (_variables, message) => {
-    const processType = message?.variables?.processType || 'main'
-    const fileName = processType === 'renderer' ? 'renderer.log' : 'main.log'
+    const scope = message?.scope || 'main'
+    // Route renderer logs to renderer.log, all others (main, preload, backend) to main.log
+    const fileName = scope === 'renderer' ? 'renderer.log' : 'main.log'
     return path.join(logFolder, fileName)
   }
 
@@ -48,5 +48,6 @@ export function initializeLogging(): void {
   log.info(`📝 Logging initialized - ${path.resolve(logFolder)}`)
 }
 
-export const mainLogger = log
+// Create scoped logger for main process
+export const mainLogger = log.scope('main')
 export default log
