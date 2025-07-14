@@ -27,8 +27,8 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
     const loadPaths = async (): Promise<void> => {
       try {
         const [dbPath, logPath] = await Promise.all([
-          window.api.getDatabasePath(),
-          window.api.getLogPath()
+          window.api.main.getDatabasePath(),
+          window.api.main.getLogPath()
         ])
         setDatabasePath(dbPath)
         setLogPath(logPath)
@@ -48,7 +48,7 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
 
   const handleOpenFolder = async (folderPath: string): Promise<void> => {
     try {
-      await window.api.openFolder(folderPath)
+      await window.api.main.openFolder(folderPath)
     } catch (error) {
       logger.error('Failed to open folder:', error)
       setMessage({
@@ -99,7 +99,7 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
       setIsClearingDatabase(true)
       setMessage(null)
 
-      await window.api.clearDatabase()
+      await window.api.main.clearDatabase()
 
       setMessage({
         type: 'success',

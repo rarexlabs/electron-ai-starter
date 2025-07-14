@@ -20,7 +20,7 @@ function App(): React.JSX.Element {
 
       try {
         logger.info('🔌 Backend connected, testing communication...')
-        const response = await window.api.pingBackend()
+        const response = await window.api.backend.ping()
         logger.info(`✅ Backend ping successful: ${response}`)
       } catch (error) {
         logger.error('❌ Backend ping failed:', error)
@@ -28,12 +28,12 @@ function App(): React.JSX.Element {
     }
 
     // Check if backend is already connected (in case we mount after connection)
-    if (window.api.isBackendConnected()) {
+    if (window.api.backend.isConnected()) {
       handleBackendReady()
     } else {
       // Wait for backend connection by polling with a short interval
       const checkConnection = () => {
-        if (window.api.isBackendConnected()) {
+        if (window.api.backend.isConnected()) {
           handleBackendReady()
         } else {
           // Check again in 50ms if not connected yet
