@@ -61,7 +61,7 @@ export function DummyDataManager(): React.JSX.Element {
     const loadDummyData = async (): Promise<void> => {
       try {
         setIsLoading(true)
-        const dummyData = ((await window.api.main.getSetting('dummy')) as DummyDataFormData) || {}
+        const dummyData = ((await window.main.getSetting('dummy')) as DummyDataFormData) || {}
 
         form.setValue('settingA', dummyData.settingA || 'Default A')
         form.setValue('settingB', dummyData.settingB || 'Default B')
@@ -84,7 +84,7 @@ export function DummyDataManager(): React.JSX.Element {
       setIsLoading(true)
       setMessage(null)
 
-      await window.api.main.setSetting('dummy', {
+      await window.main.setSetting('dummy', {
         settingA: data.settingA,
         settingB: data.settingB
       })

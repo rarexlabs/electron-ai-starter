@@ -42,7 +42,7 @@ export function AISettings({
 
   const loadSettings = useCallback(async (): Promise<void> => {
     try {
-      const aiSettings = ((await window.api.main.getSetting('ai')) as AISettings) || {}
+      const aiSettings = ((await window.main.getSetting('ai')) as AISettings) || {}
       const currentProvider = aiSettings.default_provider || 'openai'
       setSelectedProvider(currentProvider)
       await loadProviderSettings(currentProvider, aiSettings)
@@ -53,7 +53,7 @@ export function AISettings({
 
   const loadModels = useCallback(async (): Promise<void> => {
     try {
-      const availableModels = await window.api.main.getAIModels(selectedProvider)
+      const availableModels = await window.main.getAIModels(selectedProvider)
       setModels(availableModels)
       if (!model && availableModels.length > 0) {
         setModel(availableModels[0])
@@ -67,8 +67,8 @@ export function AISettings({
     provider: AIProvider,
     aiSettings?: AISettings
   ): Promise<void> => {
-    const settings = aiSettings || ((await window.api.main.getSetting('ai')) as AISettings) || {}
-    const availableModels = await window.api.main.getAIModels(provider)
+    const settings = aiSettings || ((await window.main.getSetting('ai')) as AISettings) || {}
+    const availableModels = await window.main.getAIModels(provider)
 
     setApiKey(settings[`${provider}_api_key`] || '')
     setModel(settings[`${provider}_model`] || availableModels[0] || 'gpt-4o')
@@ -93,7 +93,7 @@ export function AISettings({
         apiKey: apiKey
       }
 
-      const connected = await window.api.main.testAIProviderConnection(config)
+      const connected = await window.main.testAIProviderConnection(config)
 
       if (connected) {
         setConnectionTestSuccess(true)
@@ -115,7 +115,7 @@ export function AISettings({
     setIsSaving(true)
     setSaveSuccess(false)
     try {
-      const currentAiSettings = (await window.api.main.getSetting('ai')) || {}
+      const currentAiSettings = (await window.main.getSetting('ai')) || {}
       const updatedSettings = {
         ...currentAiSettings,
         default_provider: selectedProvider,
@@ -123,7 +123,7 @@ export function AISettings({
         [`${selectedProvider}_model`]: model
       }
 
-      await window.api.main.setSetting('ai', updatedSettings)
+      await window.main.setSetting('ai', updatedSettings)
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 3000)
     } catch (error) {
@@ -142,7 +142,7 @@ export function AISettings({
 
     setIsClearing(true)
     try {
-      await window.api.main.clearSetting('ai')
+      await window.main.clearSetting('ai')
       setSelectedProvider('openai')
       setApiKey('')
       setModel('')

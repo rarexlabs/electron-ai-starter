@@ -15,7 +15,7 @@ export async function streamText(
   abortSignal: AbortSignal
 ): Promise<AsyncGenerator<string, void, unknown>> {
   try {
-    const sessionId = await window.api.main.streamAIChat(messages)
+    const sessionId = await window.main.streamAIChat(messages)
     logger.info('🚀 Stream started with session:', sessionId)
     return receiveStream(sessionId, abortSignal)
   } catch (error) {
@@ -88,7 +88,7 @@ async function* receiveStream(
   const handleAbortSignal = async (): Promise<void> => {
     logger.info('External abort signal received, aborting stream')
     try {
-      await window.api.main.abortAIChat(sessionId)
+      await window.main.abortAIChat(sessionId)
     } catch (abortError) {
       logger.error('Failed to abort chat session:', abortError)
     }
@@ -96,10 +96,10 @@ async function* receiveStream(
 
   try {
     // Set up event listeners using exposed IPC methods
-    window.api.main.on('ai-chat-chunk', handleChunk)
-    window.api.main.on('ai-chat-end', handleEnd)
-    window.api.main.on('ai-chat-error', handleError)
-    window.api.main.on('ai-chat-aborted', handleAborted)
+    window.main.on('ai-chat-chunk', handleChunk)
+    window.main.on('ai-chat-end', handleEnd)
+    window.main.on('ai-chat-error', handleError)
+    window.main.on('ai-chat-aborted', handleAborted)
     abortSignal.addEventListener('abort', handleAbortSignal)
 
     // Stream processing loop
@@ -130,10 +130,10 @@ async function* receiveStream(
     throw streamError
   } finally {
     // Clean up event listeners - safe to call even if not set up
-    window.api.main.off('ai-chat-chunk', handleChunk)
-    window.api.main.off('ai-chat-end', handleEnd)
-    window.api.main.off('ai-chat-error', handleError)
-    window.api.main.off('ai-chat-aborted', handleAborted)
+    window.main.off('ai-chat-chunk', handleChunk)
+    window.main.off('ai-chat-end', handleEnd)
+    window.main.off('ai-chat-error', handleError)
+    window.main.off('ai-chat-aborted', handleAborted)
     abortSignal.removeEventListener('abort', handleAbortSignal)
 
     logger.info('🧹 Cleaned up stream generator for session:', sessionId)
