@@ -4,7 +4,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '@resources/icon.png?asset'
 import { getDatabase, closeDatabase, runMigrations, testDatabaseConnection } from './db'
 import { initializeLogging, mainLogger } from './logger'
-import { setupIpcHandlers } from './ipc-handlers'
+import { setupHandlers } from './handlers'
 import { Backend } from './backend'
 
 initializeLogging()
@@ -91,7 +91,7 @@ app.whenReady().then(() => {
   })
 
   // Setup IPC handlers
-  setupIpcHandlers()
+  setupHandlers()
 
   createWindow()
 

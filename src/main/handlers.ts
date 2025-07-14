@@ -7,7 +7,7 @@ import { streamText, abortStream, listAvailableModel, testConnection } from './a
 import type { AIProvider, AIConfig, AISettings } from '@common/types'
 import { FACTORY } from './ai/factory'
 
-export function setupIpcHandlers(): void {
+export function setupHandlers(): void {
   ipcMain.handle('get-setting', async (_, key: string) => {
     return getSetting(key)
   })
