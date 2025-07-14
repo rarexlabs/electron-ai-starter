@@ -53,11 +53,42 @@ export class BackendManager {
   async stopBackend(): Promise<void> {
     if (this.backendProcess) {
       mainLogger.info('🛑 Stopping backend process...')
-      this.backendProcess.kill()
-      this.backendProcess = null
-      this.messageChannel = null
-      this.isStarted = false
-      mainLogger.info('✅ Backend process stopped')
+      
+      return new Promise<void>((resolve) => {
+        if (!this.backendProcess) {
+          resolve()
+          return
+        }
+
+        // Set up timeout for force kill
+        const forceKillTimeout = setTimeout(() => {
+          if (this.backendProcess) {
+            mainLogger.warn('⚠️ Force killing backend process after timeout')
+            this.backendProcess.kill('SIGKILL')
+          }
+        }, 3000) // 3 second timeout
+
+        // Listen for process exit
+        this.backendProcess.once('exit', () => {
+          clearTimeout(forceKillTimeout)
+          this.backendProcess = null
+          this.messageChannel = null
+          this.isStarted = false
+          mainLogger.info('✅ Backend process stopped')
+          resolve()
+        })
+
+        // Try graceful shutdown first
+        this.backendProcess.kill('SIGTERM')
+        
+        // If still running after 1 second, try SIGINT
+        setTimeout(() => {
+          if (this.backendProcess) {
+            mainLogger.info('🔄 Sending SIGINT to backend process')
+            this.backendProcess.kill('SIGINT')
+          }
+        }, 1000)
+      })
     }
   }
 

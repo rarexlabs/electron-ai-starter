@@ -123,8 +123,19 @@ app.on('window-all-closed', () => {
   }
 })
 
+async function shutdownGracefully(): Promise<void> {
+  try {
+    await backendManager.stopBackend()
+    closeDatabase()
+    mainLogger.info('✅ Graceful shutdown complete')
+  } catch (error) {
+    mainLogger.error('❌ Error during graceful shutdown:', error)
+  }
+}
+
 // Close database and stop backend on app quit
-app.on('before-quit', async () => {
-  await backendManager.stopBackend()
-  closeDatabase()
+app.on('before-quit', async (event) => {
+  event.preventDefault()
+  await shutdownGracefully()
+  app.exit(0)
 })
