@@ -4,7 +4,7 @@ import 'electron-log/preload'
 
 // Create scoped logger for preload process using direct IPC
 const preloadLogger = {
-  info: (message: string, ...args: any[]) => {
+  info: (message: string, ...args: unknown[]) => {
     ipcRenderer.send('__ELECTRON_LOG__', {
       data: [message, ...args],
       level: 'info',
@@ -12,7 +12,7 @@ const preloadLogger = {
       variables: { processType: 'preload' }
     })
   },
-  warn: (message: string, ...args: any[]) => {
+  warn: (message: string, ...args: unknown[]) => {
     ipcRenderer.send('__ELECTRON_LOG__', {
       data: [message, ...args],
       level: 'warn',
@@ -20,7 +20,7 @@ const preloadLogger = {
       variables: { processType: 'preload' }
     })
   },
-  error: (message: string, ...args: any[]) => {
+  error: (message: string, ...args: unknown[]) => {
     ipcRenderer.send('__ELECTRON_LOG__', {
       data: [message, ...args],
       level: 'error',
@@ -28,7 +28,7 @@ const preloadLogger = {
       variables: { processType: 'preload' }
     })
   },
-  debug: (message: string, ...args: any[]) => {
+  debug: (message: string, ...args: unknown[]) => {
     ipcRenderer.send('__ELECTRON_LOG__', {
       data: [message, ...args],
       level: 'debug',
@@ -150,7 +150,7 @@ const API = {
           reject(new Error('Backend ping timeout'))
         }, 5000)
 
-        const handleResponse = (e: MessageEvent) => {
+        const handleResponse = (e: MessageEvent): void => {
           if (e.data === 'pong') {
             clearTimeout(timeout)
             backendPort!.removeEventListener('message', handleResponse)

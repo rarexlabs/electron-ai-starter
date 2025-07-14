@@ -64,7 +64,7 @@ export class BackendManager {
         const forceKillTimeout = setTimeout(() => {
           if (this.backendProcess) {
             mainLogger.warn('⚠️ Force killing backend process after timeout')
-            this.backendProcess.kill('SIGKILL')
+            this.backendProcess.kill()
           }
         }, 3000) // 3 second timeout
 
@@ -79,13 +79,13 @@ export class BackendManager {
         })
 
         // Try graceful shutdown first
-        this.backendProcess.kill('SIGTERM')
+        this.backendProcess.kill()
 
         // If still running after 1 second, try SIGINT
         setTimeout(() => {
           if (this.backendProcess) {
             mainLogger.info('🔄 Sending SIGINT to backend process')
-            this.backendProcess.kill('SIGINT')
+            this.backendProcess.kill()
           }
         }, 1000)
       })

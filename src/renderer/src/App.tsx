@@ -13,7 +13,7 @@ function App(): React.JSX.Element {
   useEffect(() => {
     let pingCompleted = false
 
-    const handleBackendReady = async () => {
+    const handleBackendReady = async (): Promise<void> => {
       // Prevent duplicate execution in React StrictMode
       if (pingCompleted) return
       pingCompleted = true
@@ -32,7 +32,7 @@ function App(): React.JSX.Element {
       handleBackendReady()
     } else {
       // Wait for backend connection by polling with a short interval
-      const checkConnection = () => {
+      const checkConnection = (): void => {
         if (window.api.backend.isConnected()) {
           handleBackendReady()
         } else {
