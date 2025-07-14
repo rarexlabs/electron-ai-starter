@@ -8,45 +8,32 @@ import { logger } from '@renderer/lib/logger'
 
 function App(): React.JSX.Element {
   const [currentPage, setCurrentPage] = useState<'home' | 'settings' | 'chat' | 'dummyData'>('home')
+  const [backendConnected, setBackendConnected] = useState(false)
+  const [isConnecting, setIsConnecting] = useState(true)
 
-  // Test backend communication when connection is established
+  // Connect to backend and test communication
   useEffect(() => {
-    let pingCompleted = false
-
-    const handleBackendReady = async (): Promise<void> => {
-      // Prevent duplicate execution in React StrictMode
-      if (pingCompleted) return
-      pingCompleted = true
-
+    const connectToBackend = async (): Promise<void> => {
       try {
-        logger.info('🔌 Backend connected, testing communication...')
-        const response = await window.backend.ping()
-        logger.info(`✅ Backend ping successful: ${response}`)
-      } catch (error) {
-        logger.error('❌ Backend ping failed:', error)
-      }
-    }
+        logger.info('🔌 Connecting to backend...')
+        await window.connectBackend()
+        setBackendConnected(true)
 
-    // Check if backend is already connected (in case we mount after connection)
-    if (window.backend.isConnected()) {
-      handleBackendReady()
-    } else {
-      // Wait for backend connection by polling with a short interval
-      const checkConnection = (): void => {
-        if (window.backend.isConnected()) {
-          handleBackendReady()
-        } else {
-          // Check again in 50ms if not connected yet
-          setTimeout(checkConnection, 50)
+        // Test backend communication
+        try {
+          const response = await window.backend.ping()
+          logger.info(`✅ Backend ping successful: ${response}`)
+        } catch (error) {
+          logger.error('❌ Backend ping failed:', error)
         }
+      } catch (error) {
+        logger.error('❌ Failed to connect to backend:', error)
+      } finally {
+        setIsConnecting(false)
       }
-      checkConnection()
     }
 
-    // Cleanup function to prevent duplicate execution
-    return () => {
-      pingCompleted = true
-    }
+    connectToBackend()
   }, [])
 
   const handleSettingsClick = (): void => {
@@ -67,6 +54,36 @@ function App(): React.JSX.Element {
   const handleBackToHome = (): void => {
     logger.info('Navigated back to home')
     setCurrentPage('home')
+  }
+
+  // Show loading state while connecting to backend
+  if (isConnecting) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-2xl font-semibold text-gray-700 dark:text-gray-200 mb-4">
+            Connecting to backend...
+          </div>
+          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state if backend connection failed
+  if (!backendConnected) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-red-50 dark:from-gray-900 dark:via-gray-800 dark:to-red-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-2xl font-semibold text-red-700 dark:text-red-300 mb-4">
+            Failed to connect to backend
+          </div>
+          <p className="text-gray-600 dark:text-gray-400">
+            Please check the logs for more information.
+          </p>
+        </div>
+      </div>
+    )
   }
 
   if (currentPage === 'settings') {

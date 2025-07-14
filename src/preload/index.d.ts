@@ -15,6 +15,7 @@ declare global {
 
   interface Window {
     electron: ElectronAPI
+    connectBackend(): Promise<void>
     main: {
       // Settings operations
       getSetting(key: string): Promise<unknown>
