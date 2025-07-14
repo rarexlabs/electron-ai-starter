@@ -43,7 +43,7 @@ async function* receiveStream(
   }
 
   // Cleaner async waiting mechanism
-  const waitForEvent = (): Promise<void> => 
+  const waitForEvent = (): Promise<void> =>
     new Promise<void>((resolve) => {
       resolveYieldLoopBlocker = resolve
       // Immediate resolve if stream is already finished

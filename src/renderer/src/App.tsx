@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Settings as SettingsIcon, MessageCircle, Database } from 'lucide-react'
 import { Button } from '@renderer/components/ui/button'
 import { Settings } from '@renderer/components/Settings'
@@ -8,6 +8,46 @@ import log from 'electron-log/renderer'
 
 function App(): React.JSX.Element {
   const [currentPage, setCurrentPage] = useState<'home' | 'settings' | 'chat' | 'dummyData'>('home')
+
+  // Test backend communication when connection is established
+  useEffect(() => {
+    let pingCompleted = false
+
+    const handleBackendReady = async () => {
+      // Prevent duplicate execution in React StrictMode
+      if (pingCompleted) return
+      pingCompleted = true
+
+      try {
+        log.info('🔌 Backend connected, testing communication...')
+        const response = await window.api.pingBackend()
+        log.info(`✅ Backend ping successful: ${response}`)
+      } catch (error) {
+        log.error('❌ Backend ping failed:', error)
+      }
+    }
+
+    // Check if backend is already connected (in case we mount after connection)
+    if (window.api.isBackendConnected()) {
+      handleBackendReady()
+    } else {
+      // Wait for backend connection by polling with a short interval
+      const checkConnection = () => {
+        if (window.api.isBackendConnected()) {
+          handleBackendReady()
+        } else {
+          // Check again in 50ms if not connected yet
+          setTimeout(checkConnection, 50)
+        }
+      }
+      checkConnection()
+    }
+
+    // Cleanup function to prevent duplicate execution
+    return () => {
+      pingCompleted = true
+    }
+  }, [])
 
   const handleSettingsClick = (): void => {
     log.info('Settings page opened')

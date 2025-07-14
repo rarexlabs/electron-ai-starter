@@ -5,6 +5,7 @@ import icon from '@resources/icon.png?asset'
 import { getDatabase, closeDatabase, runMigrations, testDatabaseConnection } from './db'
 import { initializeLogging, mainLogger } from './logger'
 import { setupIpcHandlers } from './ipc-handlers'
+import { backendManager } from './backend-manager'
 
 initializeLogging()
 
@@ -36,7 +37,7 @@ function initializeDatabase(): void {
   }
 }
 
-function createWindow(): void {
+async function createWindow(): Promise<void> {
   const mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
@@ -49,6 +50,19 @@ function createWindow(): void {
       sandbox: false
     }
   })
+
+  // Start backend process and get MessagePort
+  try {
+    const backendPort = await backendManager.startBackend()
+
+    // Pass the MessagePort to the preload script
+    mainWindow.webContents.once('did-finish-load', () => {
+      mainWindow.webContents.postMessage('backend-port', null, [backendPort])
+      mainLogger.info('📤 Sent backend MessagePort to renderer')
+    })
+  } catch (error) {
+    mainLogger.error('❌ Failed to setup backend communication:', error)
+  }
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
@@ -109,7 +123,8 @@ app.on('window-all-closed', () => {
   }
 })
 
-// Close database on app quit
-app.on('before-quit', () => {
+// Close database and stop backend on app quit
+app.on('before-quit', async () => {
+  await backendManager.stopBackend()
   closeDatabase()
 })

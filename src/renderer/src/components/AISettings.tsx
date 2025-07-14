@@ -224,14 +224,16 @@ export function AISettings({
             <Button
               onClick={() => testConnection()}
               disabled={!apiKey || isTesting}
-              variant={connectionTestSuccess ? 'default' : connectionTestError ? 'destructive' : 'outline'}
+              variant={
+                connectionTestSuccess ? 'default' : connectionTestError ? 'destructive' : 'outline'
+              }
               size="sm"
               className={
-                connectionTestSuccess 
-                  ? 'bg-green-600 hover:bg-green-700 text-white' 
-                  : connectionTestError 
-                  ? 'bg-orange-500 hover:bg-orange-600 text-white' 
-                  : ''
+                connectionTestSuccess
+                  ? 'bg-green-600 hover:bg-green-700 text-white'
+                  : connectionTestError
+                    ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                    : ''
               }
             >
               {isTesting ? (
@@ -269,9 +271,9 @@ export function AISettings({
             </Button>
           </div>
 
-          <Button 
-            onClick={saveSettings} 
-            disabled={!apiKey || isSaving} 
+          <Button
+            onClick={saveSettings}
+            disabled={!apiKey || isSaving}
             size="sm"
             variant={saveSuccess ? 'default' : 'default'}
             className={saveSuccess ? 'bg-green-600 hover:bg-green-700 text-white' : ''}

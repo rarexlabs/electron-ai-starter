@@ -1,6 +1,27 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import log from 'electron-log/preload'
+
+// Backend communication state
+let backendPort: MessagePort | null = null
+let communicationSetup = false
+
+// Listen for backend MessagePort from main process
+ipcRenderer.on('backend-port', (event) => {
+  if (communicationSetup) {
+    __electronLog.warn('⚠️ Backend communication already setup, skipping duplicate')
+    return
+  }
+
+  const [port] = event.ports
+  if (port) {
+    backendPort = port
+    backendPort.start()
+    communicationSetup = true
+    __electronLog.info('✅ Backend MessagePort received and started')
+  } else {
+    __electronLog.error('❌ No MessagePort received from main process')
+  }
+})
 
 // AI Chat API types
 export type AIProvider = 'openai' | 'anthropic' | 'google'
@@ -75,6 +96,38 @@ const API = {
 
   off: (channel: string, listener: (...args: unknown[]) => void): void => {
     ipcRenderer.removeListener(channel, listener)
+  },
+
+  // Backend process communication
+  pingBackend: (): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      if (!backendPort) {
+        reject(new Error('Backend not connected'))
+        return
+      }
+
+      const timeout = setTimeout(() => {
+        reject(new Error('Backend ping timeout'))
+      }, 5000)
+
+      const handleResponse = (e: MessageEvent) => {
+        if (e.data === 'pong') {
+          clearTimeout(timeout)
+          backendPort!.removeEventListener('message', handleResponse)
+          resolve('pong')
+          __electronLog.info('✅ Received pong from backend')
+        }
+      }
+
+      backendPort.addEventListener('message', handleResponse)
+      backendPort.postMessage('ping')
+      __electronLog.info('📤 Sent ping to backend')
+    })
+  },
+
+  // Check if backend is connected
+  isBackendConnected: (): boolean => {
+    return backendPort !== null && communicationSetup
   }
 }
 
@@ -86,7 +139,7 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('api', API)
   } catch (error) {
-    log.error('Context bridge error:', error)
+    __electronLog.error('Context bridge error:', error)
   }
 } else {
   // @ts-ignore (define in dts)
