@@ -215,17 +215,20 @@ export class Server {
 
     this._backendConnectionPromise = new Promise<void>((resolve) => {
       // Listen for backend MessagePort from main process
-      ipcRenderer.on('backend-port', (event) => {
+      ipcRenderer.on('backend-connected', (event) => {
         const [port] = event.ports
-        if (port) {
-          this._backendConnection = new Connection(port)
-          preloadLogger.info('✅ Backend connection established')
-          resolve()
-        } else {
-          preloadLogger.error('❌ No MessagePort received from main process')
-          // Don't resolve - keep waiting for a valid connection
-        }
+        this._backendConnection = new Connection(port)
+        preloadLogger.info('✅ Backend connection established')
+        resolve()
       })
+
+      // attempt to reconnect when backend exited
+      ipcRenderer.on('backend-exited', () => {
+        ipcRenderer.send('connect-backend')
+      })
+
+      preloadLogger.info('🔄 Connecting to backend')
+      ipcRenderer.send('connect-backend')
     })
 
     return this._backendConnectionPromise

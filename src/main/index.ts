@@ -1,16 +1,18 @@
-import { app, shell, BrowserWindow, dialog } from 'electron'
+import { app, shell, BrowserWindow, dialog, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '@resources/icon.png?asset'
 import { getDatabase, closeDatabase, runMigrations, testDatabaseConnection } from './db'
 import { initializeLogging, mainLogger } from './logger'
 import { setupIpcHandlers } from './ipc-handlers'
-import { backendManager } from './backend-manager'
+import { Backend } from './backend'
 
 initializeLogging()
 
 mainLogger.info('🚀 App starting...')
 mainLogger.info('🔧 Main process started')
+
+let backend: Backend | undefined = undefined
 
 function initializeDatabase(): void {
   try {
@@ -50,19 +52,6 @@ async function createWindow(): Promise<void> {
       sandbox: false
     }
   })
-
-  // Start backend process and get MessagePort
-  try {
-    const backendPort = await backendManager.startBackend()
-
-    // Pass the MessagePort to the preload script
-    mainWindow.webContents.once('did-finish-load', () => {
-      mainWindow.webContents.postMessage('backend-port', null, [backendPort])
-      mainLogger.info('📤 Sent backend MessagePort to renderer')
-    })
-  } catch (error) {
-    mainLogger.error('❌ Failed to setup backend communication:', error)
-  }
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
@@ -111,6 +100,11 @@ app.whenReady().then(() => {
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
+
+  backend = new Backend()
+  ipcMain.on('connect-backend', async (e) => {
+    return backend!.connect(e.sender)
+  })
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -125,7 +119,7 @@ app.on('window-all-closed', () => {
 
 async function shutdownGracefully(): Promise<void> {
   try {
-    await backendManager.stopBackend()
+    await backend!.stop()
     closeDatabase()
     mainLogger.info('✅ Graceful shutdown complete')
   } catch (error) {
