@@ -7,9 +7,16 @@ import { sql } from 'drizzle-orm'
 import logger from '../logger'
 import { getDatabasePath } from '../paths'
 
+interface MigrationStatus {
+  appliedCount: number
+  pendingCount: number
+  latestApplied: string | null
+  totalMigrations: number
+}
+
 export function connectDatabase(): ReturnType<typeof drizzle> {
   const dbPath = getDatabasePath()
-  logger.info(`🗄️ Database: ${path.resolve(path.dirname(dbPath))}`)
+  logger.info(`Database: ${path.resolve(path.dirname(dbPath))}`)
 
   const dbDir = path.dirname(dbPath)
   if (!fs.existsSync(dbDir)) {
@@ -23,15 +30,18 @@ export function connectDatabase(): ReturnType<typeof drizzle> {
 export async function runMigrations(database: ReturnType<typeof drizzle>): Promise<void> {
   const migrationsFolder = getMigrationsFolder()
   if (!migrationsFolder) {
-    logger.info('📦 No migrations folder found, skipping migrations')
+    logger.info('No migrations folder found, skipping migrations')
     return
   }
 
-  logger.info('🚀 Running migrations...')
+  const migrationStatus = await getMigrationStatus(database, migrationsFolder)
+  if (migrationStatus.pendingCount === 0) logger.info('DB migration up to date')
+  else logger.info(`${migrationStatus.pendingCount} pending db migration(s) to apply`)
 
   // Run migrations directly - libsql migrate handles checking if already applied
   await migrate(database, { migrationsFolder })
-  logger.info('✅ Migrations completed successfully')
+
+  logger.info(`DB migration completed`)
 }
 
 function getMigrationsFolder(): string | null {
@@ -42,6 +52,46 @@ function getMigrationsFolder(): string | null {
   ]
 
   return possiblePaths.find(fs.existsSync) || null
+}
+
+async function getMigrationStatus(
+  database: ReturnType<typeof drizzle>,
+  migrationsFolder: string
+): Promise<MigrationStatus> {
+  // Get all migration files from filesystem
+  const migrationFiles = fs
+    .readdirSync(migrationsFolder)
+    .filter((file) => file.endsWith('.sql'))
+    .sort()
+
+  const totalMigrations = migrationFiles.length
+
+  // Try to query the migrations table to see what's been applied
+  let appliedMigrations: { id: number; hash: string; created_at: number }[] = []
+  try {
+    const result = await database.all(sql`SELECT * FROM __drizzle_migrations ORDER BY id`)
+    appliedMigrations = result as { id: number; hash: string; created_at: number }[]
+  } catch {
+    // Table doesn't exist yet, no migrations applied
+    appliedMigrations = []
+  }
+
+  const appliedCount = appliedMigrations.length
+  const pendingCount = Math.max(0, totalMigrations - appliedCount)
+
+  // Get the latest applied migration file name
+  let latestApplied: string | null = null
+  if (appliedCount > 0 && migrationFiles.length > 0) {
+    // The latest applied migration corresponds to the file at index (appliedCount - 1)
+    latestApplied = appliedCount <= migrationFiles.length ? migrationFiles[appliedCount - 1] : null
+  }
+
+  return {
+    appliedCount,
+    pendingCount,
+    latestApplied,
+    totalMigrations
+  }
 }
 
 export async function ensureConnection(database: ReturnType<typeof drizzle>) {

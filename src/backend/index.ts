@@ -4,7 +4,7 @@ import logger, { initializeBackendLogging } from './logger'
 // Initialize logging first
 initializeBackendLogging()
 
-logger.info('🚀 Backend process started')
+logger.info('Backend process started')
 
 async function main(): Promise<void> {
   const server = new Server(process.parentPort)
