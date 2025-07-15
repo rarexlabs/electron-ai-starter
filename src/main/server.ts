@@ -4,7 +4,7 @@ import { is } from '@electron-toolkit/utils'
 import icon from '@resources/icon.png?asset'
 import { Handler } from './handler'
 import { Backend } from './backend'
-import { mainLogger } from './logger'
+import logger from './logger'
 
 export class Server {
   private _backend: Backend
@@ -14,21 +14,12 @@ export class Server {
   constructor() {
     this._handler = new Handler()
     this._backend = new Backend()
-    this.setupHandlers()
-  }
 
-  private setupHandlers(): void {
     ipcMain.on('connectBackend', async (e) => {
       return this._backend.connect(e.sender)
     })
 
-    ipcMain.handle('ping', async () => {
-      return await this._handler.ping()
-    })
-
-    ipcMain.handle('openFolder', async (_, folderPath: string) => {
-      return await this._handler.openFolder(folderPath)
-    })
+    this._handle(['ping', 'openFolder'])
   }
 
   async createMainWindow(): Promise<void> {
@@ -51,7 +42,7 @@ export class Server {
 
     this._mainWindow.on('closed', () => {
       this._mainWindow = null
-      mainLogger.info('Main window closed')
+      logger.info('Main window closed')
     })
 
     this._mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -67,18 +58,28 @@ export class Server {
       this._mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
     }
 
-    mainLogger.info('Main window created')
-  }
-
-  getMainWindow(): BrowserWindow | null {
-    return this._mainWindow
-  }
-
-  getBackend(): Backend {
-    return this._backend
+    logger.info('Main window created')
   }
 
   async shutdown(): Promise<void> {
     await this._backend.stop()
+  }
+
+  private _handle(channels: string[]) {
+    for (const channel of channels) {
+      ipcMain.handle(channel, async (_e, ...args) => {
+        return this._handleChannel(this._handler, channel, args)
+      })
+    }
+  }
+
+  private async _handleChannel(handler: Handler, channel: string, args: unknown[]) {
+    const channelHandler = handler[channel]
+
+    logger.info('[start]', `Handler#${channel}`)
+    const result = await channelHandler.apply(handler, args)
+    logger.info('[end]', `Handler#${channel}`)
+
+    return result
   }
 }

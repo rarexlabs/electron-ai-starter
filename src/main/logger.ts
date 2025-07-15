@@ -46,5 +46,5 @@ export function initializeLogging(): void {
   log.info(`Logging initialized`)
 }
 
-export const mainLogger = log.scope('main')
-export default log
+const logger = log.scope('main')
+export default logger

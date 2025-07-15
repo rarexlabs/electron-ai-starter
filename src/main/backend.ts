@@ -1,5 +1,5 @@
 import { utilityProcess, MessageChannelMain, UtilityProcess, WebContents } from 'electron'
-import { mainLogger } from './logger'
+import logger from './logger'
 import { getBasePath } from './paths'
 import backendPath from '../backend/index?modulePath'
 
@@ -45,7 +45,7 @@ export class Backend {
 
   async stop(): Promise<void> {
     if (this._process) {
-      mainLogger.info('🛑 Stopping backend process...')
+      logger.info('🛑 Stopping backend process...')
 
       return new Promise<void>((resolve) => {
         if (!this._process) {
@@ -55,7 +55,7 @@ export class Backend {
 
         // Listen for process exit
         this._process.once('exit', () => {
-          mainLogger.info('✅ Backend process stopped')
+          logger.info('✅ Backend process stopped')
           resolve()
         })
 

@@ -1,11 +1,11 @@
 import { app, BrowserWindow } from 'electron'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
-import { initializeLogging, mainLogger } from './logger'
+import logger, { initializeLogging } from './logger'
 import { Server } from './server'
 
 function main() {
   initializeLogging()
-  mainLogger.info('🔧 Main process started')
+  logger.info('Main process started')
 
   let server: Server
 
