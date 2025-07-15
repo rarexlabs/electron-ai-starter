@@ -60,7 +60,7 @@ export class Server {
   public readonly mainAPI = {
     // Only keep non-database/AI operations in main
     openFolder: (folderPath: string): Promise<void> => {
-      return ipcRenderer.invoke('open-folder', folderPath)
+      return ipcRenderer.invoke('openFolder', folderPath)
     },
 
     // Raw IPC event methods for renderer to handle streaming events
@@ -77,16 +77,16 @@ export class Server {
   public readonly backendAPI: RendererBackendAPI & BackendListenerAPI = {
     // Backend process communication using Connection directly
     ping: (...args) => this._invoke('ping', ...args),
-    getSetting: (...args) => this._invoke('get-setting', ...args),
-    setSetting: (...args) => this._invoke('set-setting', ...args),
-    clearSetting: (...args) => this._invoke('clear-setting', ...args),
-    clearDatabase: (...args) => this._invoke('clear-database', ...args),
-    getDatabasePath: (...args) => this._invoke('get-database-path', ...args),
-    getLogPath: (...args) => this._invoke('get-log-path', ...args),
-    streamAIChat: (...args) => this._invoke('stream-ai-chat', ...args),
-    abortAIChat: (...args) => this._invoke('abort-ai-chat', ...args),
-    getAIModels: (...args) => this._invoke('get-ai-models', ...args),
-    testAIProviderConnection: (...args) => this._invoke('test-ai-provider-connection', ...args),
+    getSetting: (...args) => this._invoke('getSetting', ...args),
+    setSetting: (...args) => this._invoke('setSetting', ...args),
+    clearSetting: (...args) => this._invoke('clearSetting', ...args),
+    clearDatabase: (...args) => this._invoke('clearDatabase', ...args),
+    getDatabasePath: (...args) => this._invoke('getDatabasePath', ...args),
+    getLogPath: (...args) => this._invoke('getLogPath', ...args),
+    streamAIText: (...args) => this._invoke('streamAIText', ...args),
+    abortAIText: (...args) => this._invoke('abortAIText', ...args),
+    getAIModels: (...args) => this._invoke('getAiModels', ...args),
+    testAIProviderConnection: (...args) => this._invoke('testAiProviderConnection', ...args),
     onEvent: (channel: string, callback: (appEvent: AppEvent) => void) => {
       this._backendConnection!.onEvent(channel, callback)
     },
@@ -106,7 +106,7 @@ export class Server {
 
     this._backendConnectionPromise = new Promise<void>((resolve) => {
       // Listen for backend MessagePort from main process
-      ipcRenderer.on('backend-connected', (event) => {
+      ipcRenderer.on('backendConnected', (event) => {
         const [port] = event.ports
         this._backendConnection = new Connection(port)
 
@@ -115,12 +115,12 @@ export class Server {
       })
 
       // attempt to reconnect when backend exited
-      ipcRenderer.on('backend-exited', () => {
-        ipcRenderer.send('connect-backend')
+      ipcRenderer.on('backendExited', () => {
+        ipcRenderer.send('connectBackend')
       })
 
       preloadLogger.info('🔄 Connecting to backend')
-      ipcRenderer.send('connect-backend')
+      ipcRenderer.send('connectBackend')
     })
 
     return this._backendConnectionPromise

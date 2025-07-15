@@ -28,14 +28,14 @@ export class Backend {
 
     // send one port to backend tell it it is a connection for renderer
     const message = `renderer/${renderer.id}`
-    this._process.postMessage({ channel: 'connect-renderer', message }, [backendPort])
+    this._process.postMessage({ channel: 'connectRenderer', message }, [backendPort])
 
     this._process.on('message', (e) => {
-      if (e.data.channel !== 'renderer-connected') return
+      if (e.data.channel !== 'rendererConnected') return
       if (e.data.message !== message) return
 
       // send the other port to renderer and inform backend is connected
-      renderer.postMessage('backend-connected', null, [rendererPort])
+      renderer.postMessage('backendConnected', null, [rendererPort])
     })
   }
 

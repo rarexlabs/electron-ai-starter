@@ -3,7 +3,7 @@ import { mainLogger } from './logger'
 
 export function setupHandlers(): void {
   // Only keep essential main process operations
-  ipcMain.handle('open-folder', async (_, folderPath: string) => {
+  ipcMain.handle('openFolder', async (_, folderPath: string) => {
     try {
       await shell.openPath(folderPath)
       mainLogger.info(`Opened folder: ${folderPath}`)

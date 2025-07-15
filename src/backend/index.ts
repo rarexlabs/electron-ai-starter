@@ -35,11 +35,11 @@ function main(): void {
   process.parentPort.on('message', (e) => {
     if (!e.data.channel && e.data.message) throw new Error('Malformatted message')
 
-    if (e.data.channel === 'connect-renderer') {
+    if (e.data.channel === 'connectRenderer') {
       const [port] = e.ports
       server.connectRenderer(port)
       process.parentPort.postMessage({
-        data: { channel: 'renderer-connected', message: e.data.message }
+        data: { channel: 'rendererConnected', message: e.data.message }
       })
     }
   })

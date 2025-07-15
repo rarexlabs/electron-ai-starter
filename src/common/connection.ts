@@ -96,7 +96,7 @@ export class Connection {
     callback: (channel: string, args: unknown[]) => Promise<Result<unknown, unknown>>
   ): void {
     const listener = async (event: MessageEvent): Promise<void> => {
-      if (event.data?.type !== 'invoke') return;
+      if (event.data?.type !== 'invoke') return
 
       const invoke = event.data as InvokeMessage
       const result = await callback(invoke.channel, invoke.args)

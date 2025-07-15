@@ -73,7 +73,7 @@ app.whenReady().then(() => {
   })
 
   backend = new Backend()
-  ipcMain.on('connect-backend', async (e) => {
+  ipcMain.on('connectBackend', async (e) => {
     return backend!.connect(e.sender)
   })
 })

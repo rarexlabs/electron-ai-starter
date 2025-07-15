@@ -94,8 +94,8 @@ export interface RendererBackendAPI {
   clearDatabase: () => Promise<Result<void>>
   getDatabasePath: () => Promise<Result<string>>
   getLogPath: () => Promise<Result<string>>
-  streamAIChat: (messages: AIMessage[]) => Promise<Result<string>>
-  abortAIChat: (sessionId: string) => Promise<Result<void>>
+  streamAIText: (messages: AIMessage[]) => Promise<Result<string>>
+  abortAIText: (sessionId: string) => Promise<Result<void>>
   getAIModels: (provider: AIProvider) => Promise<Result<string[]>>
   testAIProviderConnection: (config: AIConfig) => Promise<Result<boolean>>
 }

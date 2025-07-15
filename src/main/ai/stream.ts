@@ -42,13 +42,13 @@ export async function streamSessionText(
       // Check if session was aborted
       if (session.abortSignal.aborted) {
         mainLogger.info(`Stream aborted during chunk processing for session: ${session.id}`)
-        publishEvent('ai-chat-aborted', {
+        publishEvent('aiChatAborted', {
           type: EventType.Message,
           payload: { sessionId: session.id }
         })
         return
       }
-      publishEvent('ai-chat-chunk', {
+      publishEvent('aiChatChunk', {
         type: EventType.Message,
         payload: { sessionId: session.id, chunk }
       })
@@ -56,7 +56,7 @@ export async function streamSessionText(
 
     // Signal end of stream if not aborted
     if (!session.abortSignal.aborted) {
-      publishEvent('ai-chat-end', { type: EventType.Message, payload: { sessionId: session.id } })
+      publishEvent('aiChatEnd', { type: EventType.Message, payload: { sessionId: session.id } })
       mainLogger.info(
         `✅ AI response streaming completed successfully with ${config.provider} for session: ${session.id}`
       )
@@ -64,14 +64,14 @@ export async function streamSessionText(
   } catch (error) {
     if (isAbortError(error)) {
       mainLogger.info(`AI chat stream was aborted for session: ${session.id}`)
-      publishEvent('ai-chat-aborted', {
+      publishEvent('aiChatAborted', {
         type: EventType.Message,
         payload: { sessionId: session.id }
       })
     } else {
       mainLogger.error('AI chat stream error:', error)
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
-      publishEvent('ai-chat-error', {
+      publishEvent('aiChatError', {
         type: EventType.Message,
         payload: { sessionId: session.id, error: errorMessage }
       })

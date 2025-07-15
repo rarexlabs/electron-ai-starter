@@ -9,7 +9,7 @@ export async function streamText(
   try {
     // Ensure backend is connected before making the call
     await window.connectBackend()
-    const result = await window.backend.streamAIChat(messages)
+    const result = await window.backend.streamAIText(messages)
 
     if (isOk(result)) {
       const sessionId = result.value
@@ -90,7 +90,7 @@ async function* receiveStream(
   const handleAbortSignal = async (): Promise<void> => {
     logger.info('External abort signal received, aborting stream')
     try {
-      const result = await window.backend.abortAIChat(sessionId)
+      const result = await window.backend.abortAIText(sessionId)
       if (isError(result)) {
         logger.error('Failed to abort chat session:', result.error)
       }
@@ -101,10 +101,10 @@ async function* receiveStream(
 
   try {
     // Set up event listeners directly from backend
-    window.backend.onEvent('ai-chat-chunk', handleChunk)
-    window.backend.onEvent('ai-chat-end', handleEnd)
-    window.backend.onEvent('ai-chat-error', handleError)
-    window.backend.onEvent('ai-chat-aborted', handleAborted)
+    window.backend.onEvent('aiChatChunk', handleChunk)
+    window.backend.onEvent('aiChatEnd', handleEnd)
+    window.backend.onEvent('aiChatError', handleError)
+    window.backend.onEvent('aiChatAborted', handleAborted)
     abortSignal.addEventListener('abort', handleAbortSignal)
 
     // Stream processing loop
@@ -135,10 +135,10 @@ async function* receiveStream(
     throw streamError
   } finally {
     // Clean up event listeners - safe to call even if not set up
-    window.backend.offEvent('ai-chat-chunk')
-    window.backend.offEvent('ai-chat-end')
-    window.backend.offEvent('ai-chat-error')
-    window.backend.offEvent('ai-chat-aborted')
+    window.backend.offEvent('aiChatChunk')
+    window.backend.offEvent('aiChatEnd')
+    window.backend.offEvent('aiChatError')
+    window.backend.offEvent('aiChatAborted')
     abortSignal.removeEventListener('abort', handleAbortSignal)
 
     logger.info('🧹 Cleaned up stream generator for session:', sessionId)
