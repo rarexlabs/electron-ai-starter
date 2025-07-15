@@ -1,12 +1,4 @@
-import {
-  Result,
-  TimeoutError,
-  InvokeMessage,
-  ResultMessage,
-  EventMessage,
-  AppEvent,
-  EventType
-} from './types'
+import { Result, TimeoutError, InvokeMessage, ResultMessage, EventMessage, AppEvent } from './types'
 import { MessagePortMain } from 'electron'
 
 // Helper function to generate unique IDs
@@ -127,16 +119,9 @@ export class Connection {
    * Unlike invoke, publishing event is for things that the other side of the connection
    * may be interested in, but the sending side does not need a reply.
    */
-  publishEvent(channels: string[] | string, content?: string | AppEvent): void {
+  publishEvent(channels: string[] | string, event?: AppEvent): void {
     if (!this._isStarted) {
       return
-    }
-
-    let event: AppEvent | undefined
-    if (typeof content === 'string') {
-      event = { type: EventType.Message, payload: content }
-    } else {
-      event = content
     }
 
     const channelArray = Array.isArray(channels) ? channels : [channels]

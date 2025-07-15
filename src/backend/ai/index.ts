@@ -1,4 +1,4 @@
-import type { AIMessage, AIConfig } from '@common/types'
+import type { AIMessage, AIConfig, AppEvent } from '@common/types'
 import { streamSessionText } from './stream'
 import { sessionStore } from './stream-session-store'
 import { createModel } from './factory'
@@ -33,13 +33,13 @@ export async function testConnection(config: AIConfig): Promise<boolean> {
 export async function streamText(
   config: AIConfig,
   messages: AIMessage[],
-  send: (channel: string, ...args: unknown[]) => void
+  publishEvent: (channel: string, event: AppEvent) => void
 ): Promise<string> {
   // Create and store session
   const session = sessionStore.startSession()
 
   // Start streaming directly to session (handles everything in one function)
-  streamSessionText(config, messages, session, send, () => {
+  streamSessionText(config, messages, session, publishEvent, () => {
     sessionStore.endSession(session.id)
   })
 

@@ -45,30 +45,30 @@ async function* receiveStream(
       }
     })
 
-  const handleChunk = (id: string, data: string): void => {
-    if (id !== sessionId) return
-    if (data) {
-      pendingChunks.push(data)
+  const handleChunk = (payload: { sessionId: string; chunk: string }): void => {
+    if (payload.sessionId !== sessionId) return
+    if (payload.chunk) {
+      pendingChunks.push(payload.chunk)
     }
     unblockYieldLoop()
   }
 
-  const handleEnd = (id: string): void => {
-    if (id !== sessionId) return
+  const handleEnd = (payload: { sessionId: string }): void => {
+    if (payload.sessionId !== sessionId) return
     completed = true
     logger.info('✅ Stream completed for session:', sessionId)
     unblockYieldLoop()
   }
 
-  const handleError = (id: string, data: string): void => {
-    if (id !== sessionId) return
-    error = data || 'Unknown error'
+  const handleError = (payload: { sessionId: string; error: string }): void => {
+    if (payload.sessionId !== sessionId) return
+    error = payload.error || 'Unknown error'
     logger.error('❌ Stream error for session:', sessionId, error)
     unblockYieldLoop()
   }
 
-  const handleAborted = (id: string): void => {
-    if (id !== sessionId) return
+  const handleAborted = (payload: { sessionId: string }): void => {
+    if (payload.sessionId !== sessionId) return
     completed = true
     logger.info('Stream aborted for session:', sessionId)
     unblockYieldLoop()

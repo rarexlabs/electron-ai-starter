@@ -6,7 +6,8 @@ import type {
   AIProvider,
   AIConfig,
   AISettings,
-  AIMessage
+  AIMessage,
+  AppEvent
 } from '@common/types'
 import { ok, error } from '@common/result'
 import { dirname } from 'path'
@@ -143,14 +144,9 @@ export class Server {
           apiKey
         }
 
-        // Create a send function that forwards events through the connection
-        const send = (channel: string, ...eventArgs: unknown[]): void => {
-          // Convert the arguments to a JSON string for compatibility
-          const payload = JSON.stringify(eventArgs)
-          connection.publishEvent(channel, payload)
-        }
-
-        const sessionId = await streamText(config, messages, send)
+        const sessionId = await streamText(config, messages, (channel: string, event: AppEvent) => {
+          connection.publishEvent(channel, event)
+        })
         return ok(sessionId)
       } catch (err) {
         backendLogger.error('AI chat stream error:', err)

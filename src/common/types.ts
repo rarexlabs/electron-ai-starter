@@ -21,7 +21,17 @@ export interface AISettings {
   google_model?: string
 }
 
-export type Result<A, E = never> = Ok<A> | Error<E>
+export class TimeoutError extends Error {
+  limitMs: number
+
+  constructor({ limitMs }: { limitMs: number }) {
+    super(`Operation timed out after ${limitMs}ms`)
+    this.name = 'TimeoutError'
+    this.limitMs = limitMs
+  }
+}
+
+export type Result<A, E = never> = Ok<A> | Error<E | TimeoutError>
 
 export interface Ok<A> {
   status: 'ok'
@@ -31,16 +41,6 @@ export interface Ok<A> {
 export interface Error<E> {
   status: 'error'
   error: E
-}
-
-export class TimeoutError extends Error {
-  limitMs: number
-
-  constructor({ limitMs }: { limitMs: number }) {
-    super(`Operation timed out after ${limitMs}ms`)
-    this.name = 'TimeoutError'
-    this.limitMs = limitMs
-  }
 }
 
 export interface InvokeMessage {
@@ -79,4 +79,23 @@ export interface AppEvent {
 export interface BackendMainAPI {
   osEncrypt: (text: string) => Promise<Result<string, string>>
   osDecrypt: (text: string) => Promise<Result<string, string>>
+}
+
+export interface BackendListenerAPI {
+  onEvent: (channel: string, callback: (appEvent: AppEvent) => void) => void
+  offEvent: (channel: string) => void
+}
+
+export interface RendererBackendAPI {
+  ping: () => Promise<Result<string>>
+  getSetting: (key: string) => Promise<Result<unknown>>
+  setSetting: (key: string, value: unknown) => Promise<Result<void>>
+  clearSetting: (key: string) => Promise<Result<void>>
+  clearDatabase: () => Promise<Result<void>>
+  getDatabasePath: () => Promise<Result<string>>
+  getLogPath: () => Promise<Result<string>>
+  streamAIChat: (messages: AIMessage[]) => Promise<Result<string>>
+  abortAIChat: (sessionId: string) => Promise<Result<void>>
+  getAIModels: (provider: AIProvider) => Promise<Result<string[]>>
+  testAIProviderConnection: (config: AIConfig) => Promise<Result<boolean>>
 }

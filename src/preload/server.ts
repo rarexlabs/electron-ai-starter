@@ -1,6 +1,6 @@
 import { ipcRenderer } from 'electron'
 import { Connection } from '../common/connection'
-import { isOk } from '../common/result'
+import { BackendListenerAPI, RendererBackendAPI } from '../common/types'
 
 // Create scoped logger for preload process using direct IPC
 const preloadLogger = {
@@ -74,252 +74,25 @@ export class Server {
   }
 
   // Backend process communication using Connection directly
-  public readonly backendAPI = {
+  public readonly backendAPI: RendererBackendAPI & BackendListenerAPI = {
     // Backend process communication using Connection directly
-    ping: async (): Promise<string> => {
-      if (!this._backendConnection) {
-        throw new Error('Backend not connected')
-      }
+    ping: (...args) => this._invoke('ping', ...args),
+    onEvent: (...args) => this._invoke('onEvent', ...args),
+    offEvent: (...args) => this._invoke('offEvent', ...args),
+    getSetting: (...args) => this._invoke('getSetting', ...args),
+    setSetting: (...args) => this._invoke('setSetting', ...args),
+    clearSetting: (...args) => this._invoke('clearSetting', ...args),
+    clearDatabase: (...args) => this._invoke('clearDatabase', ...args),
+    getDatabasePath: (...args) => this._invoke('getDatabasePath', ...args),
+    getLogPath: (...args) => this._invoke('getLogpath', ...args),
+    streamAIChat: (...args) => this._invoke('streamAIChat', ...args),
+    abortAIChat: (...args) => this._invoke('abortAIChat', ...args),
+    getAIModels: (...args) => this._invoke('getAIModels', ...args),
+    testAIProviderConnection: (...args) => this._invoke('testAIProviderConnection', ...args)
+  }
 
-      const result = await this._backendConnection.invoke('ping')
-      if (isOk(result)) {
-        return result.value as string
-      } else {
-        throw new Error(result.error?.toString() || 'Backend ping failed')
-      }
-    },
-
-    // Test backend communication with a message
-    test: async (message: string): Promise<string> => {
-      if (!this._backendConnection) {
-        throw new Error('Backend not connected')
-      }
-
-      const result = await this._backendConnection.invoke('test', message)
-      if (isOk(result)) {
-        return result.value as string
-      } else {
-        throw new Error(result.error?.toString() || 'Backend test failed')
-      }
-    },
-
-    // Test error handling
-    testError: async (): Promise<void> => {
-      if (!this._backendConnection) {
-        throw new Error('Backend not connected')
-      }
-
-      const result = await this._backendConnection.invoke('error-test')
-      if (!isOk(result)) {
-        throw new Error(result.error?.toString() || 'Backend error test failed')
-      }
-    },
-
-    // Generic invoke method for custom backend operations
-    invoke: async (channel: string, ...args: unknown[]): Promise<unknown> => {
-      if (!this._backendConnection) {
-        throw new Error('Backend not connected')
-      }
-
-      const result = await this._backendConnection.invoke(channel, ...args)
-      if (isOk(result)) {
-        return result.value
-      } else {
-        throw new Error(result.error?.toString() || `Backend invoke ${channel} failed`)
-      }
-    },
-
-    // Publish events to backend
-    publishEvent: (channel: string, payload: string): void => {
-      if (!this._backendConnection) {
-        preloadLogger.warn('⚠️ Cannot publish event - backend not connected')
-        return
-      }
-
-      this._backendConnection.publishEvent(channel, payload)
-    },
-
-    // Listen for events from backend
-    onEvent: (channel: string, callback: (payload: unknown) => void): void => {
-      if (!this._backendConnection) {
-        preloadLogger.warn('⚠️ Cannot listen for events - backend not connected')
-        return
-      }
-
-      // Wrap the callback to handle AI event payload unwrapping
-      const wrappedCallback = (payload: unknown): void => {
-        // For AI events, unwrap the connection payload format
-        if (channel.startsWith('ai-chat-')) {
-          try {
-            if (payload && typeof payload === 'object' && 'payload' in payload) {
-              // Extract and parse the JSON string from the payload field
-              const args = JSON.parse((payload as { payload: string }).payload)
-              // Call the original callback with spread arguments (cast for AI events)
-              ;(callback as (...args: unknown[]) => void)(...args)
-              return
-            }
-          } catch (error) {
-            preloadLogger.error(`Failed to unwrap AI event ${channel}:`, error)
-          }
-        }
-
-        // For non-AI events or if unwrapping fails, pass payload as-is
-        callback(payload)
-      }
-
-      this._backendConnection.onEvent(channel, wrappedCallback)
-    },
-
-    // Stop listening for events from backend
-    offEvent: (channel: string): void => {
-      if (!this._backendConnection) {
-        return
-      }
-
-      this._backendConnection.offEvent(channel)
-    },
-
-    // Database operations (moved from mainAPI)
-    getSetting: async (key: string): Promise<unknown> => {
-      if (!this._backendConnection) {
-        throw new Error('Backend not connected')
-      }
-
-      const result = await this._backendConnection.invoke('get-setting', key)
-      if (isOk(result)) {
-        return result.value
-      } else {
-        throw new Error(result.error?.toString() || 'Get setting failed')
-      }
-    },
-
-    setSetting: async (key: string, value: unknown): Promise<void> => {
-      if (!this._backendConnection) {
-        throw new Error('Backend not connected')
-      }
-
-      const result = await this._backendConnection.invoke('set-setting', key, value)
-      if (!isOk(result)) {
-        throw new Error(result.error?.toString() || 'Set setting failed')
-      }
-    },
-
-    getAllSettings: async (): Promise<Record<string, unknown>> => {
-      if (!this._backendConnection) {
-        throw new Error('Backend not connected')
-      }
-
-      const result = await this._backendConnection.invoke('get-all-settings')
-      if (isOk(result)) {
-        return result.value as Record<string, unknown>
-      } else {
-        throw new Error(result.error?.toString() || 'Get all settings failed')
-      }
-    },
-
-    clearSetting: async (key: string): Promise<void> => {
-      if (!this._backendConnection) {
-        throw new Error('Backend not connected')
-      }
-
-      const result = await this._backendConnection.invoke('clear-setting', key)
-      if (!isOk(result)) {
-        throw new Error(result.error?.toString() || 'Clear setting failed')
-      }
-    },
-
-    clearDatabase: async (): Promise<void> => {
-      if (!this._backendConnection) {
-        throw new Error('Backend not connected')
-      }
-
-      const result = await this._backendConnection.invoke('clear-database')
-      if (!isOk(result)) {
-        throw new Error(result.error?.toString() || 'Clear database failed')
-      }
-    },
-
-    getDatabasePath: async (): Promise<string> => {
-      if (!this._backendConnection) {
-        throw new Error('Backend not connected')
-      }
-
-      const result = await this._backendConnection.invoke('get-database-path')
-      if (isOk(result)) {
-        return result.value as string
-      } else {
-        throw new Error(result.error?.toString() || 'Get database path failed')
-      }
-    },
-
-    getLogPath: async (): Promise<string> => {
-      if (!this._backendConnection) {
-        throw new Error('Backend not connected')
-      }
-
-      const result = await this._backendConnection.invoke('get-log-path')
-      if (isOk(result)) {
-        return result.value as string
-      } else {
-        throw new Error(result.error?.toString() || 'Get log path failed')
-      }
-    },
-
-    // AI operations (moved from mainAPI)
-    streamAIChat: async (messages: AIMessage[]): Promise<string> => {
-      if (!this._backendConnection) {
-        throw new Error('Backend not connected')
-      }
-
-      const result = await this._backendConnection.invoke('stream-ai-chat', messages)
-      if (isOk(result)) {
-        return result.value as string
-      } else {
-        throw new Error(result.error?.toString() || 'Stream AI chat failed')
-      }
-    },
-
-    abortAIChat: async (sessionId: string): Promise<void> => {
-      if (!this._backendConnection) {
-        throw new Error('Backend not connected')
-      }
-
-      const result = await this._backendConnection.invoke('abort-ai-chat', sessionId)
-      if (!isOk(result)) {
-        throw new Error(result.error?.toString() || 'Abort AI chat failed')
-      }
-    },
-
-    getAIModels: async (provider: AIProvider): Promise<string[]> => {
-      if (!this._backendConnection) {
-        throw new Error('Backend not connected')
-      }
-
-      const result = await this._backendConnection.invoke('get-ai-models', provider)
-      if (isOk(result)) {
-        return result.value as string[]
-      } else {
-        throw new Error(result.error?.toString() || 'Get AI models failed')
-      }
-    },
-
-    testAIProviderConnection: async (config: AIConfig): Promise<boolean> => {
-      if (!this._backendConnection) {
-        throw new Error('Backend not connected')
-      }
-
-      const result = await this._backendConnection.invoke('test-ai-provider-connection', config)
-      if (isOk(result)) {
-        return result.value as boolean
-      } else {
-        throw new Error(result.error?.toString() || 'Test AI provider connection failed')
-      }
-    },
-
-    // Check if backend is connected
-    isConnected: (): boolean => {
-      return this._backendConnection?.isConnected() === true
-    }
+  private _invoke(channel: string, ...args) {
+    return this._backendConnection!.invoke(channel, ...args)
   }
 
   async connectBackend(): Promise<void> {

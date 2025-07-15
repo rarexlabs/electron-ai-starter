@@ -1,7 +1,8 @@
 import { streamText } from 'ai'
 import { mainLogger } from '@main/logger'
 import { createModel } from './factory'
-import type { AIMessage, AIConfig } from '@common/types'
+import type { AIMessage, AIConfig, AppEvent } from '@common/types'
+import { EventType } from '@common/types'
 import type { StreamSession } from './stream-session-store'
 
 function isAbortError(error: unknown): boolean {
@@ -12,7 +13,7 @@ export async function streamSessionText(
   config: AIConfig,
   messages: AIMessage[],
   session: StreamSession,
-  send: (channel: string, ...args: unknown[]) => void,
+  publishEvent: (channel: string, event: AppEvent) => void,
   cb: () => void
 ): Promise<void> {
   try {
@@ -41,15 +42,21 @@ export async function streamSessionText(
       // Check if session was aborted
       if (session.abortSignal.aborted) {
         mainLogger.info(`Stream aborted during chunk processing for session: ${session.id}`)
-        send('ai-chat-aborted', session.id)
+        publishEvent('ai-chat-aborted', {
+          type: EventType.Message,
+          payload: { sessionId: session.id }
+        })
         return
       }
-      send('ai-chat-chunk', session.id, chunk)
+      publishEvent('ai-chat-chunk', {
+        type: EventType.Message,
+        payload: { sessionId: session.id, chunk }
+      })
     }
 
     // Signal end of stream if not aborted
     if (!session.abortSignal.aborted) {
-      send('ai-chat-end', session.id)
+      publishEvent('ai-chat-end', { type: EventType.Message, payload: { sessionId: session.id } })
       mainLogger.info(
         `✅ AI response streaming completed successfully with ${config.provider} for session: ${session.id}`
       )
@@ -57,11 +64,17 @@ export async function streamSessionText(
   } catch (error) {
     if (isAbortError(error)) {
       mainLogger.info(`AI chat stream was aborted for session: ${session.id}`)
-      send('ai-chat-aborted', session.id)
+      publishEvent('ai-chat-aborted', {
+        type: EventType.Message,
+        payload: { sessionId: session.id }
+      })
     } else {
       mainLogger.error('AI chat stream error:', error)
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
-      send('ai-chat-error', session.id, errorMessage)
+      publishEvent('ai-chat-error', {
+        type: EventType.Message,
+        payload: { sessionId: session.id, error: errorMessage }
+      })
     }
   } finally {
     // Execute caller-provided cleanup
