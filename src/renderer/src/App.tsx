@@ -5,6 +5,7 @@ import { Settings } from '@renderer/components/Settings'
 import { DummyDataPage } from '@renderer/components/DummyDataPage'
 import { ChatPage } from '@renderer/components/ChatPage'
 import { logger } from '@renderer/lib/logger'
+import { isOk } from '@common/result'
 
 function App(): React.JSX.Element {
   const [currentPage, setCurrentPage] = useState<'home' | 'settings' | 'chat' | 'dummyData'>('home')
@@ -14,21 +15,12 @@ function App(): React.JSX.Element {
   // Connect to backend and test communication
   useEffect(() => {
     const connectToBackend = async (): Promise<void> => {
-      try {
-        await window.connectBackend()
-        setBackendConnected(true)
-
-        // Test backend communication
-        try {
-          const response = await window.backend.ping()
-          logger.info(`✅ Backend ping successful: ${response}`)
-        } catch (error) {
-          logger.error('❌ Backend ping failed:', error)
-        }
-      } catch (error) {
-        logger.error('❌ Failed to connect to backend:', error)
-      } finally {
-        setIsConnecting(false)
+      await window.connectBackend()
+      setBackendConnected(true)
+      setIsConnecting(false)
+      const result = await window.backend.ping()
+      if (isOk(result)) {
+        logger.info(`✅ Backend ping successful: ${result.value}`)
       }
     }
 
