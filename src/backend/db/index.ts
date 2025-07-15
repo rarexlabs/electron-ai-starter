@@ -1,6 +1,6 @@
-import { drizzle } from 'drizzle-orm/better-sqlite3'
-import { migrate } from 'drizzle-orm/better-sqlite3/migrator'
-import Database from 'better-sqlite3'
+import { drizzle } from 'drizzle-orm/libsql'
+import { migrate } from 'drizzle-orm/libsql/migrator'
+import { createClient } from '@libsql/client'
 import * as path from 'path'
 import * as fs from 'fs'
 import { sql } from 'drizzle-orm'
@@ -19,17 +19,14 @@ export function getDatabase(): ReturnType<typeof drizzle> {
       fs.mkdirSync(dbDir, { recursive: true })
     }
 
-    const sqlite = new Database(dbPath)
-    db = drizzle({ client: sqlite })
-
-    // Enable WAL mode for better performance (recommended by better-sqlite3 docs)
-    db.run(sql`PRAGMA journal_mode = WAL`)
+    const client = createClient({ url: `file:${dbPath}` })
+    db = drizzle({ client })
   }
 
   return db
 }
 
-export function runMigrations(): void {
+export async function runMigrations(): Promise<void> {
   if (!db) {
     throw new Error('Database not initialized. Call getDatabase() first.')
   }
@@ -43,9 +40,9 @@ export function runMigrations(): void {
   logger.info('🚀 Running migrations...')
 
   try {
-    const beforeCount = getAppliedMigrationsCount()
-    migrate(db, { migrationsFolder })
-    const afterCount = getAppliedMigrationsCount()
+    const beforeCount = await getAppliedMigrationsCount()
+    await migrate(db, { migrationsFolder })
+    const afterCount = await getAppliedMigrationsCount()
     const newMigrations = afterCount - beforeCount
 
     if (newMigrations > 0) {
@@ -69,16 +66,18 @@ function getMigrationsFolder(): string | null {
   return possiblePaths.find(fs.existsSync) || null
 }
 
-function getAppliedMigrationsCount(): number {
+async function getAppliedMigrationsCount(): Promise<number> {
+  if (!db) return 0
+  
   // Check if migrations table exists
-  const tableCheck = db.get(
+  const tableCheck = await db.get(
     sql`SELECT name FROM sqlite_master WHERE type='table' AND name='__drizzle_migrations'`
   ) as any
 
   if (!tableCheck) return 0
 
   // Count applied migrations
-  const result = db.get(sql`SELECT COUNT(*) as count FROM __drizzle_migrations`) as any
+  const result = await db.get(sql`SELECT COUNT(*) as count FROM __drizzle_migrations`) as any
   return result?.count || 0
 }
 
@@ -99,9 +98,9 @@ function getMigrationErrorMessage(error: unknown): string {
   return message
 }
 
-export function testDatabaseConnection(): boolean {
+export async function testDatabaseConnection(): Promise<boolean> {
   try {
-    getDatabase().run(sql`SELECT 1 as test`)
+    await getDatabase().run(sql`SELECT 1 as test`)
     logger.info('✅ Database connected')
     return true
   } catch (error) {
@@ -112,7 +111,7 @@ export function testDatabaseConnection(): boolean {
 
 export function closeDatabase(): void {
   if (db) {
-    // Access the underlying SQLite client via Drizzle's $client property
+    // Access the underlying libSQL client via Drizzle's $client property
     const client = db.$client
     if (client && typeof client.close === 'function') {
       client.close()
