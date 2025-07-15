@@ -70,21 +70,16 @@ function getMigrationsFolder(): string | null {
 }
 
 function getAppliedMigrationsCount(): number {
-  if (!db) return 0
+  // Check if migrations table exists
+  const tableCheck = db.get(
+    sql`SELECT name FROM sqlite_master WHERE type='table' AND name='__drizzle_migrations'`
+  ) as any
 
-  try {
-    // Check if migrations table exists
-    const tableCheck = db.get(sql`SELECT name FROM sqlite_master WHERE type='table' AND name='__drizzle_migrations'`) as any
-    
-    if (!tableCheck) return 0
+  if (!tableCheck) return 0
 
-    // Count applied migrations
-    const result = db.get(sql`SELECT COUNT(*) as count FROM __drizzle_migrations`) as any
-    return result?.count || 0
-  } catch (error) {
-    // If table doesn't exist or other error, return 0
-    return 0
-  }
+  // Count applied migrations
+  const result = db.get(sql`SELECT COUNT(*) as count FROM __drizzle_migrations`) as any
+  return result?.count || 0
 }
 
 function getMigrationErrorMessage(error: unknown): string {
