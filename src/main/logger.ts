@@ -20,8 +20,6 @@ export function initializeLogging(): void {
   // Initialize for renderer IPC
   log.initialize()
 
-  // Use default console format that includes scope display
-
   // Configure file transport to route to separate files based on scope
   log.transports.file.resolvePathFn = (_variables, message) => {
     const scope = message?.scope || 'main'
@@ -45,11 +43,8 @@ export function initializeLogging(): void {
 
   log.eventLogger.startLogging({ level: 'warn' })
 
-  log.info(
-    `📝 Logging initialized - Files: main.log, renderer.log, preload.log in ${path.resolve(logFolder)}`
-  )
+  log.info(`Logging initialized`)
 }
 
-// Create scoped logger for main process
 export const mainLogger = log.scope('main')
 export default log
