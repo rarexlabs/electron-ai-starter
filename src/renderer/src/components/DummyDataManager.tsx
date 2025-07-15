@@ -5,7 +5,6 @@ import { z } from 'zod'
 import { Save } from 'lucide-react'
 import { Button } from '@renderer/components/ui/button'
 import { isOk } from '@common/result'
-import { logger } from '@renderer/lib/logger'
 import {
   Card,
   CardContent,
@@ -60,67 +59,32 @@ export function DummyDataManager(): React.JSX.Element {
   // Load dummy data on component mount
   useEffect(() => {
     const loadDummyData = async (): Promise<void> => {
-      try {
-        setIsLoading(true)
-        await window.connectBackend()
-        const result = await window.backend.getSetting('dummy')
+      const result = await window.backend.getSetting('dummy')
 
-        if (isOk(result)) {
-          const dummyData = (result.value as DummyDataFormData) || {}
-          form.setValue('settingA', dummyData.settingA || 'Default A')
-          form.setValue('settingB', dummyData.settingB || 'Default B')
-        } else {
-          logger.error('Failed to get dummy data:', result.error)
-          setMessage({
-            type: 'error',
-            text: 'Failed to load dummy data. Please try again.'
-          })
-        }
-      } catch (error) {
-        logger.error('Error loading dummy data:', error)
-        setMessage({
-          type: 'error',
-          text: 'Failed to load dummy data. Please try again.'
-        })
-      } finally {
-        setIsLoading(false)
+      if (isOk(result)) {
+        const dummyData = (result.value as DummyDataFormData) || {}
+        form.setValue('settingA', dummyData.settingA || 'Default A')
+        form.setValue('settingB', dummyData.settingB || 'Default B')
       }
     }
 
     loadDummyData()
-  }, []) // Remove form dependency to avoid infinite re-renders
+  }, [form])
 
   const onSubmit = async (data: DummyDataFormData): Promise<void> => {
-    try {
-      setIsLoading(true)
-      setMessage(null)
+    setIsLoading(true)
+    setMessage(null)
 
-      const result = await window.backend.setSetting('dummy', {
-        settingA: data.settingA,
-        settingB: data.settingB
-      })
+    await window.backend.setSetting('dummy', {
+      settingA: data.settingA,
+      settingB: data.settingB
+    })
 
-      if (isOk(result)) {
-        setMessage({
-          type: 'success',
-          text: 'Dummy data saved successfully!'
-        })
-      } else {
-        logger.error('Failed to save dummy data:', result.error)
-        setMessage({
-          type: 'error',
-          text: 'Failed to save dummy data. Please try again.'
-        })
-      }
-    } catch (error) {
-      logger.error('Error saving dummy data:', error)
-      setMessage({
-        type: 'error',
-        text: 'Failed to save dummy data. Please try again.'
-      })
-    } finally {
-      setIsLoading(false)
-    }
+    setMessage({
+      type: 'success',
+      text: 'Dummy data saved successfully!'
+    })
+    setIsLoading(false)
   }
 
   return (
@@ -139,7 +103,7 @@ export function DummyDataManager(): React.JSX.Element {
                 <FormItem>
                   <FormLabel>Setting A</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter Setting A value" {...field} disabled={isLoading} />
+                    <Input placeholder="Enter Setting A value" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -153,7 +117,7 @@ export function DummyDataManager(): React.JSX.Element {
                 <FormItem>
                   <FormLabel>Setting B</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter Setting B value" {...field} disabled={isLoading} />
+                    <Input placeholder="Enter Setting B value" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

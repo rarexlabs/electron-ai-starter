@@ -17,7 +17,7 @@ function App() {
       setBackendConnected(true)
       const result = await window.backend.ping()
       if (isOk(result)) {
-        logger.info(`✅ Backend ping successful: ${result.value}`)
+        logger.info(`Backend ping successful: ${result.value}`)
       }
     }
 
