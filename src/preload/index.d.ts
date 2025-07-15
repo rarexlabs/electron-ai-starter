@@ -1,4 +1,5 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
+import { BackendListenerAPI, RendererBackendAPI } from '../common/types'
 
 export type { AIProvider, AIMessage, AISettings, AIConfig } from '../common/types'
 
@@ -23,31 +24,6 @@ declare global {
       on(channel: string, listener: (...args: unknown[]) => void): void
       off(channel: string, listener: (...args: unknown[]) => void): void
     }
-    backend: {
-      // Backend process communication
-      ping(): Promise<string>
-      test(message: string): Promise<string>
-      testError(): Promise<void>
-      invoke(channel: string, ...args: unknown[]): Promise<unknown>
-      publishEvent(channel: string, payload: string): void
-      onEvent(channel: string, callback: (payload: unknown) => void): void
-      offEvent(channel: string): void
-      isConnected(): boolean
-
-      // Database operations (moved from main)
-      getSetting(key: string): Promise<unknown>
-      setSetting(key: string, value: unknown): Promise<void>
-      getAllSettings(): Promise<Record<string, unknown>>
-      clearSetting(key: string): Promise<void>
-      clearDatabase(): Promise<void>
-      getDatabasePath(): Promise<string>
-      getLogPath(): Promise<string>
-
-      // AI operations (moved from main)
-      streamAIChat(messages: AIMessage[]): Promise<string>
-      abortAIChat(sessionId: string): Promise<void>
-      getAIModels(provider: AIProvider): Promise<string[]>
-      testAIProviderConnection(config: AIConfig): Promise<boolean>
-    }
+    backend: BackendListenerAPI & RendererBackendAPI
   }
 }
