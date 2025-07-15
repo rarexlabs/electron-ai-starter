@@ -80,16 +80,6 @@ export class Server {
   }
 
   async shutdown(): Promise<void> {
-    mainLogger.info('🛑 Shutting down server...')
-    
-    // Close main window
-    if (this._mainWindow && !this._mainWindow.isDestroyed()) {
-      this._mainWindow.close()
-    }
-
-    // Stop backend
     await this._backend.stop()
-    
-    mainLogger.info('✅ Server shutdown complete')
   }
 }
