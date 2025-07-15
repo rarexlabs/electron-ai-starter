@@ -7,15 +7,15 @@ initializeBackendLogging()
 
 logger.info('🚀 Backend process started')
 
-function initializeDatabase(): void {
+async function initializeDatabase(): Promise<void> {
   try {
     // Initialize Drizzle database connection
     getDatabase()
 
     // Run database migrations
-    runMigrations()
+    await runMigrations()
 
-    testDatabaseConnection()
+    await testDatabaseConnection()
 
     logger.info('✅ Database ready')
   } catch (error) {
@@ -26,9 +26,9 @@ function initializeDatabase(): void {
   }
 }
 
-function main(): void {
+async function main(): Promise<void> {
   // Initialize database
-  initializeDatabase()
+  await initializeDatabase()
 
   const server = new Server(process.parentPort)
 

@@ -40,16 +40,9 @@ export async function runMigrations(): Promise<void> {
   logger.info('🚀 Running migrations...')
 
   try {
-    const beforeCount = await getAppliedMigrationsCount()
+    // Run migrations directly - libsql migrate handles checking if already applied
     await migrate(db, { migrationsFolder })
-    const afterCount = await getAppliedMigrationsCount()
-    const newMigrations = afterCount - beforeCount
-
-    if (newMigrations > 0) {
-      logger.info(`✅ Applied ${newMigrations} new migration(s)`)
-    } else {
-      logger.info('✅ Migrations up to date')
-    }
+    logger.info('✅ Migrations completed successfully')
   } catch (error) {
     logger.error('❌ Migration failed:', error)
     throw new Error(`Database migration failed: ${getMigrationErrorMessage(error)}`)
@@ -66,20 +59,6 @@ function getMigrationsFolder(): string | null {
   return possiblePaths.find(fs.existsSync) || null
 }
 
-async function getAppliedMigrationsCount(): Promise<number> {
-  if (!db) return 0
-  
-  // Check if migrations table exists
-  const tableCheck = await db.get(
-    sql`SELECT name FROM sqlite_master WHERE type='table' AND name='__drizzle_migrations'`
-  ) as any
-
-  if (!tableCheck) return 0
-
-  // Count applied migrations
-  const result = await db.get(sql`SELECT COUNT(*) as count FROM __drizzle_migrations`) as any
-  return result?.count || 0
-}
 
 function getMigrationErrorMessage(error: unknown): string {
   if (!(error instanceof Error)) return 'Unknown migration error'
