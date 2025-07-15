@@ -1,6 +1,7 @@
 import { contextBridge } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import { Server } from './server'
+import logger from './logger'
 
 function expose(name: string, data: unknown): void {
   // Use `contextBridge` APIs to expose Electron APIs to
@@ -19,6 +20,8 @@ function expose(name: string, data: unknown): void {
 }
 
 function main(): void {
+  logger.info('Preload script started')
+
   expose('electron', electronAPI)
   const server = new Server()
   server.connectBackend()

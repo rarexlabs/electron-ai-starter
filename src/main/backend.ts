@@ -37,8 +37,6 @@ export class Backend {
 
       // Remove listener immediately to prevent accumulation
       this._process.removeListener('message', responseListener)
-
-      // Execute callback
       callback()
     }
 

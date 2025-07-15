@@ -1,42 +1,7 @@
 import { ipcRenderer } from 'electron'
 import { Connection } from '../common/connection'
 import { BackendListenerAPI, RendererBackendAPI, AppEvent } from '../common/types'
-
-// Create scoped logger for preload process using direct IPC
-const preloadLogger = {
-  info: (message: string, ...args: unknown[]) => {
-    ipcRenderer.send('__ELECTRON_LOG__', {
-      data: [message, ...args],
-      level: 'info',
-      scope: 'preload',
-      variables: { processType: 'preload' }
-    })
-  },
-  warn: (message: string, ...args: unknown[]) => {
-    ipcRenderer.send('__ELECTRON_LOG__', {
-      data: [message, ...args],
-      level: 'warn',
-      scope: 'preload',
-      variables: { processType: 'preload' }
-    })
-  },
-  error: (message: string, ...args: unknown[]) => {
-    ipcRenderer.send('__ELECTRON_LOG__', {
-      data: [message, ...args],
-      level: 'error',
-      scope: 'preload',
-      variables: { processType: 'preload' }
-    })
-  },
-  debug: (message: string, ...args: unknown[]) => {
-    ipcRenderer.send('__ELECTRON_LOG__', {
-      data: [message, ...args],
-      level: 'debug',
-      scope: 'preload',
-      variables: { processType: 'preload' }
-    })
-  }
-}
+import logger from './logger'
 
 export class Server {
   private _backendConnectionPromise?: Promise<void>
@@ -96,7 +61,7 @@ export class Server {
         const [port] = event.ports
         this._backendConnection = new Connection(port)
 
-        preloadLogger.info('✅ Backend connection established')
+        logger.info('✅ Backend connection established')
         resolve()
       })
 
@@ -105,7 +70,7 @@ export class Server {
         ipcRenderer.send('connectBackend')
       })
 
-      preloadLogger.info('🔄 Connecting to backend')
+      logger.info('🔄 Connecting to backend')
       ipcRenderer.send('connectBackend')
     })
 
