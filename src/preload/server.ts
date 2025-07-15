@@ -38,20 +38,6 @@ const preloadLogger = {
   }
 }
 
-// AI Chat API types
-export type AIProvider = 'openai' | 'anthropic' | 'google'
-
-export interface AIMessage {
-  role: 'user' | 'assistant' | 'system'
-  content: string
-}
-
-export interface AIConfig {
-  provider: AIProvider
-  model: string
-  apiKey: string
-}
-
 export class Server {
   private _backendConnectionPromise?: Promise<void>
   private _backendConnection: Connection | null = null
