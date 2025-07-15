@@ -3,6 +3,7 @@ import type { MessagePortMain } from 'electron'
 import type { BackendMainAPI } from '@common/types'
 import { Handler } from './handler'
 import logger from './logger'
+import { db, runMigrations, ensureConnection } from './db'
 
 /**
  * This class encapsulate the main logic of the backend thread.
@@ -17,6 +18,11 @@ export class Server {
 
   constructor(parentPort: Electron.ParentPort) {
     this._mainConnection = new Connection(parentPort)
+  }
+
+  async init(): Promise<void> {
+    await ensureConnection(db)
+    await runMigrations(db)
   }
 
   /**

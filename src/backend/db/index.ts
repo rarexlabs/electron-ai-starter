@@ -44,15 +44,10 @@ function getMigrationsFolder(): string | null {
   return possiblePaths.find(fs.existsSync) || null
 }
 
-export async function testConnection(database: ReturnType<typeof drizzle>): Promise<boolean> {
-  try {
-    await database.run(sql`SELECT 1 as test`)
-    logger.info('✅ Database connected')
-    return true
-  } catch (error) {
-    logger.error('❌ Database connection failed:', error)
-    return false
-  }
+export async function ensureConnection(database: ReturnType<typeof drizzle>) {
+  const result = await database.get(sql`SELECT 1 as test`)
+  const test = (result as { test: number }).test
+  if (test !== 1) throw new Error('Unable to query database')
 }
 
 export function close(db: ReturnType<typeof drizzle>): void {
