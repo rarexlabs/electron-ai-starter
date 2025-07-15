@@ -22,43 +22,30 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [databasePath, setDatabasePath] = useState<string>('')
   const [logPath, setLogPath] = useState<string>('')
-  const [isLoadingPaths, setIsLoadingPaths] = useState(true)
-
   useEffect(() => {
     const loadPaths = async (): Promise<void> => {
-      try {
-        await window.connectBackend()
-        const [dbPathResult, logPathResult] = await Promise.all([
-          window.backend.getDatabasePath(),
-          window.backend.getLogPath()
-        ])
+      const [dbPathResult, logPathResult] = await Promise.all([
+        window.backend.getDatabasePath(),
+        window.backend.getLogPath()
+      ])
 
-        if (isOk(dbPathResult)) {
-          setDatabasePath(dbPathResult.value)
-        } else {
-          logger.error('Failed to get database path:', dbPathResult.error)
-        }
+      if (isOk(dbPathResult)) {
+        setDatabasePath(dbPathResult.value)
+      } else {
+        logger.error('Failed to get database path:', dbPathResult.error)
+      }
 
-        if (isOk(logPathResult)) {
-          setLogPath(logPathResult.value)
-        } else {
-          logger.error('Failed to get log path:', logPathResult.error)
-        }
+      if (isOk(logPathResult)) {
+        setLogPath(logPathResult.value)
+      } else {
+        logger.error('Failed to get log path:', logPathResult.error)
+      }
 
-        if (isError(dbPathResult) || isError(logPathResult)) {
-          setMessage({
-            type: 'error',
-            text: 'Failed to load some file paths'
-          })
-        }
-      } catch (error) {
-        logger.error('Failed to load paths:', error)
+      if (isError(dbPathResult) || isError(logPathResult)) {
         setMessage({
           type: 'error',
-          text: 'Failed to load file paths'
+          text: 'Failed to load some file paths'
         })
-      } finally {
-        setIsLoadingPaths(false)
       }
     }
 
@@ -66,15 +53,7 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
   }, [])
 
   const handleOpenFolder = async (folderPath: string): Promise<void> => {
-    try {
-      await window.main.openFolder(folderPath)
-    } catch (error) {
-      logger.error('Failed to open folder:', error)
-      setMessage({
-        type: 'error',
-        text: 'Failed to open folder'
-      })
-    }
+    await window.main.openFolder(folderPath)
   }
 
   const PathDisplay = ({
@@ -85,21 +64,21 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
     title: string
     description: string
     path: string
-  }): React.JSX.Element => (
+  }) => (
     <div>
       <h3 className="font-medium text-gray-900 mb-2">{title}</h3>
       <p className="text-sm text-gray-600 mb-3">{description}</p>
       <div className="flex items-center gap-3">
         <div className="flex-1 min-w-0">
           <code className="text-sm bg-gray-100 px-3 py-2 rounded border block truncate">
-            {isLoadingPaths ? 'Loading...' : path || 'Path not available'}
+            {path || 'Path not available'}
           </code>
         </div>
         <Button
           variant="outline"
           size="sm"
           onClick={() => handleOpenFolder(path)}
-          disabled={isLoadingPaths || !path}
+          disabled={!path}
           className="flex items-center gap-2 shrink-0"
         >
           <FolderOpen className="h-4 w-4" />
@@ -114,33 +93,25 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
       return
     }
 
-    try {
-      setIsClearingDatabase(true)
-      setMessage(null)
+    setIsClearingDatabase(true)
+    setMessage(null)
 
-      const result = await window.backend.clearDatabase()
+    const result = await window.backend.clearDatabase()
 
-      if (isOk(result)) {
-        setMessage({
-          type: 'success',
-          text: 'Database cleared successfully!'
-        })
-      } else {
-        logger.error('Failed to clear database:', result.error)
-        setMessage({
-          type: 'error',
-          text: 'Failed to clear database. Please try again.'
-        })
-      }
-    } catch (error) {
-      logger.error('Error clearing database:', error)
+    if (isOk(result)) {
+      setMessage({
+        type: 'success',
+        text: 'Database cleared successfully!'
+      })
+    } else {
+      logger.error('Failed to clear database:', result.error)
       setMessage({
         type: 'error',
         text: 'Failed to clear database. Please try again.'
       })
-    } finally {
-      setIsClearingDatabase(false)
     }
+
+    setIsClearingDatabase(false)
   }
 
   return (

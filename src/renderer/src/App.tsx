@@ -25,22 +25,18 @@ function App() {
   }, [])
 
   const handleSettingsClick = (): void => {
-    logger.info('Settings page opened')
     setCurrentPage('settings')
   }
 
   const handleChatClick = (): void => {
-    logger.info('Chat page opened')
     setCurrentPage('chat')
   }
 
   const handleDummyDataClick = (): void => {
-    logger.info('Dummy Data page opened')
     setCurrentPage('dummyData')
   }
 
   const handleBackToHome = (): void => {
-    logger.info('Navigated back to home')
     setCurrentPage('home')
   }
 
