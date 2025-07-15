@@ -7,8 +7,6 @@ import { setupHandlers } from './handlers'
 import { Backend } from './backend'
 
 initializeLogging()
-
-mainLogger.info('🚀 App starting...')
 mainLogger.info('🔧 Main process started')
 
 let backend: Backend | undefined = undefined
@@ -50,7 +48,7 @@ async function createWindow(): Promise<void> {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   // Set app user model id for windows
-  electronApp.setAppUserModelId('com.worthyfiles')
+  electronApp.setAppUserModelId('com.electron-ai-starter')
 
   // Logging already initialized at module load
 
