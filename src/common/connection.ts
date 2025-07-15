@@ -26,9 +26,9 @@ export class Connection {
   private _channelLastReceivedEvent: Record<string, EventMessage> = {}
   private _isStarted = false
 
-  constructor(private port: MessagePort | MessagePortMain) {
+  constructor(private port: MessagePort | MessagePortMain | Electron.ParentPort) {
     // Start the port
-    port.start()
+    if ('start' in port) port.start()
     this._isStarted = true
 
     this._onAllEvent((e) => {
@@ -44,7 +44,8 @@ export class Connection {
    * This method essentially sends a message to the other end of the connection and waits for
    * a reply before resolving the promise.
    */
-  async invoke(channel: string, ...args: unknown[]): Promise<Result<unknown, unknown>> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async invoke(channel: string, ...args: unknown[]): Promise<Result<any, any>> {
     const TIMEOUT_DURATION = 1800000 // 30 minutes in milliseconds
 
     return new Promise((resolve) => {
@@ -202,7 +203,7 @@ export class Connection {
    * Close the connection and clean up listeners
    */
   close(): void {
-    this.port.close()
+    if ('close' in this.port) this.port.close()
     this._eventListeners = {}
     this._channelLastReceivedEvent = {}
     this._isStarted = false

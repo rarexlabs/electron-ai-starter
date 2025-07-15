@@ -1,5 +1,6 @@
 import { Connection } from '@common/connection'
 import type { MessagePortMain } from 'electron'
+import type { Result, BackendMainAPI } from '@common/types'
 
 /**
  * This class encapsulate the main logic of the backend thread.
@@ -9,7 +10,12 @@ import type { MessagePortMain } from 'electron'
  *  2. A list of connections to renderers
  */
 export class Server {
+  private _mainConnection: Connection
   private _rendererConnections: Connection[] = []
+
+  constructor(parentPort: Electron.ParentPort) {
+    this._mainConnection = new Connection(parentPort)
+  }
 
   /**
    * Connect a renderer's port and setup listeners to handle all invoke request
@@ -42,5 +48,17 @@ export class Server {
     })
 
     return connection
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private _invokeMain(channel: string, ...args): Promise<Result<any, any>> {
+    return this._mainConnection.invoke(channel, ...args)
+  }
+
+  get mainAPI(): BackendMainAPI {
+    return {
+      osEncrypt: (...args) => this._invokeMain('osEncrypt', ...args),
+      osDecrypt: (...args) => this._invokeMain('osDecrypt', ...args)
+    }
   }
 }

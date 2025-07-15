@@ -70,3 +70,8 @@ export interface AppEvent {
   type: EventType
   payload: unknown
 }
+
+export interface BackendMainAPI {
+  osEncrypt: (text: string) => Promise<Result<string, string>>
+  osDecrypt: (text: string) => Promise<Result<string, string>>
+}
