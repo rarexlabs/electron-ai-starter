@@ -7,15 +7,12 @@ export class Server {
   private _backendConnectionPromise?: Promise<void>
   private _backendConnection: Connection | null = null
 
-  // Main process communication using secure IPC
   public readonly mainAPI: RendererMainAPI = {
     ping: (...args) => ipcRenderer.invoke('ping', ...args),
     openFolder: (...args) => ipcRenderer.invoke('openFolder', ...args)
   }
 
-  // Backend process communication using Connection directly
   public readonly backendAPI: RendererBackendAPI & BackendListenerAPI = {
-    // Backend process communication using Connection directly
     ping: (...args) => this._invoke('ping', ...args),
     getSetting: (...args) => this._invoke('getSetting', ...args),
     setSetting: (...args) => this._invoke('setSetting', ...args),
@@ -45,12 +42,11 @@ export class Server {
     }
 
     this._backendConnectionPromise = new Promise<void>((resolve) => {
-      // Listen for backend MessagePort from main process
       ipcRenderer.on('backendConnected', (event) => {
         const [port] = event.ports
         this._backendConnection = new Connection(port)
 
-        logger.info('✅ Backend connection established')
+        logger.info('Backend connection established')
         resolve()
       })
 
@@ -59,7 +55,7 @@ export class Server {
         ipcRenderer.send('connectBackend')
       })
 
-      logger.info('🔄 Connecting to backend')
+      logger.info('Connecting to backend...')
       ipcRenderer.send('connectBackend')
     })
 
