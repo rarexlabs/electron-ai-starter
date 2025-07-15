@@ -1,5 +1,5 @@
 import { streamText } from 'ai'
-import { backendLogger } from '../logger'
+import logger from '../logger'
 import { createModel } from './factory'
 import type { AIMessage, AIConfig, AppEvent } from '@common/types'
 import { EventType } from '@common/types'
@@ -21,7 +21,7 @@ export async function streamSessionText(
 
     // Add abort signal listener for logging
     session.abortSignal.addEventListener('abort', () => {
-      backendLogger.info(
+      logger.info(
         `ABORT SIGNAL RECEIVED - Cancelling AI provider request for ${config.provider} (session: ${session.id})`
       )
     })
@@ -34,14 +34,14 @@ export async function streamSessionText(
       abortSignal: session.abortSignal
     })
 
-    backendLogger.info(
+    logger.info(
       `AI response streaming started with ${config.provider} for session: ${session.id}`
     )
 
     for await (const chunk of result.textStream) {
       // Check if session was aborted
       if (session.abortSignal.aborted) {
-        backendLogger.info(`Stream aborted during chunk processing for session: ${session.id}`)
+        logger.info(`Stream aborted during chunk processing for session: ${session.id}`)
         publishEvent('aiChatAborted', {
           type: EventType.Message,
           payload: { sessionId: session.id }
@@ -57,19 +57,19 @@ export async function streamSessionText(
     // Signal end of stream if not aborted
     if (!session.abortSignal.aborted) {
       publishEvent('aiChatEnd', { type: EventType.Message, payload: { sessionId: session.id } })
-      backendLogger.info(
+      logger.info(
         `✅ AI response streaming completed successfully with ${config.provider} for session: ${session.id}`
       )
     }
   } catch (error) {
     if (isAbortError(error)) {
-      backendLogger.info(`AI chat stream was aborted for session: ${session.id}`)
+      logger.info(`AI chat stream was aborted for session: ${session.id}`)
       publishEvent('aiChatAborted', {
         type: EventType.Message,
         payload: { sessionId: session.id }
       })
     } else {
-      backendLogger.error('AI chat stream error:', error)
+      logger.error('AI chat stream error:', error)
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
       publishEvent('aiChatError', {
         type: EventType.Message,

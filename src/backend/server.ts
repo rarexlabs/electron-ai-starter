@@ -2,7 +2,7 @@ import { Connection } from '@common/connection'
 import type { MessagePortMain } from 'electron'
 import type { BackendMainAPI } from '@common/types'
 import { Handler } from './handler'
-import { backendLogger } from './logger'
+import logger from './logger'
 
 /**
  * This class encapsulate the main logic of the backend thread.
@@ -33,7 +33,7 @@ export class Server {
       return result
     })
 
-    backendLogger.info('Renderer Connected')
+    logger.info('Renderer Connected')
     return connection
   }
 

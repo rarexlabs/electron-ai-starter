@@ -3,7 +3,7 @@ import { streamSessionText } from './stream'
 import { sessionStore } from './stream-session-store'
 import { createModel } from './factory'
 import { streamText as _streamText } from 'ai'
-import { backendLogger } from '../logger'
+import logger from '../logger'
 
 export { listAvailableModel } from './factory'
 
@@ -18,13 +18,13 @@ export async function testConnection(config: AIConfig): Promise<boolean> {
 
     for await (const chunk of result.textStream) {
       if (chunk?.length > 0) {
-        backendLogger.info(`Connection test successful for ${config.provider}`)
+        logger.info(`Connection test successful for ${config.provider}`)
         return true
       }
     }
     return false
   } catch (error) {
-    backendLogger.error(`Connection test failed for ${config.provider}:`, error)
+    logger.error(`Connection test failed for ${config.provider}:`, error)
     return false
   }
 }

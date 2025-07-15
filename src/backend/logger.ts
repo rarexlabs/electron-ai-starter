@@ -44,5 +44,5 @@ export function initializeBackendLogging(): void {
 }
 
 // Create scoped logger for backend process
-export const backendLogger = log.scope('backend')
-export default log
+const logger = log.scope('backend')
+export default logger

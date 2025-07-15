@@ -4,7 +4,7 @@ import Database from 'better-sqlite3'
 import * as path from 'path'
 import * as fs from 'fs'
 import { sql } from 'drizzle-orm'
-import { backendLogger } from '../logger'
+import logger from '../logger'
 import { getDatabasePath } from '../paths'
 
 let db: ReturnType<typeof drizzle> | null = null
@@ -13,7 +13,7 @@ let sqlite: Database.Database | null = null
 export function getDatabase(): ReturnType<typeof drizzle> {
   if (!db) {
     const dbPath = getDatabasePath()
-    backendLogger.info(`🗄️ Database: ${path.resolve(path.dirname(dbPath))}`)
+    logger.info(`🗄️ Database: ${path.resolve(path.dirname(dbPath))}`)
 
     const dbDir = path.dirname(dbPath)
     if (!fs.existsSync(dbDir)) {
@@ -38,11 +38,11 @@ export function runMigrations(): void {
 
   const migrationsFolder = getMigrationsFolder()
   if (!migrationsFolder) {
-    backendLogger.info('📦 No migrations folder found, skipping migrations')
+    logger.info('📦 No migrations folder found, skipping migrations')
     return
   }
 
-  backendLogger.info('🚀 Running migrations...')
+  logger.info('🚀 Running migrations...')
 
   try {
     const beforeCount = getAppliedMigrationsCount()
@@ -51,12 +51,12 @@ export function runMigrations(): void {
     const newMigrations = afterCount - beforeCount
 
     if (newMigrations > 0) {
-      backendLogger.info(`✅ Applied ${newMigrations} new migration(s)`)
+      logger.info(`✅ Applied ${newMigrations} new migration(s)`)
     } else {
-      backendLogger.info('✅ Migrations up to date')
+      logger.info('✅ Migrations up to date')
     }
   } catch (error) {
-    backendLogger.error('❌ Migration failed:', error)
+    logger.error('❌ Migration failed:', error)
     throw new Error(`Database migration failed: ${getMigrationErrorMessage(error)}`)
   }
 }
@@ -106,10 +106,10 @@ function getMigrationErrorMessage(error: unknown): string {
 export function testDatabaseConnection(): boolean {
   try {
     getDatabase().run(sql`SELECT 1 as test`)
-    backendLogger.info('✅ Database connected')
+    logger.info('✅ Database connected')
     return true
   } catch (error) {
-    backendLogger.error('❌ Database connection failed:', error)
+    logger.error('❌ Database connection failed:', error)
     return false
   }
 }

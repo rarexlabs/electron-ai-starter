@@ -1,11 +1,11 @@
 import { Server } from './server'
-import { initializeBackendLogging, backendLogger } from './logger'
+import logger, { initializeBackendLogging } from './logger'
 import { getDatabase, runMigrations, testDatabaseConnection } from './db'
 
 // Initialize logging first
 initializeBackendLogging()
 
-backendLogger.info('🚀 Backend process started')
+logger.info('🚀 Backend process started')
 
 function initializeDatabase(): void {
   try {
@@ -17,9 +17,9 @@ function initializeDatabase(): void {
 
     testDatabaseConnection()
 
-    backendLogger.info('✅ Database ready')
+    logger.info('✅ Database ready')
   } catch (error) {
-    backendLogger.error('❌ Failed to initialize database:', error)
+    logger.error('❌ Failed to initialize database:', error)
 
     // Exit the backend process if database initialization fails
     process.exit(1)

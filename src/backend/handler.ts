@@ -4,7 +4,7 @@ import { ok } from '@common/result'
 import { dirname } from 'path'
 import { getSetting, setSetting, getAllSettings, clearSetting, clearDatabase } from './settings'
 import { getDatabasePath, getLogPath } from './paths'
-import { backendLogger } from './logger'
+import logger from './logger'
 import { streamText, abortStream, listAvailableModel, testConnection } from './ai'
 import { FACTORY } from './ai/factory'
 
@@ -96,9 +96,9 @@ export class Handler {
   async abortAIText(sessionId: string): Promise<Result<void>> {
     const success = abortStream(sessionId)
     if (success) {
-      backendLogger.info(`AI chat session ${sessionId} successfully aborted`)
+      logger.info(`AI chat session ${sessionId} successfully aborted`)
     } else {
-      backendLogger.warn(`L Attempted to abort non-existent session: ${sessionId}`)
+      logger.warn(`L Attempted to abort non-existent session: ${sessionId}`)
     }
     return ok(undefined)
   }
