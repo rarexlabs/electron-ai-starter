@@ -32,7 +32,7 @@ export class Server {
     })
   }
 
-  async createWindow(): Promise<void> {
+  async createMainWindow(): Promise<void> {
     this._mainWindow = new BrowserWindow({
       width: 900,
       height: 670,

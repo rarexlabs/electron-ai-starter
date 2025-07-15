@@ -15,8 +15,8 @@ const fullDbPath = path.join(dbPath, 'db', 'app.db')
 console.log('🔧 Drizzle Kit using database path:', fullDbPath)
 
 export default defineConfig({
-  out: './src/main/db/migrations',
-  schema: './src/main/db/schema.ts',
+  out: './src/backend/db/migrations',
+  schema: './src/backend/db/schema.ts',
   dialect: 'sqlite',
   dbCredentials: {
     // This is only used by Drizzle Kit CLI commands (generate, push, studio)
