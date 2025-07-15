@@ -3,9 +3,9 @@ import { resolve } from 'path'
 
 export default defineConfig({
   test: {
-    name: 'main',
+    name: 'backend',
     environment: 'node',
-    include: ['tests/main/**/*.{test,spec}.ts'],
+    include: ['tests/backend/**/*.{test,spec}.ts'],
     exclude: ['**/node_modules/**', '**/out/**', '**/coverage/**'],
     // Use forks pool for better Electron compatibility (native modules)
     pool: 'forks',
@@ -13,7 +13,7 @@ export default defineConfig({
     testTimeout: 10000,
     hookTimeout: 10000,
     alias: {
-      '@main': resolve('src/main'),
+      '@backend': resolve('src/backend'),
       '@common': resolve('src/common'),
       '@resources': resolve('resources')
     }

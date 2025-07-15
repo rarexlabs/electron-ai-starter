@@ -5,7 +5,7 @@ import * as path from 'path'
 import * as fs from 'fs'
 import { beforeEach } from 'vitest'
 
-const MIGRATIONS_PATH = path.join(process.cwd(), 'src', 'main', 'db', 'migrations')
+const MIGRATIONS_PATH = path.join(process.cwd(), 'src', 'backend', 'db', 'migrations')
 
 /**
  * Creates a fresh in-memory test database with migrations applied

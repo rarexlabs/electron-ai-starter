@@ -20,7 +20,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Testing
 
-- `npm run test:main` - Run main process tests with Vitest
+- `npm run test:backend` - Run backend process tests with Vitest
 
 ### Database Operations
 
@@ -77,7 +77,7 @@ src/
 - `tsconfig.node.json` - Node.js (main/preload) TypeScript config
 - `tsconfig.web.json` - Web (renderer) TypeScript config
 - `drizzle.config.ts` - Database configuration and migration setup
-- `vitest.config.main.ts` - Testing configuration for main process
+- `vitest.config.backend.ts` - Testing configuration for backend process
 
 ### Path Aliases
 
@@ -105,7 +105,7 @@ The configuration uses New York style with Lucide icons and neutral base color.
 - **Development database**: `./tmp/db/app.db`
 - **Production database**: Electron's userData directory `/db/app.db`
 - **Schema**: Simple settings table for key-value configuration storage
-- **Migrations**: Located in `src/main/db/migrations/`
+- **Migrations**: Located in `src/backend/db/migrations/`
 - **Database commands**:
   - `npm run drizzle-kit` - Drizzle Kit operations (generate, migrate, push, studio)
   - `npm run db:reset` - Reset development database
@@ -142,7 +142,7 @@ The configuration uses New York style with Lucide icons and neutral base color.
 - The build process includes comprehensive TypeScript checking before bundling
 - Database migrations are handled through Drizzle Kit CLI
 - AI chat functionality is built with streaming support and multiple provider options
-- Testing is set up for the main process using Vitest with Electron runtime
+- Testing is set up for the backend process using Vitest with Electron runtime
 
 ## Key Dependencies
 

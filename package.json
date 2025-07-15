@@ -16,7 +16,7 @@
     "build": "npm run typecheck && electron-vite build",
     "drizzle-kit": "ELECTRON_RUN_AS_NODE=1 electron ./node_modules/drizzle-kit/bin.cjs",
     "db:reset": "rm -f ./tmp/db/app.db",
-    "test:main": "ELECTRON_RUN_AS_NODE=1 electron ./node_modules/vitest/vitest.mjs run --config vitest.config.main.ts",
+    "test:backend": "ELECTRON_RUN_AS_NODE=1 electron ./node_modules/vitest/vitest.mjs run --config vitest.config.backend.ts",
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
