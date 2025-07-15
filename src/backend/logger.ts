@@ -39,8 +39,6 @@ export function initializeBackendLogging(): void {
       log.error('Backend process error:', { processType, error })
     }
   })
-
-  log.info(`📝 Backend logging initialized - File: backend.log in ${path.resolve(logFolder)}`)
 }
 
 // Create scoped logger for backend process

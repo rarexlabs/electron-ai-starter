@@ -42,8 +42,6 @@ export function initializeLogging(): void {
   })
 
   log.eventLogger.startLogging({ level: 'warn' })
-
-  log.info(`Logging initialized`)
 }
 
 const logger = log.scope('main')
