@@ -7,12 +7,11 @@ import { ChatPage } from '@renderer/components/ChatPage'
 import { logger } from '@renderer/lib/logger'
 import { isOk } from '@common/result'
 
-function App(): React.JSX.Element {
+function App() {
   const [currentPage, setCurrentPage] = useState<'home' | 'settings' | 'chat' | 'dummyData'>('home')
   const [backendConnected, setBackendConnected] = useState(false)
   const [isConnecting, setIsConnecting] = useState(true)
 
-  // Connect to backend and test communication
   useEffect(() => {
     const connectToBackend = async (): Promise<void> => {
       await window.connectBackend()
