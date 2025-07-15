@@ -12,7 +12,7 @@ export async function createTestDatabase(): Promise<ReturnType<typeof drizzle>> 
 
   // Create Drizzle instance
   const testDb = drizzle({ client })
-  
+
   // Create settings table manually for test database
   await testDb.run(sql`CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY NOT NULL,
@@ -35,4 +35,3 @@ export function setupDatabaseTest() {
 
   return () => testDb
 }
-

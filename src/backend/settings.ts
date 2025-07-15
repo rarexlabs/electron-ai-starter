@@ -1,10 +1,9 @@
 import { eq } from 'drizzle-orm'
-import { getDatabase, closeDatabase, removeDatabaseFile } from './db'
+import { db } from './db'
 import { settings } from './db/schema'
 
-export async function getSetting<T>(key: string, db?: ReturnType<typeof getDatabase>): Promise<T> {
-  const database = db || getDatabase()
-  const result = await database
+export async function getSetting<T>(key: string): Promise<T> {
+  const result = await db
     .select({ value: settings.value })
     .from(settings)
     .where(eq(settings.key, key))
@@ -13,13 +12,8 @@ export async function getSetting<T>(key: string, db?: ReturnType<typeof getDatab
   return result[0]?.value as T
 }
 
-export async function setSetting(
-  key: string,
-  value: unknown,
-  db?: ReturnType<typeof getDatabase>
-): Promise<void> {
-  const database = db || getDatabase()
-  await database
+export async function setSetting(key: string, value: unknown): Promise<void> {
+  await db
     .insert(settings)
     .values({ key, value })
     .onConflictDoUpdate({
@@ -28,11 +22,8 @@ export async function setSetting(
     })
 }
 
-export async function getAllSettings(
-  db?: ReturnType<typeof getDatabase>
-): Promise<Record<string, unknown>> {
-  const database = db || getDatabase()
-  const result = await database.select({ key: settings.key, value: settings.value }).from(settings)
+export async function getAllSettings(): Promise<Record<string, unknown>> {
+  const result = await db.select({ key: settings.key, value: settings.value }).from(settings)
 
   return result.reduce(
     (acc, row) => {
@@ -43,16 +34,6 @@ export async function getAllSettings(
   )
 }
 
-export async function clearSetting(
-  key: string,
-  db?: ReturnType<typeof getDatabase>
-): Promise<void> {
-  const database = db || getDatabase()
-  await database.delete(settings).where(eq(settings.key, key))
-}
-
-export async function clearDatabase(): Promise<void> {
-  closeDatabase()
-  removeDatabaseFile()
-  // Note: app.quit() should be handled by main process
+export async function clearSetting(key: string): Promise<void> {
+  await db.delete(settings).where(eq(settings.key, key))
 }

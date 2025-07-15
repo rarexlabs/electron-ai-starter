@@ -1,6 +1,6 @@
 import { Server } from './server'
 import logger, { initializeBackendLogging } from './logger'
-import { getDatabase, runMigrations, testDatabaseConnection } from './db'
+import { runMigrations, testConnection, db } from './db'
 
 // Initialize logging first
 initializeBackendLogging()
@@ -8,22 +8,9 @@ initializeBackendLogging()
 logger.info('🚀 Backend process started')
 
 async function initializeDatabase(): Promise<void> {
-  try {
-    // Initialize Drizzle database connection
-    getDatabase()
-
-    // Run database migrations
-    await runMigrations()
-
-    await testDatabaseConnection()
-
-    logger.info('✅ Database ready')
-  } catch (error) {
-    logger.error('❌ Failed to initialize database:', error)
-
-    // Exit the backend process if database initialization fails
-    process.exit(1)
-  }
+  await runMigrations(db)
+  await testConnection(db)
+  logger.info('✅ Database ready')
 }
 
 async function main(): Promise<void> {

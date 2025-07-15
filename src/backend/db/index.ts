@@ -7,30 +7,20 @@ import { sql } from 'drizzle-orm'
 import logger from '../logger'
 import { getDatabasePath } from '../paths'
 
-let db: ReturnType<typeof drizzle> | null = null
+export function connectDatabase(): ReturnType<typeof drizzle> {
+  const dbPath = getDatabasePath()
+  logger.info(`🗄️ Database: ${path.resolve(path.dirname(dbPath))}`)
 
-export function getDatabase(): ReturnType<typeof drizzle> {
-  if (!db) {
-    const dbPath = getDatabasePath()
-    logger.info(`🗄️ Database: ${path.resolve(path.dirname(dbPath))}`)
-
-    const dbDir = path.dirname(dbPath)
-    if (!fs.existsSync(dbDir)) {
-      fs.mkdirSync(dbDir, { recursive: true })
-    }
-
-    const client = createClient({ url: `file:${dbPath}` })
-    db = drizzle({ client })
+  const dbDir = path.dirname(dbPath)
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true })
   }
 
-  return db
+  const client = createClient({ url: `file:${dbPath}` })
+  return drizzle({ client })
 }
 
-export async function runMigrations(): Promise<void> {
-  if (!db) {
-    throw new Error('Database not initialized. Call getDatabase() first.')
-  }
-
+export async function runMigrations(database: ReturnType<typeof drizzle>): Promise<void> {
   const migrationsFolder = getMigrationsFolder()
   if (!migrationsFolder) {
     logger.info('📦 No migrations folder found, skipping migrations')
@@ -39,14 +29,9 @@ export async function runMigrations(): Promise<void> {
 
   logger.info('🚀 Running migrations...')
 
-  try {
-    // Run migrations directly - libsql migrate handles checking if already applied
-    await migrate(db, { migrationsFolder })
-    logger.info('✅ Migrations completed successfully')
-  } catch (error) {
-    logger.error('❌ Migration failed:', error)
-    throw new Error(`Database migration failed: ${getMigrationErrorMessage(error)}`)
-  }
+  // Run migrations directly - libsql migrate handles checking if already applied
+  await migrate(database, { migrationsFolder })
+  logger.info('✅ Migrations completed successfully')
 }
 
 function getMigrationsFolder(): string | null {
@@ -59,27 +44,9 @@ function getMigrationsFolder(): string | null {
   return possiblePaths.find(fs.existsSync) || null
 }
 
-
-function getMigrationErrorMessage(error: unknown): string {
-  if (!(error instanceof Error)) return 'Unknown migration error'
-
-  let message = error.message
-  if (message.includes('SQLITE_CORRUPT')) {
-    message +=
-      '\n\nThe database file may be corrupted. Try deleting the database file and restarting the application.'
-  } else if (message.includes('SQLITE_BUSY')) {
-    message +=
-      '\n\nThe database is locked by another process. Make sure no other instances of the application are running.'
-  } else if (message.includes('SQLITE_READONLY')) {
-    message += '\n\nThe database file is read-only. Check file permissions.'
-  }
-
-  return message
-}
-
-export async function testDatabaseConnection(): Promise<boolean> {
+export async function testConnection(database: ReturnType<typeof drizzle>): Promise<boolean> {
   try {
-    await getDatabase().run(sql`SELECT 1 as test`)
+    await database.run(sql`SELECT 1 as test`)
     logger.info('✅ Database connected')
     return true
   } catch (error) {
@@ -88,20 +55,15 @@ export async function testDatabaseConnection(): Promise<boolean> {
   }
 }
 
-export function closeDatabase(): void {
-  if (db) {
-    // Access the underlying libSQL client via Drizzle's $client property
-    const client = db.$client
-    if (client && typeof client.close === 'function') {
-      client.close()
-    }
-    db = null
-  }
+export function close(db: ReturnType<typeof drizzle>): void {
+  db?.$client.close()
 }
 
-export function removeDatabaseFile(): void {
+export function destroy(): void {
   const dbPath = getDatabasePath()
   if (fs.existsSync(dbPath)) {
     fs.unlinkSync(dbPath)
   }
 }
+
+export const db = connectDatabase()

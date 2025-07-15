@@ -2,11 +2,12 @@ import { Connection } from '@common/connection'
 import type { Result, AIProvider, AIConfig, AISettings, AIMessage, AppEvent } from '@common/types'
 import { ok } from '@common/result'
 import { dirname } from 'path'
-import { getSetting, setSetting, getAllSettings, clearSetting, clearDatabase } from './settings'
+import { getSetting, setSetting, getAllSettings, clearSetting } from './settings'
 import { getDatabasePath, getLogPath } from './paths'
 import logger from './logger'
 import { streamText, abortStream, listAvailableModel, testConnection } from './ai'
 import { FACTORY } from './ai/factory'
+import { close, db, destroy } from './db'
 
 export class Handler {
   private _rendererConnection: Connection
@@ -41,7 +42,8 @@ export class Handler {
   }
 
   async clearDatabase(): Promise<Result<void, string>> {
-    await clearDatabase()
+    close(db)
+    destroy()
     return ok(undefined)
   }
 

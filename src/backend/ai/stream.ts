@@ -34,9 +34,7 @@ export async function streamSessionText(
       abortSignal: session.abortSignal
     })
 
-    logger.info(
-      `AI response streaming started with ${config.provider} for session: ${session.id}`
-    )
+    logger.info(`AI response streaming started with ${config.provider} for session: ${session.id}`)
 
     for await (const chunk of result.textStream) {
       // Check if session was aborted
