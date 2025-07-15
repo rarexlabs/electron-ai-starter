@@ -1,15 +1,6 @@
 import { logger } from '@renderer/lib/logger'
 import type { AIMessage } from '@common/types'
 
-// Type definitions for better type safety
-type StreamEventArgs = [eventName: string, sessionId: string, data?: string]
-
-// Helper to safely parse event arguments
-const parseEventArgs = (args: unknown[]): StreamEventArgs => {
-  const [eventName, sessionId, data] = args
-  return [eventName as string, sessionId as string, data as string | undefined]
-}
-
 export async function streamText(
   messages: AIMessage[],
   abortSignal: AbortSignal
@@ -54,38 +45,34 @@ async function* receiveStream(
       }
     })
 
-  const createEventHandler = (eventType: 'chunk' | 'end' | 'error' | 'aborted') => {
-    return (id: string, data: string): void => {
-      if (id !== sessionId) return
-
-      switch (eventType) {
-        case 'chunk':
-          if (data) {
-            pendingChunks.push(data)
-          }
-          break
-        case 'end':
-          completed = true
-          logger.info('✅ Stream completed for session:', sessionId)
-          break
-        case 'error':
-          error = data || 'Unknown error'
-          logger.error('❌ Stream error for session:', sessionId, error)
-          break
-        case 'aborted':
-          completed = true
-          logger.info('Stream aborted for session:', sessionId)
-          break
-      }
-
-      unblockYieldLoop()
+  const handleChunk = (id: string, data: string): void => {
+    if (id !== sessionId) return
+    if (data) {
+      pendingChunks.push(data)
     }
+    unblockYieldLoop()
   }
 
-  const handleChunk = createEventHandler('chunk')
-  const handleEnd = createEventHandler('end')
-  const handleError = createEventHandler('error')
-  const handleAborted = createEventHandler('aborted')
+  const handleEnd = (id: string): void => {
+    if (id !== sessionId) return
+    completed = true
+    logger.info('✅ Stream completed for session:', sessionId)
+    unblockYieldLoop()
+  }
+
+  const handleError = (id: string, data: string): void => {
+    if (id !== sessionId) return
+    error = data || 'Unknown error'
+    logger.error('❌ Stream error for session:', sessionId, error)
+    unblockYieldLoop()
+  }
+
+  const handleAborted = (id: string): void => {
+    if (id !== sessionId) return
+    completed = true
+    logger.info('Stream aborted for session:', sessionId)
+    unblockYieldLoop()
+  }
 
   // Handle external abort signal
   const handleAbortSignal = async (): Promise<void> => {
@@ -99,10 +86,10 @@ async function* receiveStream(
 
   try {
     // Set up event listeners directly from backend
-    window.backend.onEvent('ai-chat-chunk', handleChunk)
-    window.backend.onEvent('ai-chat-end', handleEnd)
-    window.backend.onEvent('ai-chat-error', handleError)
-    window.backend.onEvent('ai-chat-aborted', handleAborted)
+    window.backend.onEvent('ai-chat-chunk', handleChunk as (...args: unknown[]) => void)
+    window.backend.onEvent('ai-chat-end', handleEnd as (...args: unknown[]) => void)
+    window.backend.onEvent('ai-chat-error', handleError as (...args: unknown[]) => void)
+    window.backend.onEvent('ai-chat-aborted', handleAborted as (...args: unknown[]) => void)
     abortSignal.addEventListener('abort', handleAbortSignal)
 
     // Stream processing loop

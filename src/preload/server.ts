@@ -1,5 +1,6 @@
 import { ipcRenderer } from 'electron'
 import { Connection } from '../common/connection'
+import { isOk } from '../common/result'
 
 // Create scoped logger for preload process using direct IPC
 const preloadLogger = {
@@ -81,8 +82,8 @@ export class Server {
       }
 
       const result = await this._backendConnection.invoke('ping')
-      if (result.status === 'success') {
-        return result.data as string
+      if (isOk(result)) {
+        return result.value as string
       } else {
         throw new Error(result.error?.toString() || 'Backend ping failed')
       }
@@ -95,8 +96,8 @@ export class Server {
       }
 
       const result = await this._backendConnection.invoke('test', message)
-      if (result.status === 'success') {
-        return result.data as string
+      if (isOk(result)) {
+        return result.value as string
       } else {
         throw new Error(result.error?.toString() || 'Backend test failed')
       }
@@ -109,7 +110,7 @@ export class Server {
       }
 
       const result = await this._backendConnection.invoke('error-test')
-      if (result.status === 'error') {
+      if (!isOk(result)) {
         throw new Error(result.error?.toString() || 'Backend error test failed')
       }
     },
@@ -121,8 +122,8 @@ export class Server {
       }
 
       const result = await this._backendConnection.invoke(channel, ...args)
-      if (result.status === 'success') {
-        return result.data
+      if (isOk(result)) {
+        return result.value
       } else {
         throw new Error(result.error?.toString() || `Backend invoke ${channel} failed`)
       }
@@ -146,13 +147,13 @@ export class Server {
       }
 
       // Wrap the callback to handle AI event payload unwrapping
-      const wrappedCallback = (payload: unknown) => {
+      const wrappedCallback = (payload: unknown): void => {
         // For AI events, unwrap the connection payload format
         if (channel.startsWith('ai-chat-')) {
           try {
             if (payload && typeof payload === 'object' && 'payload' in payload) {
               // Extract and parse the JSON string from the payload field
-              const args = JSON.parse((payload as any).payload)
+              const args = JSON.parse((payload as { payload: string }).payload)
               // Call the original callback with spread arguments (cast for AI events)
               ;(callback as (...args: unknown[]) => void)(...args)
               return
@@ -185,8 +186,8 @@ export class Server {
       }
 
       const result = await this._backendConnection.invoke('get-setting', key)
-      if (result.status === 'success') {
-        return result.data
+      if (isOk(result)) {
+        return result.value
       } else {
         throw new Error(result.error?.toString() || 'Get setting failed')
       }
@@ -198,7 +199,7 @@ export class Server {
       }
 
       const result = await this._backendConnection.invoke('set-setting', key, value)
-      if (result.status === 'error') {
+      if (!isOk(result)) {
         throw new Error(result.error?.toString() || 'Set setting failed')
       }
     },
@@ -209,8 +210,8 @@ export class Server {
       }
 
       const result = await this._backendConnection.invoke('get-all-settings')
-      if (result.status === 'success') {
-        return result.data as Record<string, unknown>
+      if (isOk(result)) {
+        return result.value as Record<string, unknown>
       } else {
         throw new Error(result.error?.toString() || 'Get all settings failed')
       }
@@ -222,7 +223,7 @@ export class Server {
       }
 
       const result = await this._backendConnection.invoke('clear-setting', key)
-      if (result.status === 'error') {
+      if (!isOk(result)) {
         throw new Error(result.error?.toString() || 'Clear setting failed')
       }
     },
@@ -233,7 +234,7 @@ export class Server {
       }
 
       const result = await this._backendConnection.invoke('clear-database')
-      if (result.status === 'error') {
+      if (!isOk(result)) {
         throw new Error(result.error?.toString() || 'Clear database failed')
       }
     },
@@ -244,8 +245,8 @@ export class Server {
       }
 
       const result = await this._backendConnection.invoke('get-database-path')
-      if (result.status === 'success') {
-        return result.data as string
+      if (isOk(result)) {
+        return result.value as string
       } else {
         throw new Error(result.error?.toString() || 'Get database path failed')
       }
@@ -257,8 +258,8 @@ export class Server {
       }
 
       const result = await this._backendConnection.invoke('get-log-path')
-      if (result.status === 'success') {
-        return result.data as string
+      if (isOk(result)) {
+        return result.value as string
       } else {
         throw new Error(result.error?.toString() || 'Get log path failed')
       }
@@ -271,8 +272,8 @@ export class Server {
       }
 
       const result = await this._backendConnection.invoke('stream-ai-chat', messages)
-      if (result.status === 'success') {
-        return result.data as string
+      if (isOk(result)) {
+        return result.value as string
       } else {
         throw new Error(result.error?.toString() || 'Stream AI chat failed')
       }
@@ -284,7 +285,7 @@ export class Server {
       }
 
       const result = await this._backendConnection.invoke('abort-ai-chat', sessionId)
-      if (result.status === 'error') {
+      if (!isOk(result)) {
         throw new Error(result.error?.toString() || 'Abort AI chat failed')
       }
     },
@@ -295,8 +296,8 @@ export class Server {
       }
 
       const result = await this._backendConnection.invoke('get-ai-models', provider)
-      if (result.status === 'success') {
-        return result.data as string[]
+      if (isOk(result)) {
+        return result.value as string[]
       } else {
         throw new Error(result.error?.toString() || 'Get AI models failed')
       }
@@ -308,8 +309,8 @@ export class Server {
       }
 
       const result = await this._backendConnection.invoke('test-ai-provider-connection', config)
-      if (result.status === 'success') {
-        return result.data as boolean
+      if (isOk(result)) {
+        return result.value as boolean
       } else {
         throw new Error(result.error?.toString() || 'Test AI provider connection failed')
       }

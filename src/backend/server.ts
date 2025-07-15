@@ -1,6 +1,14 @@
 import { Connection } from '@common/connection'
 import type { MessagePortMain } from 'electron'
-import type { Result, BackendMainAPI, AIProvider, AIConfig, AISettings, AIMessage } from '@common/types'
+import type {
+  Result,
+  BackendMainAPI,
+  AIProvider,
+  AIConfig,
+  AISettings,
+  AIMessage
+} from '@common/types'
+import { ok, error } from '@common/result'
 import { dirname } from 'path'
 import { getSetting, setSetting, getAllSettings, clearSetting, clearDatabase } from './settings'
 import { getDatabasePath, getLogPath } from './paths'
@@ -33,87 +41,72 @@ export class Server {
 
     // Handle ping requests
     connection.handle('ping', async () => {
-      return { status: 'success', data: 'pong' }
-    })
-
-    // Handle test requests
-    connection.handle('test', async (...args) => {
-      const message = args[0] as string
-      return { status: 'success', data: `Echo: ${message}` }
-    })
-
-    // Handle error test requests
-    connection.handle('error-test', async () => {
-      return { status: 'error', error: new Error('Test error from backend') }
+      return ok('pong')
     })
 
     // Database handlers
-    connection.handle('get-setting', async (...args) => {
+    connection.handle('get-setting', async (key: string) => {
       try {
-        const key = args[0] as string
         const result = await getSetting(key)
-        return { status: 'success', data: result }
-      } catch (error) {
-        return { status: 'error', error }
+        return ok(result)
+      } catch (err) {
+        return error(err)
       }
     })
 
-    connection.handle('set-setting', async (...args) => {
+    connection.handle('set-setting', async (key: string, value: unknown) => {
       try {
-        const key = args[0] as string
-        const value = args[1] as unknown
         await setSetting(key, value)
-        return { status: 'success', data: undefined }
-      } catch (error) {
-        return { status: 'error', error }
+        return ok(undefined)
+      } catch (err) {
+        return error(err)
       }
     })
 
     connection.handle('get-all-settings', async () => {
       try {
         const result = await getAllSettings()
-        return { status: 'success', data: result }
-      } catch (error) {
-        return { status: 'error', error }
+        return ok(result)
+      } catch (err) {
+        return error(err)
       }
     })
 
-    connection.handle('clear-setting', async (...args) => {
+    connection.handle('clear-setting', async (key: string) => {
       try {
-        const key = args[0] as string
         await clearSetting(key)
-        return { status: 'success', data: undefined }
-      } catch (error) {
-        return { status: 'error', error }
+        return ok(undefined)
+      } catch (err) {
+        return error(err)
       }
     })
 
     connection.handle('clear-database', async () => {
       try {
         await clearDatabase()
-        return { status: 'success', data: undefined }
-      } catch (error) {
-        return { status: 'error', error }
+        return ok(undefined)
+      } catch (err) {
+        return error(err)
       }
     })
 
     connection.handle('get-database-path', async () => {
       try {
         const dbPath = getDatabasePath()
-        return { status: 'success', data: dirname(dbPath) }
-      } catch (error) {
-        backendLogger.error('Failed to get database path:', error)
-        return { status: 'error', error }
+        return ok(dirname(dbPath))
+      } catch (err) {
+        backendLogger.error('Failed to get database path:', err)
+        return error(err)
       }
     })
 
     connection.handle('get-log-path', async () => {
       try {
         const logPath = getLogPath()
-        return { status: 'success', data: logPath }
-      } catch (error) {
-        backendLogger.error('Failed to get log path:', error)
-        return { status: 'error', error }
+        return ok(logPath)
+      } catch (err) {
+        backendLogger.error('Failed to get log path:', err)
+        return error(err)
       }
     })
 
@@ -151,68 +144,59 @@ export class Server {
         }
 
         // Create a send function that forwards events through the connection
-        const send = (channel: string, ...eventArgs: unknown[]) => {
+        const send = (channel: string, ...eventArgs: unknown[]): void => {
           // Convert the arguments to a JSON string for compatibility
           const payload = JSON.stringify(eventArgs)
           connection.publishEvent(channel, payload)
         }
 
         const sessionId = await streamText(config, messages, send)
-        return { status: 'success', data: sessionId }
-      } catch (error) {
-        backendLogger.error('AI chat stream error:', error)
-        return { status: 'error', error }
+        return ok(sessionId)
+      } catch (err) {
+        backendLogger.error('AI chat stream error:', err)
+        return error(err)
       }
     })
 
-    connection.handle('abort-ai-chat', async (...args) => {
+    connection.handle('abort-ai-chat', async (sessionId: string) => {
       try {
-        const sessionId = args[0] as string
         const success = abortStream(sessionId)
         if (success) {
           backendLogger.info(`AI chat session ${sessionId} successfully aborted`)
         } else {
           backendLogger.warn(`❌ Attempted to abort non-existent session: ${sessionId}`)
         }
-        return { status: 'success', data: undefined }
-      } catch (error) {
-        return { status: 'error', error }
+        return ok(undefined)
+      } catch (err) {
+        return error(err)
       }
     })
 
-    connection.handle('get-ai-models', async (...args) => {
+    connection.handle('get-ai-models', async (provider: AIProvider) => {
       try {
-        const provider = args[0] as AIProvider
         const models = await listAvailableModel(provider)
-        return { status: 'success', data: models }
-      } catch (error) {
-        backendLogger.error('Failed to get AI models:', error)
-        return { status: 'error', error }
+        return ok(models)
+      } catch (err) {
+        backendLogger.error('Failed to get AI models:', err)
+        return error(err)
       }
     })
 
-    connection.handle('test-ai-provider-connection', async (...args) => {
+    connection.handle('test-ai-provider-connection', async (config: AIConfig) => {
       try {
-        const config = args[0] as AIConfig
         const result = await testConnection(config)
-        return { status: 'success', data: result }
-      } catch (error) {
-        backendLogger.error('AI connection test failed:', error)
-        return { status: 'success', data: false }
+        return ok(result)
+      } catch (err) {
+        backendLogger.error('AI connection test failed:', err)
+        return ok(false)
       }
-    })
-
-    // Example of listening for events
-    connection.onEvent('custom-event', (payload) => {
-      // Echo the event back to preload
-      connection!.publishEvent('echo-event', `Echo: ${payload}`)
     })
 
     return connection
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private _invokeMain(channel: string, ...args): Promise<Result<any, any>> {
+  private _invokeMain(channel: string, ...args: unknown[]): Promise<Result<any, any>> {
     return this._mainConnection.invoke(channel, ...args)
   }
 

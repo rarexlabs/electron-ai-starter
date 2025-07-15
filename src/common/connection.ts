@@ -22,7 +22,7 @@ function createId(): string {
  * Works with both MessagePort (web API) and MessagePortMain (Node.js EventEmitter API).
  */
 export class Connection {
-  private _eventListeners: Record<string, ((...args: unknown[]) => void)[]> = {}
+  private _eventListeners: Record<string, ((...args) => void)[]> = {}
   private _channelLastReceivedEvent: Record<string, EventMessage> = {}
   private _isStarted = false
 
@@ -82,25 +82,16 @@ export class Connection {
    * given callback needs to resolve its promise within 30 minutes, otherwise the other side
    * will timeout. See {@link invoke}.
    */
-  handle(
-    channel: string,
-    callback: (...args: unknown[]) => Promise<Result<unknown, unknown>>
-  ): void {
+  handle(channel: string, callback: (...args) => Promise<Result<unknown, unknown>>): void {
     const listener = async (event: MessageEvent): Promise<void> => {
       const data = event.data
       if (data.type !== 'invoke') return
       if (data.channel !== channel) return
 
       const invoke = data as InvokeMessage
-      try {
-        const result = await callback(...invoke.args)
-        const msg = this._resultMessage(invoke, result)
-        this._postMessage(msg)
-      } catch (error) {
-        const errorResult: Result<unknown, unknown> = { status: 'error', error }
-        const msg = this._resultMessage(invoke, errorResult)
-        this._postMessage(msg)
-      }
+      const result = await callback(...invoke.args)
+      const msg = this._resultMessage(invoke, result)
+      this._postMessage(msg)
     }
 
     this._addListener(listener)
@@ -160,7 +151,7 @@ export class Connection {
    * When a listener is added, it will be immediately invoked with the most recent event from that
    * channel if any, even if that event has already been handled by other listeners.
    */
-  onEvent(channel: string, callback: (arg: unknown) => void): void {
+  onEvent(channel: string, callback: (arg) => void): void {
     const listener = (event: MessageEvent): void => {
       const data = event.data
       if (data.type !== 'event') return
@@ -177,7 +168,7 @@ export class Connection {
 
     this._addListener(listener)
     this._eventListeners[channel] ||= []
-    this._eventListeners[channel].push(listener as (...args: unknown[]) => void)
+    this._eventListeners[channel].push(listener)
   }
 
   /**
