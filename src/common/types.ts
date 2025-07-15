@@ -99,3 +99,8 @@ export interface RendererBackendAPI {
   getAIModels: (provider: AIProvider) => Promise<Result<string[]>>
   testAIProviderConnection: (config: AIConfig) => Promise<Result<boolean>>
 }
+
+export interface RendererMainAPI {
+  ping: () => Promise<Result<string>>
+  openFolder: (folderPath: string) => Promise<Result<void>>
+}

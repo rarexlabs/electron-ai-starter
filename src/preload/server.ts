@@ -1,6 +1,6 @@
 import { ipcRenderer } from 'electron'
 import { Connection } from '../common/connection'
-import { BackendListenerAPI, RendererBackendAPI, AppEvent } from '../common/types'
+import { BackendListenerAPI, RendererBackendAPI, RendererMainAPI, AppEvent } from '../common/types'
 import logger from './logger'
 
 export class Server {
@@ -8,20 +8,9 @@ export class Server {
   private _backendConnection: Connection | null = null
 
   // Main process communication using secure IPC
-  public readonly mainAPI = {
-    // Only keep non-database/AI operations in main
-    openFolder: (folderPath: string): Promise<void> => {
-      return ipcRenderer.invoke('openFolder', folderPath)
-    },
-
-    // Raw IPC event methods for renderer to handle streaming events
-    on: (channel: string, listener: (...args: unknown[]) => void): void => {
-      ipcRenderer.on(channel, listener)
-    },
-
-    off: (channel: string, listener: (...args: unknown[]) => void): void => {
-      ipcRenderer.removeListener(channel, listener)
-    }
+  public readonly mainAPI: RendererMainAPI = {
+    ping: (...args) => ipcRenderer.invoke('ping', ...args),
+    openFolder: (...args) => ipcRenderer.invoke('openFolder', ...args)
   }
 
   // Backend process communication using Connection directly
