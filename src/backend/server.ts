@@ -1,6 +1,6 @@
 import { Connection } from '@common/connection'
 import type { MessagePortMain } from 'electron'
-import type { Result, BackendMainAPI, AIProvider, AIConfig, AISettings } from '@common/types'
+import type { Result, BackendMainAPI, AIProvider, AIConfig, AISettings, AIMessage } from '@common/types'
 import { dirname } from 'path'
 import { getSetting, setSetting, getAllSettings, clearSetting, clearDatabase } from './settings'
 import { getDatabasePath, getLogPath } from './paths'
@@ -118,10 +118,8 @@ export class Server {
     })
 
     // AI handlers
-    connection.handle('stream-ai-chat', async (...args) => {
+    connection.handle('stream-ai-chat', async (messages: AIMessage[]) => {
       try {
-        const messages = args[0] as any[]
-        
         // Get AI settings from database
         const aiSettings = await getSetting<AISettings>('ai')
 

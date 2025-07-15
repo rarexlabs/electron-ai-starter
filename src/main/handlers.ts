@@ -13,6 +13,5 @@ export function setupHandlers(): void {
     }
   })
 
-
   ipcMain.on('ping', () => mainLogger.info('pong'))
 }

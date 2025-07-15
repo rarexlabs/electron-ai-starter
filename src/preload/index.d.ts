@@ -33,6 +33,7 @@ declare global {
       onEvent(channel: string, callback: (payload: unknown) => void): void
       offEvent(channel: string): void
       isConnected(): boolean
+
       // Database operations (moved from main)
       getSetting(key: string): Promise<unknown>
       setSetting(key: string, value: unknown): Promise<void>
@@ -41,6 +42,7 @@ declare global {
       clearDatabase(): Promise<void>
       getDatabasePath(): Promise<string>
       getLogPath(): Promise<string>
+
       // AI operations (moved from main)
       streamAIChat(messages: AIMessage[]): Promise<string>
       abortAIChat(sessionId: string): Promise<void>

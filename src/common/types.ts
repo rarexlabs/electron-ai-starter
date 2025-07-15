@@ -21,11 +21,16 @@ export interface AISettings {
   google_model?: string
 }
 
-// Connection types
-export interface Result<T, E> {
-  status: 'success' | 'error'
-  data?: T
-  error?: E
+export type Result<A, E = never> = Ok<A> | Error<E>
+
+export interface Ok<A> {
+  status: 'ok'
+  value: A
+}
+
+export interface Error<E> {
+  status: 'error'
+  error: E
 }
 
 export class TimeoutError extends Error {

@@ -29,7 +29,7 @@ function initializeDatabase(): void {
 function main(): void {
   // Initialize database
   initializeDatabase()
-  
+
   const server = new Server(process.parentPort)
 
   process.parentPort.on('message', (e) => {

@@ -13,7 +13,6 @@ mainLogger.info('🔧 Main process started')
 
 let backend: Backend | undefined = undefined
 
-
 async function createWindow(): Promise<void> {
   const mainWindow = new BrowserWindow({
     width: 900,

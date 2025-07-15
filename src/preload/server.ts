@@ -161,7 +161,7 @@ export class Server {
             preloadLogger.error(`Failed to unwrap AI event ${channel}:`, error)
           }
         }
-        
+
         // For non-AI events or if unwrapping fails, pass payload as-is
         callback(payload)
       }
@@ -331,8 +331,7 @@ export class Server {
       ipcRenderer.on('backend-connected', (event) => {
         const [port] = event.ports
         this._backendConnection = new Connection(port)
-        
-        
+
         preloadLogger.info('✅ Backend connection established')
         resolve()
       })
@@ -348,5 +347,4 @@ export class Server {
 
     return this._backendConnectionPromise
   }
-
 }
