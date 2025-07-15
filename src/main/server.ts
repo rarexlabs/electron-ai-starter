@@ -16,7 +16,7 @@ export class Server {
     this._backend = new Backend()
 
     ipcMain.on('connectBackend', async (e) => {
-      return this._backend.connect(e.sender)
+      return this._backend.connectRenderer(e.sender)
     })
 
     this._handle(['ping', 'openFolder'])

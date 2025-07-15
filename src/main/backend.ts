@@ -12,7 +12,7 @@ export class Backend {
     this._process = utilityProcess.fork(backendPath, ['--user-data-path', userDataPath])
   }
 
-  connect(renderer: WebContents): void {
+  connectRenderer(renderer: WebContents): void {
     const messageChannel = new MessageChannelMain()
     this._messageChannels.set(renderer.id, messageChannel)
     const backendPort = messageChannel.port1
@@ -44,24 +44,16 @@ export class Backend {
   }
 
   async stop(): Promise<void> {
-    if (this._process) {
-      logger.info('🛑 Stopping backend process...')
+    if (!this._process) return
+    logger.info('Stopping backend process...')
 
-      return new Promise<void>((resolve) => {
-        if (!this._process) {
-          resolve()
-          return
-        }
-
-        // Listen for process exit
-        this._process.once('exit', () => {
-          logger.info('✅ Backend process stopped')
-          resolve()
-        })
-
-        // Try graceful shutdown first
-        this._process.kill()
+    return new Promise<void>((resolve) => {
+      this._process.once('exit', () => {
+        logger.info('Backend process stopped')
+        resolve()
       })
-    }
+
+      this._process.kill()
+    })
   }
 }
