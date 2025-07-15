@@ -10,13 +10,11 @@ import { isOk } from '@common/result'
 function App() {
   const [currentPage, setCurrentPage] = useState<'home' | 'settings' | 'chat' | 'dummyData'>('home')
   const [backendConnected, setBackendConnected] = useState(false)
-  const [isConnecting, setIsConnecting] = useState(true)
 
   useEffect(() => {
     const connectToBackend = async (): Promise<void> => {
       await window.connectBackend()
       setBackendConnected(true)
-      setIsConnecting(false)
       const result = await window.backend.ping()
       if (isOk(result)) {
         logger.info(`✅ Backend ping successful: ${result.value}`)
@@ -44,20 +42,6 @@ function App() {
   const handleBackToHome = (): void => {
     logger.info('Navigated back to home')
     setCurrentPage('home')
-  }
-
-  // Show loading state while connecting to backend
-  if (isConnecting) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-2xl font-semibold text-gray-700 dark:text-gray-200 mb-4">
-            Connecting to backend...
-          </div>
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        </div>
-      </div>
-    )
   }
 
   // Show error state if backend connection failed
