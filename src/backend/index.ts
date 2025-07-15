@@ -1,12 +1,35 @@
 import { Server } from './server'
 import { initializeBackendLogging, backendLogger } from './logger'
+import { getDatabase, runMigrations, testDatabaseConnection } from './db'
 
 // Initialize logging first
 initializeBackendLogging()
 
 backendLogger.info('🚀 Backend process started')
 
+function initializeDatabase(): void {
+  try {
+    // Initialize Drizzle database connection
+    getDatabase()
+
+    // Run database migrations
+    runMigrations()
+
+    testDatabaseConnection()
+
+    backendLogger.info('✅ Database ready')
+  } catch (error) {
+    backendLogger.error('❌ Failed to initialize database:', error)
+
+    // Exit the backend process if database initialization fails
+    process.exit(1)
+  }
+}
+
 function main(): void {
+  // Initialize database
+  initializeDatabase()
+  
   const server = new Server(process.parentPort)
 
   process.parentPort.on('message', (e) => {

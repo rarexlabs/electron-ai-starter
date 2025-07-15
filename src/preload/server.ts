@@ -57,54 +57,9 @@ export class Server {
 
   // Main process communication using secure IPC
   public readonly mainAPI = {
-    // Settings operations
-    getSetting: (key: string): Promise<unknown> => {
-      return ipcRenderer.invoke('get-setting', key)
-    },
-
-    setSetting: (key: string, value: unknown): Promise<void> => {
-      return ipcRenderer.invoke('set-setting', key, value)
-    },
-
-    getAllSettings: (): Promise<Record<string, unknown>> => {
-      return ipcRenderer.invoke('get-all-settings')
-    },
-
-    clearSetting: (key: string): Promise<void> => {
-      return ipcRenderer.invoke('clear-setting', key)
-    },
-
-    clearDatabase: (): Promise<void> => {
-      return ipcRenderer.invoke('clear-database')
-    },
-
-    getDatabasePath: (): Promise<string> => {
-      return ipcRenderer.invoke('get-database-path')
-    },
-
-    getLogPath: (): Promise<string> => {
-      return ipcRenderer.invoke('get-log-path')
-    },
-
+    // Only keep non-database/AI operations in main
     openFolder: (folderPath: string): Promise<void> => {
       return ipcRenderer.invoke('open-folder', folderPath)
-    },
-
-    // AI operations
-    streamAIChat: (messages: AIMessage[]): Promise<string> => {
-      return ipcRenderer.invoke('stream-ai-chat', messages)
-    },
-
-    abortAIChat: (sessionId: string): Promise<void> => {
-      return ipcRenderer.invoke('abort-ai-chat', sessionId)
-    },
-
-    getAIModels: (provider: AIProvider): Promise<string[]> => {
-      return ipcRenderer.invoke('get-ai-models', provider)
-    },
-
-    testAIProviderConnection: (config: AIConfig): Promise<boolean> => {
-      return ipcRenderer.invoke('test-ai-provider-connection', config)
     },
 
     // Raw IPC event methods for renderer to handle streaming events
@@ -190,7 +145,28 @@ export class Server {
         return
       }
 
-      this._backendConnection.onEvent(channel, callback)
+      // Wrap the callback to handle AI event payload unwrapping
+      const wrappedCallback = (payload: unknown) => {
+        // For AI events, unwrap the connection payload format
+        if (channel.startsWith('ai-chat-')) {
+          try {
+            if (payload && typeof payload === 'object' && 'payload' in payload) {
+              // Extract and parse the JSON string from the payload field
+              const args = JSON.parse((payload as any).payload)
+              // Call the original callback with spread arguments (cast for AI events)
+              ;(callback as (...args: unknown[]) => void)(...args)
+              return
+            }
+          } catch (error) {
+            preloadLogger.error(`Failed to unwrap AI event ${channel}:`, error)
+          }
+        }
+        
+        // For non-AI events or if unwrapping fails, pass payload as-is
+        callback(payload)
+      }
+
+      this._backendConnection.onEvent(channel, wrappedCallback)
     },
 
     // Stop listening for events from backend
@@ -200,6 +176,143 @@ export class Server {
       }
 
       this._backendConnection.offEvent(channel)
+    },
+
+    // Database operations (moved from mainAPI)
+    getSetting: async (key: string): Promise<unknown> => {
+      if (!this._backendConnection) {
+        throw new Error('Backend not connected')
+      }
+
+      const result = await this._backendConnection.invoke('get-setting', key)
+      if (result.status === 'success') {
+        return result.data
+      } else {
+        throw new Error(result.error?.toString() || 'Get setting failed')
+      }
+    },
+
+    setSetting: async (key: string, value: unknown): Promise<void> => {
+      if (!this._backendConnection) {
+        throw new Error('Backend not connected')
+      }
+
+      const result = await this._backendConnection.invoke('set-setting', key, value)
+      if (result.status === 'error') {
+        throw new Error(result.error?.toString() || 'Set setting failed')
+      }
+    },
+
+    getAllSettings: async (): Promise<Record<string, unknown>> => {
+      if (!this._backendConnection) {
+        throw new Error('Backend not connected')
+      }
+
+      const result = await this._backendConnection.invoke('get-all-settings')
+      if (result.status === 'success') {
+        return result.data as Record<string, unknown>
+      } else {
+        throw new Error(result.error?.toString() || 'Get all settings failed')
+      }
+    },
+
+    clearSetting: async (key: string): Promise<void> => {
+      if (!this._backendConnection) {
+        throw new Error('Backend not connected')
+      }
+
+      const result = await this._backendConnection.invoke('clear-setting', key)
+      if (result.status === 'error') {
+        throw new Error(result.error?.toString() || 'Clear setting failed')
+      }
+    },
+
+    clearDatabase: async (): Promise<void> => {
+      if (!this._backendConnection) {
+        throw new Error('Backend not connected')
+      }
+
+      const result = await this._backendConnection.invoke('clear-database')
+      if (result.status === 'error') {
+        throw new Error(result.error?.toString() || 'Clear database failed')
+      }
+    },
+
+    getDatabasePath: async (): Promise<string> => {
+      if (!this._backendConnection) {
+        throw new Error('Backend not connected')
+      }
+
+      const result = await this._backendConnection.invoke('get-database-path')
+      if (result.status === 'success') {
+        return result.data as string
+      } else {
+        throw new Error(result.error?.toString() || 'Get database path failed')
+      }
+    },
+
+    getLogPath: async (): Promise<string> => {
+      if (!this._backendConnection) {
+        throw new Error('Backend not connected')
+      }
+
+      const result = await this._backendConnection.invoke('get-log-path')
+      if (result.status === 'success') {
+        return result.data as string
+      } else {
+        throw new Error(result.error?.toString() || 'Get log path failed')
+      }
+    },
+
+    // AI operations (moved from mainAPI)
+    streamAIChat: async (messages: AIMessage[]): Promise<string> => {
+      if (!this._backendConnection) {
+        throw new Error('Backend not connected')
+      }
+
+      const result = await this._backendConnection.invoke('stream-ai-chat', messages)
+      if (result.status === 'success') {
+        return result.data as string
+      } else {
+        throw new Error(result.error?.toString() || 'Stream AI chat failed')
+      }
+    },
+
+    abortAIChat: async (sessionId: string): Promise<void> => {
+      if (!this._backendConnection) {
+        throw new Error('Backend not connected')
+      }
+
+      const result = await this._backendConnection.invoke('abort-ai-chat', sessionId)
+      if (result.status === 'error') {
+        throw new Error(result.error?.toString() || 'Abort AI chat failed')
+      }
+    },
+
+    getAIModels: async (provider: AIProvider): Promise<string[]> => {
+      if (!this._backendConnection) {
+        throw new Error('Backend not connected')
+      }
+
+      const result = await this._backendConnection.invoke('get-ai-models', provider)
+      if (result.status === 'success') {
+        return result.data as string[]
+      } else {
+        throw new Error(result.error?.toString() || 'Get AI models failed')
+      }
+    },
+
+    testAIProviderConnection: async (config: AIConfig): Promise<boolean> => {
+      if (!this._backendConnection) {
+        throw new Error('Backend not connected')
+      }
+
+      const result = await this._backendConnection.invoke('test-ai-provider-connection', config)
+      if (result.status === 'success') {
+        return result.data as boolean
+      } else {
+        throw new Error(result.error?.toString() || 'Test AI provider connection failed')
+      }
     },
 
     // Check if backend is connected
@@ -218,6 +331,8 @@ export class Server {
       ipcRenderer.on('backend-connected', (event) => {
         const [port] = event.ports
         this._backendConnection = new Connection(port)
+        
+        
         preloadLogger.info('✅ Backend connection established')
         resolve()
       })
@@ -233,4 +348,5 @@ export class Server {
 
     return this._backendConnectionPromise
   }
+
 }

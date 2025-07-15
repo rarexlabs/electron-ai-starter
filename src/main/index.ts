@@ -1,8 +1,7 @@
-import { app, shell, BrowserWindow, dialog, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '@resources/icon.png?asset'
-import { getDatabase, closeDatabase, runMigrations, testDatabaseConnection } from './db'
 import { initializeLogging, mainLogger } from './logger'
 import { setupHandlers } from './handlers'
 import { Backend } from './backend'
@@ -14,30 +13,6 @@ mainLogger.info('🔧 Main process started')
 
 let backend: Backend | undefined = undefined
 
-function initializeDatabase(): void {
-  try {
-    // Initialize Drizzle database connection
-    getDatabase()
-
-    // Run database migrations
-    runMigrations()
-
-    testDatabaseConnection()
-
-    mainLogger.info('✅ Database ready')
-  } catch (error) {
-    mainLogger.error('❌ Failed to initialize database:', error)
-
-    // Attempt to show user-friendly error dialog
-    dialog.showErrorBox(
-      'Database Error',
-      `Failed to initialize database: ${error instanceof Error ? error.message : String(error)}`
-    )
-
-    // Exit the application if database initialization fails
-    app.quit()
-  }
-}
 
 async function createWindow(): Promise<void> {
   const mainWindow = new BrowserWindow({
@@ -80,9 +55,6 @@ app.whenReady().then(() => {
 
   // Logging already initialized at module load
 
-  // Initialize database
-  initializeDatabase()
-
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
@@ -112,7 +84,6 @@ app.whenReady().then(() => {
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    closeDatabase()
     app.quit()
   }
 })
@@ -120,7 +91,6 @@ app.on('window-all-closed', () => {
 async function shutdownGracefully(): Promise<void> {
   try {
     await backend!.stop()
-    closeDatabase()
     mainLogger.info('✅ Graceful shutdown complete')
   } catch (error) {
     mainLogger.error('❌ Error during graceful shutdown:', error)

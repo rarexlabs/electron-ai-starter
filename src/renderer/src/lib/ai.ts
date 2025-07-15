@@ -15,7 +15,9 @@ export async function streamText(
   abortSignal: AbortSignal
 ): Promise<AsyncGenerator<string, void, unknown>> {
   try {
-    const sessionId = await window.main.streamAIChat(messages)
+    // Ensure backend is connected before making the call
+    await window.connectBackend()
+    const sessionId = await window.backend.streamAIChat(messages)
     logger.info('🚀 Stream started with session:', sessionId)
     return receiveStream(sessionId, abortSignal)
   } catch (error) {
@@ -53,13 +55,14 @@ async function* receiveStream(
     })
 
   const createEventHandler = (eventType: 'chunk' | 'end' | 'error' | 'aborted') => {
-    return (...args: unknown[]): void => {
-      const [, id, data] = parseEventArgs(args)
+    return (id: string, data: string): void => {
       if (id !== sessionId) return
 
       switch (eventType) {
         case 'chunk':
-          if (data) pendingChunks.push(data)
+          if (data) {
+            pendingChunks.push(data)
+          }
           break
         case 'end':
           completed = true
@@ -88,18 +91,18 @@ async function* receiveStream(
   const handleAbortSignal = async (): Promise<void> => {
     logger.info('External abort signal received, aborting stream')
     try {
-      await window.main.abortAIChat(sessionId)
+      await window.backend.abortAIChat(sessionId)
     } catch (abortError) {
       logger.error('Failed to abort chat session:', abortError)
     }
   }
 
   try {
-    // Set up event listeners using exposed IPC methods
-    window.main.on('ai-chat-chunk', handleChunk)
-    window.main.on('ai-chat-end', handleEnd)
-    window.main.on('ai-chat-error', handleError)
-    window.main.on('ai-chat-aborted', handleAborted)
+    // Set up event listeners directly from backend
+    window.backend.onEvent('ai-chat-chunk', handleChunk)
+    window.backend.onEvent('ai-chat-end', handleEnd)
+    window.backend.onEvent('ai-chat-error', handleError)
+    window.backend.onEvent('ai-chat-aborted', handleAborted)
     abortSignal.addEventListener('abort', handleAbortSignal)
 
     // Stream processing loop
@@ -130,10 +133,10 @@ async function* receiveStream(
     throw streamError
   } finally {
     // Clean up event listeners - safe to call even if not set up
-    window.main.off('ai-chat-chunk', handleChunk)
-    window.main.off('ai-chat-end', handleEnd)
-    window.main.off('ai-chat-error', handleError)
-    window.main.off('ai-chat-aborted', handleAborted)
+    window.backend.offEvent('ai-chat-chunk')
+    window.backend.offEvent('ai-chat-end')
+    window.backend.offEvent('ai-chat-error')
+    window.backend.offEvent('ai-chat-aborted')
     abortSignal.removeEventListener('abort', handleAbortSignal)
 
     logger.info('🧹 Cleaned up stream generator for session:', sessionId)

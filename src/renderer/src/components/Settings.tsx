@@ -26,9 +26,10 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
   useEffect(() => {
     const loadPaths = async (): Promise<void> => {
       try {
+        await window.connectBackend()
         const [dbPath, logPath] = await Promise.all([
-          window.main.getDatabasePath(),
-          window.main.getLogPath()
+          window.backend.getDatabasePath(),
+          window.backend.getLogPath()
         ])
         setDatabasePath(dbPath)
         setLogPath(logPath)
@@ -99,7 +100,7 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
       setIsClearingDatabase(true)
       setMessage(null)
 
-      await window.main.clearDatabase()
+      await window.backend.clearDatabase()
 
       setMessage({
         type: 'success',

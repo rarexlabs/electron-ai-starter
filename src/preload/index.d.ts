@@ -17,20 +17,8 @@ declare global {
     electron: ElectronAPI
     connectBackend(): Promise<void>
     main: {
-      // Settings operations
-      getSetting(key: string): Promise<unknown>
-      setSetting(key: string, value: unknown): Promise<void>
-      getAllSettings(): Promise<Record<string, unknown>>
-      clearSetting(key: string): Promise<void>
-      clearDatabase(): Promise<void>
-      getDatabasePath(): Promise<string>
-      getLogPath(): Promise<string>
+      // Only keep essential main process operations
       openFolder(folderPath: string): Promise<void>
-      // AI operations
-      streamAIChat(messages: AIMessage[]): Promise<string>
-      abortAIChat(sessionId: string): Promise<void>
-      getAIModels(provider: AIProvider): Promise<string[]>
-      testAIProviderConnection(config: AIConfig): Promise<boolean>
       // Raw IPC event methods for renderer to handle streaming events
       on(channel: string, listener: (...args: unknown[]) => void): void
       off(channel: string, listener: (...args: unknown[]) => void): void
@@ -45,6 +33,19 @@ declare global {
       onEvent(channel: string, callback: (payload: unknown) => void): void
       offEvent(channel: string): void
       isConnected(): boolean
+      // Database operations (moved from main)
+      getSetting(key: string): Promise<unknown>
+      setSetting(key: string, value: unknown): Promise<void>
+      getAllSettings(): Promise<Record<string, unknown>>
+      clearSetting(key: string): Promise<void>
+      clearDatabase(): Promise<void>
+      getDatabasePath(): Promise<string>
+      getLogPath(): Promise<string>
+      // AI operations (moved from main)
+      streamAIChat(messages: AIMessage[]): Promise<string>
+      abortAIChat(sessionId: string): Promise<void>
+      getAIModels(provider: AIProvider): Promise<string[]>
+      testAIProviderConnection(config: AIConfig): Promise<boolean>
     }
   }
 }
