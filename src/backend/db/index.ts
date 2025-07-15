@@ -27,14 +27,20 @@ export function connectDatabase(): ReturnType<typeof drizzle> {
   return drizzle({ client })
 }
 
+export async function ensureConnection(database: ReturnType<typeof drizzle>) {
+  const result = await database.get(sql`SELECT 1 as test`)
+  const test = (result as { test: number }).test
+  if (test !== 1) throw new Error('Unable to query database')
+}
+
 export async function runMigrations(database: ReturnType<typeof drizzle>): Promise<void> {
-  const migrationsFolder = getMigrationsFolder()
+  const migrationsFolder = _getMigrationsFolder()
   if (!migrationsFolder) {
     logger.info('No migrations folder found, skipping migrations')
     return
   }
 
-  const migrationStatus = await getMigrationStatus(database, migrationsFolder)
+  const migrationStatus = await _getMigrationStatus(database, migrationsFolder)
   if (migrationStatus.pendingCount === 0) logger.info('DB migration up to date')
   else logger.info(`${migrationStatus.pendingCount} pending db migration(s) to apply`)
 
@@ -44,7 +50,18 @@ export async function runMigrations(database: ReturnType<typeof drizzle>): Promi
   logger.info(`DB migration completed`)
 }
 
-function getMigrationsFolder(): string | null {
+export function close(db: ReturnType<typeof drizzle>): void {
+  db?.$client.close()
+}
+
+export function destroy(): void {
+  const dbPath = getDatabasePath()
+  if (fs.existsSync(dbPath)) {
+    fs.unlinkSync(dbPath)
+  }
+}
+
+function _getMigrationsFolder(): string | null {
   const possiblePaths = [
     path.join(process.cwd(), 'src', 'backend', 'db', 'migrations'),
     path.join(__dirname, 'migrations'),
@@ -54,7 +71,7 @@ function getMigrationsFolder(): string | null {
   return possiblePaths.find(fs.existsSync) || null
 }
 
-async function getMigrationStatus(
+async function _getMigrationStatus(
   database: ReturnType<typeof drizzle>,
   migrationsFolder: string
 ): Promise<MigrationStatus> {
@@ -91,23 +108,6 @@ async function getMigrationStatus(
     pendingCount,
     latestApplied,
     totalMigrations
-  }
-}
-
-export async function ensureConnection(database: ReturnType<typeof drizzle>) {
-  const result = await database.get(sql`SELECT 1 as test`)
-  const test = (result as { test: number }).test
-  if (test !== 1) throw new Error('Unable to query database')
-}
-
-export function close(db: ReturnType<typeof drizzle>): void {
-  db?.$client.close()
-}
-
-export function destroy(): void {
-  const dbPath = getDatabasePath()
-  if (fs.existsSync(dbPath)) {
-    fs.unlinkSync(dbPath)
   }
 }
 
