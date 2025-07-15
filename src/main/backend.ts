@@ -14,12 +14,6 @@ export class Backend {
 
   connect(renderer: WebContents): void {
     const messageChannel = new MessageChannelMain()
-
-    if (this._messageChannels.has(renderer.id)) {
-      mainLogger.warn(`Renderer ${renderer.id} already connected with backend`)
-      return
-    }
-
     this._messageChannels.set(renderer.id, messageChannel)
     const backendPort = messageChannel.port1
     const rendererPort = messageChannel.port2
