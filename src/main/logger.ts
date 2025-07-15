@@ -25,8 +25,8 @@ export function initializeLogging(): void {
   // Configure file transport to route to separate files based on scope
   log.transports.file.resolvePathFn = (_variables, message) => {
     const scope = message?.scope || 'main'
-    // Route renderer logs to renderer.log, all others (main, preload, backend) to main.log
-    const fileName = scope === 'renderer' ? 'renderer.log' : 'main.log'
+    // Route each scope to its own log file
+    const fileName = `${scope}.log`
     return path.join(logFolder, fileName)
   }
 
@@ -45,7 +45,7 @@ export function initializeLogging(): void {
 
   log.eventLogger.startLogging({ level: 'warn' })
 
-  log.info(`📝 Logging initialized - ${path.resolve(logFolder)}`)
+  log.info(`📝 Logging initialized - Files: main.log, renderer.log, preload.log in ${path.resolve(logFolder)}`)
 }
 
 // Create scoped logger for main process
