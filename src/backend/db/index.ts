@@ -8,7 +8,6 @@ import logger from '../logger'
 import { getDatabasePath } from '../paths'
 
 let db: ReturnType<typeof drizzle> | null = null
-let sqlite: Database.Database | null = null
 
 export function getDatabase(): ReturnType<typeof drizzle> {
   if (!db) {
@@ -20,12 +19,11 @@ export function getDatabase(): ReturnType<typeof drizzle> {
       fs.mkdirSync(dbDir, { recursive: true })
     }
 
-    sqlite = new Database(dbPath)
+    const sqlite = new Database(dbPath)
+    db = drizzle({ client: sqlite })
 
     // Enable WAL mode for better performance (recommended by better-sqlite3 docs)
-    sqlite.pragma('journal_mode = WAL')
-
-    db = drizzle({ client: sqlite })
+    db.run(sql`PRAGMA journal_mode = WAL`)
   }
 
   return db
@@ -72,18 +70,21 @@ function getMigrationsFolder(): string | null {
 }
 
 function getAppliedMigrationsCount(): number {
-  const hasMigrationsTable = sqlite
-    ?.prepare(
-      `
-    SELECT name FROM sqlite_master 
-    WHERE type='table' AND name='__drizzle_migrations'
-  `
-    )
-    .get()
+  if (!db) return 0
 
-  return hasMigrationsTable
-    ? sqlite?.prepare('SELECT hash FROM __drizzle_migrations').all()?.length || 0
-    : 0
+  try {
+    // Check if migrations table exists
+    const tableCheck = db.get(sql`SELECT name FROM sqlite_master WHERE type='table' AND name='__drizzle_migrations'`) as any
+    
+    if (!tableCheck) return 0
+
+    // Count applied migrations
+    const result = db.get(sql`SELECT COUNT(*) as count FROM __drizzle_migrations`) as any
+    return result?.count || 0
+  } catch (error) {
+    // If table doesn't exist or other error, return 0
+    return 0
+  }
 }
 
 function getMigrationErrorMessage(error: unknown): string {
@@ -115,9 +116,12 @@ export function testDatabaseConnection(): boolean {
 }
 
 export function closeDatabase(): void {
-  if (sqlite) {
-    sqlite.close()
-    sqlite = null
+  if (db) {
+    // Access the underlying SQLite client via Drizzle's $client property
+    const client = db.$client
+    if (client && typeof client.close === 'function') {
+      client.close()
+    }
     db = null
   }
 }
