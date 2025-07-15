@@ -18,6 +18,7 @@ import {
 } from '@renderer/components/ui/card'
 import { CheckCircle, Loader2, Trash2, XCircle } from 'lucide-react'
 import type { AIProvider, AISettings, AIConfig } from '@common/types'
+import { isOk } from '@common/result'
 import { logger } from '@renderer/lib/logger'
 
 interface AISettingsProps {
@@ -43,10 +44,15 @@ export function AISettings({
   const loadSettings = useCallback(async (): Promise<void> => {
     try {
       await window.connectBackend()
-      const aiSettings = ((await window.backend.getSetting('ai')) as AISettings) || {}
-      const currentProvider = aiSettings.default_provider || 'openai'
-      setSelectedProvider(currentProvider)
-      await loadProviderSettings(currentProvider, aiSettings)
+      const result = await window.backend.getSetting('ai')
+      if (isOk(result)) {
+        const aiSettings = (result.value as AISettings) || {}
+        const currentProvider = aiSettings.default_provider || 'openai'
+        setSelectedProvider(currentProvider)
+        await loadProviderSettings(currentProvider, aiSettings)
+      } else {
+        logger.error('Failed to get AI settings:', result.error)
+      }
     } catch (error) {
       logger.error('Failed to load AI settings:', error)
     }
@@ -54,10 +60,15 @@ export function AISettings({
 
   const loadModels = useCallback(async (): Promise<void> => {
     try {
-      const availableModels = await window.backend.getAIModels(selectedProvider)
-      setModels(availableModels)
-      if (!model && availableModels.length > 0) {
-        setModel(availableModels[0])
+      const result = await window.backend.getAIModels(selectedProvider)
+      if (isOk(result)) {
+        setModels(result.value)
+        if (!model && result.value.length > 0) {
+          setModel(result.value[0])
+        }
+      } else {
+        logger.error('Failed to get AI models:', result.error)
+        setModels([])
       }
     } catch (error) {
       logger.error('Failed to load models:', error)
@@ -68,8 +79,24 @@ export function AISettings({
     provider: AIProvider,
     aiSettings?: AISettings
   ): Promise<void> => {
-    const settings = aiSettings || ((await window.backend.getSetting('ai')) as AISettings) || {}
-    const availableModels = await window.backend.getAIModels(provider)
+    let settings = aiSettings
+    if (!settings) {
+      const result = await window.backend.getSetting('ai')
+      if (isOk(result)) {
+        settings = (result.value as AISettings) || {}
+      } else {
+        logger.error('Failed to get AI settings:', result.error)
+        settings = {}
+      }
+    }
+
+    const modelsResult = await window.backend.getAIModels(provider)
+    let availableModels: string[] = []
+    if (isOk(modelsResult)) {
+      availableModels = modelsResult.value
+    } else {
+      logger.error('Failed to get AI models:', modelsResult.error)
+    }
 
     setApiKey(settings[`${provider}_api_key`] || '')
     setModel(settings[`${provider}_model`] || availableModels[0] || 'gpt-4o')
@@ -94,9 +121,9 @@ export function AISettings({
         apiKey: apiKey
       }
 
-      const connected = await window.backend.testAIProviderConnection(config)
+      const result = await window.backend.testAIProviderConnection(config)
 
-      if (connected) {
+      if (isOk(result) && result.value) {
         setConnectionTestSuccess(true)
         setTimeout(() => setConnectionTestSuccess(false), 3000)
       } else {
@@ -116,7 +143,14 @@ export function AISettings({
     setIsSaving(true)
     setSaveSuccess(false)
     try {
-      const currentAiSettings = (await window.backend.getSetting('ai')) || {}
+      const settingsResult = await window.backend.getSetting('ai')
+      let currentAiSettings = {}
+      if (isOk(settingsResult)) {
+        currentAiSettings = (settingsResult.value as AISettings) || {}
+      } else {
+        logger.error('Failed to get current AI settings:', settingsResult.error)
+      }
+
       const updatedSettings = {
         ...currentAiSettings,
         default_provider: selectedProvider,
@@ -124,9 +158,13 @@ export function AISettings({
         [`${selectedProvider}_model`]: model
       }
 
-      await window.backend.setSetting('ai', updatedSettings)
-      setSaveSuccess(true)
-      setTimeout(() => setSaveSuccess(false), 3000)
+      const saveResult = await window.backend.setSetting('ai', updatedSettings)
+      if (isOk(saveResult)) {
+        setSaveSuccess(true)
+        setTimeout(() => setSaveSuccess(false), 3000)
+      } else {
+        logger.error('Failed to save settings:', saveResult.error)
+      }
     } catch (error) {
       logger.error('Failed to save settings:', error)
     } finally {
@@ -143,16 +181,20 @@ export function AISettings({
 
     setIsClearing(true)
     try {
-      await window.backend.clearSetting('ai')
-      setSelectedProvider('openai')
-      setApiKey('')
-      setModel('')
-      setModels([])
-      setConnectionTestSuccess(false)
-      setConnectionTestError(false)
-      setSaveSuccess(false)
-      onProviderChange?.('openai')
-      logger.info('AI settings cleared successfully')
+      const result = await window.backend.clearSetting('ai')
+      if (isOk(result)) {
+        setSelectedProvider('openai')
+        setApiKey('')
+        setModel('')
+        setModels([])
+        setConnectionTestSuccess(false)
+        setConnectionTestError(false)
+        setSaveSuccess(false)
+        onProviderChange?.('openai')
+        logger.info('AI settings cleared successfully')
+      } else {
+        logger.error('Failed to clear AI settings:', result.error)
+      }
     } catch (error) {
       logger.error('Failed to clear AI settings:', error)
     } finally {

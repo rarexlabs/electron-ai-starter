@@ -1,6 +1,6 @@
 import { ipcRenderer } from 'electron'
 import { Connection } from '../common/connection'
-import { BackendListenerAPI, RendererBackendAPI } from '../common/types'
+import { BackendListenerAPI, RendererBackendAPI, AppEvent } from '../common/types'
 
 // Create scoped logger for preload process using direct IPC
 const preloadLogger = {
@@ -77,18 +77,22 @@ export class Server {
   public readonly backendAPI: RendererBackendAPI & BackendListenerAPI = {
     // Backend process communication using Connection directly
     ping: (...args) => this._invoke('ping', ...args),
-    onEvent: (...args) => this._invoke('onEvent', ...args),
-    offEvent: (...args) => this._invoke('offEvent', ...args),
-    getSetting: (...args) => this._invoke('getSetting', ...args),
-    setSetting: (...args) => this._invoke('setSetting', ...args),
-    clearSetting: (...args) => this._invoke('clearSetting', ...args),
-    clearDatabase: (...args) => this._invoke('clearDatabase', ...args),
-    getDatabasePath: (...args) => this._invoke('getDatabasePath', ...args),
-    getLogPath: (...args) => this._invoke('getLogpath', ...args),
-    streamAIChat: (...args) => this._invoke('streamAIChat', ...args),
-    abortAIChat: (...args) => this._invoke('abortAIChat', ...args),
-    getAIModels: (...args) => this._invoke('getAIModels', ...args),
-    testAIProviderConnection: (...args) => this._invoke('testAIProviderConnection', ...args)
+    getSetting: (...args) => this._invoke('get-setting', ...args),
+    setSetting: (...args) => this._invoke('set-setting', ...args),
+    clearSetting: (...args) => this._invoke('clear-setting', ...args),
+    clearDatabase: (...args) => this._invoke('clear-database', ...args),
+    getDatabasePath: (...args) => this._invoke('get-database-path', ...args),
+    getLogPath: (...args) => this._invoke('get-log-path', ...args),
+    streamAIChat: (...args) => this._invoke('stream-ai-chat', ...args),
+    abortAIChat: (...args) => this._invoke('abort-ai-chat', ...args),
+    getAIModels: (...args) => this._invoke('get-ai-models', ...args),
+    testAIProviderConnection: (...args) => this._invoke('test-ai-provider-connection', ...args),
+    onEvent: (channel: string, callback: (appEvent: AppEvent) => void) => {
+      this._backendConnection!.onEvent(channel, callback)
+    },
+    offEvent: (channel: string) => {
+      this._backendConnection!.offEvent(channel)
+    }
   }
 
   private _invoke(channel: string, ...args) {

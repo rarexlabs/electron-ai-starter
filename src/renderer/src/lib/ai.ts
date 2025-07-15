@@ -1,5 +1,6 @@
 import { logger } from '@renderer/lib/logger'
-import type { AIMessage } from '@common/types'
+import { isOk, isError } from '@common/result'
+import type { AIMessage, AppEvent } from '@common/types'
 
 export async function streamText(
   messages: AIMessage[],
@@ -8,9 +9,16 @@ export async function streamText(
   try {
     // Ensure backend is connected before making the call
     await window.connectBackend()
-    const sessionId = await window.backend.streamAIChat(messages)
-    logger.info('🚀 Stream started with session:', sessionId)
-    return receiveStream(sessionId, abortSignal)
+    const result = await window.backend.streamAIChat(messages)
+
+    if (isOk(result)) {
+      const sessionId = result.value
+      logger.info('🚀 Stream started with session:', sessionId)
+      return receiveStream(sessionId, abortSignal)
+    } else {
+      logger.error('Failed to start stream:', result.error)
+      throw new Error(`Failed to start AI chat stream: ${result.error}`)
+    }
   } catch (error) {
     logger.error('Failed to start stream:', error)
     throw error
@@ -45,7 +53,8 @@ async function* receiveStream(
       }
     })
 
-  const handleChunk = (payload: { sessionId: string; chunk: string }): void => {
+  const handleChunk = (appEvent: AppEvent): void => {
+    const payload = appEvent.payload as { sessionId: string; chunk: string }
     if (payload.sessionId !== sessionId) return
     if (payload.chunk) {
       pendingChunks.push(payload.chunk)
@@ -53,21 +62,24 @@ async function* receiveStream(
     unblockYieldLoop()
   }
 
-  const handleEnd = (payload: { sessionId: string }): void => {
+  const handleEnd = (appEvent: AppEvent): void => {
+    const payload = appEvent.payload as { sessionId: string }
     if (payload.sessionId !== sessionId) return
     completed = true
     logger.info('✅ Stream completed for session:', sessionId)
     unblockYieldLoop()
   }
 
-  const handleError = (payload: { sessionId: string; error: string }): void => {
+  const handleError = (appEvent: AppEvent): void => {
+    const payload = appEvent.payload as { sessionId: string; error: string }
     if (payload.sessionId !== sessionId) return
     error = payload.error || 'Unknown error'
     logger.error('❌ Stream error for session:', sessionId, error)
     unblockYieldLoop()
   }
 
-  const handleAborted = (payload: { sessionId: string }): void => {
+  const handleAborted = (appEvent: AppEvent): void => {
+    const payload = appEvent.payload as { sessionId: string }
     if (payload.sessionId !== sessionId) return
     completed = true
     logger.info('Stream aborted for session:', sessionId)
@@ -78,7 +90,10 @@ async function* receiveStream(
   const handleAbortSignal = async (): Promise<void> => {
     logger.info('External abort signal received, aborting stream')
     try {
-      await window.backend.abortAIChat(sessionId)
+      const result = await window.backend.abortAIChat(sessionId)
+      if (isError(result)) {
+        logger.error('Failed to abort chat session:', result.error)
+      }
     } catch (abortError) {
       logger.error('Failed to abort chat session:', abortError)
     }
@@ -86,10 +101,10 @@ async function* receiveStream(
 
   try {
     // Set up event listeners directly from backend
-    window.backend.onEvent('ai-chat-chunk', handleChunk as (...args: unknown[]) => void)
-    window.backend.onEvent('ai-chat-end', handleEnd as (...args: unknown[]) => void)
-    window.backend.onEvent('ai-chat-error', handleError as (...args: unknown[]) => void)
-    window.backend.onEvent('ai-chat-aborted', handleAborted as (...args: unknown[]) => void)
+    window.backend.onEvent('ai-chat-chunk', handleChunk)
+    window.backend.onEvent('ai-chat-end', handleEnd)
+    window.backend.onEvent('ai-chat-error', handleError)
+    window.backend.onEvent('ai-chat-aborted', handleAborted)
     abortSignal.addEventListener('abort', handleAbortSignal)
 
     // Stream processing loop

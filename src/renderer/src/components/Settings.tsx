@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { ArrowLeft, Trash2, FolderOpen } from 'lucide-react'
 import { Button } from '@renderer/components/ui/button'
+import { isOk, isError } from '@common/result'
 import { logger } from '@renderer/lib/logger'
 import {
   Card,
@@ -27,12 +28,29 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
     const loadPaths = async (): Promise<void> => {
       try {
         await window.connectBackend()
-        const [dbPath, logPath] = await Promise.all([
+        const [dbPathResult, logPathResult] = await Promise.all([
           window.backend.getDatabasePath(),
           window.backend.getLogPath()
         ])
-        setDatabasePath(dbPath)
-        setLogPath(logPath)
+
+        if (isOk(dbPathResult)) {
+          setDatabasePath(dbPathResult.value)
+        } else {
+          logger.error('Failed to get database path:', dbPathResult.error)
+        }
+
+        if (isOk(logPathResult)) {
+          setLogPath(logPathResult.value)
+        } else {
+          logger.error('Failed to get log path:', logPathResult.error)
+        }
+
+        if (isError(dbPathResult) || isError(logPathResult)) {
+          setMessage({
+            type: 'error',
+            text: 'Failed to load some file paths'
+          })
+        }
       } catch (error) {
         logger.error('Failed to load paths:', error)
         setMessage({
@@ -100,12 +118,20 @@ export function Settings({ onBack }: SettingsProps): React.JSX.Element {
       setIsClearingDatabase(true)
       setMessage(null)
 
-      await window.backend.clearDatabase()
+      const result = await window.backend.clearDatabase()
 
-      setMessage({
-        type: 'success',
-        text: 'Database cleared successfully!'
-      })
+      if (isOk(result)) {
+        setMessage({
+          type: 'success',
+          text: 'Database cleared successfully!'
+        })
+      } else {
+        logger.error('Failed to clear database:', result.error)
+        setMessage({
+          type: 'error',
+          text: 'Failed to clear database. Please try again.'
+        })
+      }
     } catch (error) {
       logger.error('Error clearing database:', error)
       setMessage({

@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Save } from 'lucide-react'
 import { Button } from '@renderer/components/ui/button'
+import { isOk } from '@common/result'
 import { logger } from '@renderer/lib/logger'
 import {
   Card,
@@ -62,10 +63,19 @@ export function DummyDataManager(): React.JSX.Element {
       try {
         setIsLoading(true)
         await window.connectBackend()
-        const dummyData = ((await window.backend.getSetting('dummy')) as DummyDataFormData) || {}
+        const result = await window.backend.getSetting('dummy')
 
-        form.setValue('settingA', dummyData.settingA || 'Default A')
-        form.setValue('settingB', dummyData.settingB || 'Default B')
+        if (isOk(result)) {
+          const dummyData = (result.value as DummyDataFormData) || {}
+          form.setValue('settingA', dummyData.settingA || 'Default A')
+          form.setValue('settingB', dummyData.settingB || 'Default B')
+        } else {
+          logger.error('Failed to get dummy data:', result.error)
+          setMessage({
+            type: 'error',
+            text: 'Failed to load dummy data. Please try again.'
+          })
+        }
       } catch (error) {
         logger.error('Error loading dummy data:', error)
         setMessage({
@@ -78,22 +88,30 @@ export function DummyDataManager(): React.JSX.Element {
     }
 
     loadDummyData()
-  }, [form])
+  }, []) // Remove form dependency to avoid infinite re-renders
 
   const onSubmit = async (data: DummyDataFormData): Promise<void> => {
     try {
       setIsLoading(true)
       setMessage(null)
 
-      await window.backend.setSetting('dummy', {
+      const result = await window.backend.setSetting('dummy', {
         settingA: data.settingA,
         settingB: data.settingB
       })
 
-      setMessage({
-        type: 'success',
-        text: 'Dummy data saved successfully!'
-      })
+      if (isOk(result)) {
+        setMessage({
+          type: 'success',
+          text: 'Dummy data saved successfully!'
+        })
+      } else {
+        logger.error('Failed to save dummy data:', result.error)
+        setMessage({
+          type: 'error',
+          text: 'Failed to save dummy data. Please try again.'
+        })
+      }
     } catch (error) {
       logger.error('Error saving dummy data:', error)
       setMessage({
