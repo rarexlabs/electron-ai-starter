@@ -96,19 +96,12 @@ export class Connection {
     callback: (channel: string, args: unknown[]) => Promise<Result<unknown, unknown>>
   ): void {
     const listener = async (event: MessageEvent): Promise<void> => {
-      const data = event.data
-      if (!data || data.type !== 'invoke') return
+      if (event.data?.type !== 'invoke') return;
 
-      const invoke = data as InvokeMessage
-      try {
-        const result = await callback(invoke.channel, invoke.args)
-        const msg = this._resultMessage(invoke, result)
-        this._postMessage(msg)
-      } catch (error) {
-        const errorResult: Result<unknown, unknown> = { status: 'error', error }
-        const msg = this._resultMessage(invoke, errorResult)
-        this._postMessage(msg)
-      }
+      const invoke = event.data as InvokeMessage
+      const result = await callback(invoke.channel, invoke.args)
+      const msg = this._resultMessage(invoke, result)
+      this._postMessage(msg)
     }
 
     this._addListener(listener)
