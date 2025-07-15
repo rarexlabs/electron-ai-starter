@@ -18,17 +18,16 @@ export class Server {
   }
 
   private setupHandlers(): void {
+    ipcMain.on('connectBackend', async (e) => {
+      return this._backend.connect(e.sender)
+    })
+
     ipcMain.handle('ping', async () => {
       return await this._handler.ping()
     })
 
     ipcMain.handle('openFolder', async (_, folderPath: string) => {
       return await this._handler.openFolder(folderPath)
-    })
-
-    // Backend connection handler
-    ipcMain.on('connectBackend', async (e) => {
-      return this._backend.connect(e.sender)
     })
   }
 
