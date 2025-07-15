@@ -45,7 +45,9 @@ export function initializeLogging(): void {
 
   log.eventLogger.startLogging({ level: 'warn' })
 
-  log.info(`📝 Logging initialized - Files: main.log, renderer.log, preload.log in ${path.resolve(logFolder)}`)
+  log.info(
+    `📝 Logging initialized - Files: main.log, renderer.log, preload.log in ${path.resolve(logFolder)}`
+  )
 }
 
 // Create scoped logger for main process

@@ -1,5 +1,6 @@
 import { utilityProcess, MessageChannelMain, UtilityProcess, WebContents } from 'electron'
 import { mainLogger } from './logger'
+import { getBasePath } from './paths'
 import backendPath from '../backend/index?modulePath'
 
 export class Backend {
@@ -7,7 +8,8 @@ export class Backend {
   private _messageChannels: Map<number, MessageChannelMain> = new Map()
 
   constructor() {
-    this._process = utilityProcess.fork(backendPath)
+    const userDataPath = getBasePath()
+    this._process = utilityProcess.fork(backendPath, ['--user-data-path', userDataPath])
   }
 
   connect(renderer: WebContents): void {

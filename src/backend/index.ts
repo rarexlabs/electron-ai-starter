@@ -1,8 +1,10 @@
-import log from 'electron-log'
 import { Server } from './server'
+import { initializeBackendLogging, backendLogger } from './logger'
 
-const logger = log.scope('backend')
-logger.info('🚀 Backend process started')
+// Initialize logging first
+initializeBackendLogging()
+
+backendLogger.info('🚀 Backend process started')
 
 function main(): void {
   const server = new Server(process.parentPort)
