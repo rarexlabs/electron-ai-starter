@@ -24,13 +24,25 @@ export class Backend {
     const message = `renderer/${renderer.id}`
     this._process.postMessage({ channel: 'connectRenderer', message }, [backendPort])
 
-    this._process.on('message', (e) => {
-      if (e.data.channel !== 'rendererConnected') return
-      if (e.data.message !== message) return
-
+    this._afterRendererConnected(message, () => {
       // send the other port to renderer and inform backend is connected
       renderer.postMessage('backendConnected', null, [rendererPort])
     })
+  }
+
+  private _afterRendererConnected(rendererId: string, callback: () => void): void {
+    const responseListener = (e) => {
+      if (e.data.channel !== 'rendererConnected') return
+      if (e.data.message !== rendererId) return
+
+      // Remove listener immediately to prevent accumulation
+      this._process.removeListener('message', responseListener)
+
+      // Execute callback
+      callback()
+    }
+
+    this._process.on('message', responseListener)
   }
 
   async stop(): Promise<void> {
