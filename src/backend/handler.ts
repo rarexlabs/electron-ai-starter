@@ -2,13 +2,7 @@ import { Connection } from '@common/connection'
 import type { Result, AIProvider, AIConfig, AISettings, AIMessage, AppEvent } from '@common/types'
 import { ok } from '@common/result'
 import { dirname } from 'path'
-import {
-  getSetting as getSettingFromDB,
-  setSetting as setSettingToDB,
-  getAllSettings as getAllSettingsFromDB,
-  clearSetting as clearSettingFromDB,
-  clearDatabase as clearDatabaseFromDB
-} from './settings'
+import { getSetting, setSetting, getAllSettings, clearSetting, clearDatabase } from './settings'
 import { getDatabasePath, getLogPath } from './paths'
 import { backendLogger } from './logger'
 import { streamText, abortStream, listAvailableModel, testConnection } from './ai'
@@ -27,27 +21,27 @@ export class Handler {
 
   // Database handlers
   async getSetting(key: string): Promise<Result<unknown>> {
-    const result = await getSettingFromDB(key)
+    const result = await getSetting(key)
     return ok(result)
   }
 
   async setSetting(key: string, value: unknown): Promise<Result<void>> {
-    await setSettingToDB(key, value)
+    await setSetting(key, value)
     return ok(undefined)
   }
 
   async getAllSettings(): Promise<Result<unknown>> {
-    const result = await getAllSettingsFromDB()
+    const result = await getAllSettings()
     return ok(result)
   }
 
   async clearSetting(key: string): Promise<Result<void>> {
-    await clearSettingFromDB(key)
+    await clearSetting(key)
     return ok(undefined)
   }
 
   async clearDatabase(): Promise<Result<void, string>> {
-    await clearDatabaseFromDB()
+    await clearDatabase()
     return ok(undefined)
   }
 
@@ -64,7 +58,7 @@ export class Handler {
   // AI handlers
   async streamAIText(messages: AIMessage[]): Promise<Result<string>> {
     // Get AI settings from database
-    const aiSettings = await getSettingFromDB<AISettings>('ai')
+    const aiSettings = await getSetting<AISettings>('ai')
 
     if (!aiSettings) throw new Error('No AI setting has been created')
 

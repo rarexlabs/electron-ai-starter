@@ -85,8 +85,8 @@ export class Server {
     getLogPath: (...args) => this._invoke('getLogPath', ...args),
     streamAIText: (...args) => this._invoke('streamAIText', ...args),
     abortAIText: (...args) => this._invoke('abortAIText', ...args),
-    getAIModels: (...args) => this._invoke('getAiModels', ...args),
-    testAIProviderConnection: (...args) => this._invoke('testAiProviderConnection', ...args),
+    getAIModels: (...args) => this._invoke('getAIModels', ...args),
+    testAIProviderConnection: (...args) => this._invoke('testAIProviderConnection', ...args),
     onEvent: (channel: string, callback: (appEvent: AppEvent) => void) => {
       this._backendConnection!.onEvent(channel, callback)
     },

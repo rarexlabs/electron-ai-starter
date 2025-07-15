@@ -28,7 +28,6 @@ export class Server {
     connection.handleAll(async (channel: string, args: unknown[]) => {
       const handler = new Handler({ rendererConnetion: connection })
       const channelHandler = handler[channel]
-      console.log(channel)
       const result = await channelHandler.apply(handler, args)
       return result
     })
