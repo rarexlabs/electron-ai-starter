@@ -6,22 +6,14 @@ export async function streamText(
   messages: AIMessage[],
   abortSignal: AbortSignal
 ): Promise<AsyncGenerator<string, void, unknown>> {
-  try {
-    // Ensure backend is connected before making the call
-    await window.connectBackend()
-    const result = await window.backend.streamAIText(messages)
+  const result = await window.backend.streamAIText(messages)
 
-    if (isOk(result)) {
-      const sessionId = result.value
-      logger.info('🚀 Stream started with session:', sessionId)
-      return receiveStream(sessionId, abortSignal)
-    } else {
-      logger.error('Failed to start stream:', result.error)
-      throw new Error(`Failed to start AI chat stream: ${result.error}`)
-    }
-  } catch (error) {
-    logger.error('Failed to start stream:', error)
-    throw error
+  if (isOk(result)) {
+    const sessionId = result.value
+    return receiveStream(sessionId, abortSignal)
+  } else {
+    logger.error('Failed to start stream:', result.error)
+    throw new Error(`Failed to start AI chat stream: ${result.error}`)
   }
 }
 
@@ -66,7 +58,6 @@ async function* receiveStream(
     const payload = appEvent.payload as { sessionId: string }
     if (payload.sessionId !== sessionId) return
     completed = true
-    logger.info('✅ Stream completed for session:', sessionId)
     unblockYieldLoop()
   }
 
@@ -74,7 +65,7 @@ async function* receiveStream(
     const payload = appEvent.payload as { sessionId: string; error: string }
     if (payload.sessionId !== sessionId) return
     error = payload.error || 'Unknown error'
-    logger.error('❌ Stream error for session:', sessionId, error)
+    logger.error('AI stream error for session:', sessionId, error)
     unblockYieldLoop()
   }
 
@@ -82,20 +73,16 @@ async function* receiveStream(
     const payload = appEvent.payload as { sessionId: string }
     if (payload.sessionId !== sessionId) return
     completed = true
-    logger.info('Stream aborted for session:', sessionId)
+    logger.info('AI stream aborted:', sessionId)
     unblockYieldLoop()
   }
 
   // Handle external abort signal
   const handleAbortSignal = async (): Promise<void> => {
-    logger.info('External abort signal received, aborting stream')
-    try {
-      const result = await window.backend.abortAIText(sessionId)
-      if (isError(result)) {
-        logger.error('Failed to abort chat session:', result.error)
-      }
-    } catch (abortError) {
-      logger.error('Failed to abort chat session:', abortError)
+    logger.info('AI stream abort signal received')
+    const result = await window.backend.abortAIText(sessionId)
+    if (isError(result)) {
+      logger.error('Failed to abort chat session:', result.error)
     }
   }
 
@@ -140,7 +127,5 @@ async function* receiveStream(
     window.backend.offEvent('aiChatError')
     window.backend.offEvent('aiChatAborted')
     abortSignal.removeEventListener('abort', handleAbortSignal)
-
-    logger.info('🧹 Cleaned up stream generator for session:', sessionId)
   }
 }
