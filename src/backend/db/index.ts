@@ -6,6 +6,7 @@ import * as fs from 'fs'
 import { sql } from 'drizzle-orm'
 import logger from '../logger'
 import { getDatabasePath } from '../paths'
+import migrationsPath from '@resources/db/migrations?asset'
 
 interface MigrationStatus {
   appliedCount: number
@@ -62,13 +63,8 @@ export function destroy(): void {
 }
 
 function _getMigrationsFolder(): string | null {
-  const possiblePaths = [
-    path.join(process.cwd(), 'src', 'backend', 'db', 'migrations'),
-    path.join(__dirname, 'migrations'),
-    path.join(__dirname, '..', '..', 'src', 'backend', 'db', 'migrations')
-  ]
-
-  return possiblePaths.find(fs.existsSync) || null
+  // Use electron-vite's ?asset pattern for consistent path resolution across all environments
+  return migrationsPath && fs.existsSync(migrationsPath) ? migrationsPath : null
 }
 
 async function _getMigrationStatus(
