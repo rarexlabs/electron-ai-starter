@@ -8,6 +8,7 @@
     "baseUrl": ".",
     "paths": {
       "@main/*": ["src/main/*"],
+      "@backend/*": ["src/backend/*"],
       "@common/*": ["src/common/*"],
       "@resources/*": ["resources/*"]
     }

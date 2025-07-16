@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { eq } from 'drizzle-orm'
 import { setupDatabaseTest } from './database-helper'
-import { settings } from '../../src/backend/db/schema'
-import { getSetting, setSetting, getAllSettings } from '../../src/backend/settings'
+import { settings } from '@backend/db/schema'
+import { getSetting, setSetting, getAllSettings } from '@backend/settings'
 
 describe('Database Operations', () => {
   const getTestDatabase = setupDatabaseTest()

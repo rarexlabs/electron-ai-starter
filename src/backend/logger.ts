@@ -1,21 +1,11 @@
 import log from 'electron-log'
 import path from 'path'
+import { getUserDataPath } from './user-data-path'
 
 const isDev = process.env.NODE_ENV === 'development'
 
-function parseUserDataPath(): string {
-  const args = process.argv
-  const userDataPathIndex = args.indexOf('--user-data-path')
-
-  if (userDataPathIndex === -1 || userDataPathIndex + 1 >= args.length) {
-    throw new Error('user-data-path argument is required but not provided by main process')
-  }
-
-  return args[userDataPathIndex + 1]
-}
-
 function getLogFolder(): string {
-  const userDataPath = parseUserDataPath()
+  const userDataPath = getUserDataPath()
   return path.join(userDataPath, 'logs')
 }
 

@@ -1,7 +1,7 @@
 import { drizzle } from 'drizzle-orm/libsql'
 import { createClient } from '@libsql/client'
-import { sql } from 'drizzle-orm'
 import { beforeEach } from 'vitest'
+import { runMigrations } from '@backend/db'
 
 /**
  * Creates a fresh in-memory test database with schema setup
@@ -13,11 +13,9 @@ export async function createTestDatabase(): Promise<ReturnType<typeof drizzle>> 
   // Create Drizzle instance
   const testDb = drizzle({ client })
 
-  // Create settings table manually for test database
-  await testDb.run(sql`CREATE TABLE IF NOT EXISTS settings (
-    key TEXT PRIMARY KEY NOT NULL,
-    value TEXT NOT NULL
-  )`)
+  // Run migrations to set up schema (same as production)
+  // ?asset import should now work through electron-vite config
+  await runMigrations(testDb)
 
   return testDb
 }
