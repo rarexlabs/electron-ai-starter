@@ -23,9 +23,9 @@ A modern, full-featured Electron application template with TypeScript, React, Dr
 - **[Electron Log](https://github.com/megahertz/electron-log)** - Unified logging across main and renderer processes
 - **[Vitest](https://github.com/vitest-dev/vitest)** - Fast unit testing with TypeScript support
 
-### 🗄️ Database
-- **[better-sqlite3](https://github.com/WiseLibs/better-sqlite3) + [Drizzle ORM](https://github.com/drizzle-team/drizzle-orm)** - Type-safe database operations with auto-migrations
-- **Environment-based paths** - Development and production database separation
+### 🔄 Backend
+- **[Electron Utility Process](https://www.electronjs.org/docs/latest/tutorial/performance#3-blocking-the-main-process)** - Dedicated backend process that prevents CPU-bound operations from blocking the main process
+- **[libsql](https://github.com/tursodatabase/libsql) + [Drizzle ORM](https://github.com/drizzle-team/drizzle-orm)** - Type-safe database operations with auto-migrations and modern SQLite compatibility
 
 ### 🎨 UI & Design
 - **[React](https://github.com/facebook/react) 19** - Latest React with full TypeScript support
@@ -41,7 +41,7 @@ A modern, full-featured Electron application template with TypeScript, React, Dr
 Fork & clone first, then:
 
 ```bash
-$ cp .env.example .env
+$ cp .env.example .env.development
 $ npm install
 ```
 
@@ -81,9 +81,6 @@ $ npm run lint
 ```
 
 ## Future Roadmap
-
-### 🔄 Backend Process
-- **Utility Process for Backend Tasks** - Implement Electron utility processes to prevent CPU-bound operations from [blocking the main process](https://www.electronjs.org/docs/latest/tutorial/performance#3-blocking-the-main-process)
 
 ### 🤖 Advanced AI Capabilities  
 - **Mastra Integration for Agentic Workflows** - Integrate Mastra framework to add production-ready agentic capabilities including workflows, agent memory, RAG pipelines, and evaluation systems while maintaining compatibility with existing AI SDK setup
