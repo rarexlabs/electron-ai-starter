@@ -51,50 +51,55 @@ This is an Electron application with AI chat integration using the following mod
 
 ```
 src/
-├── main/           # Electron main process (Node.js)
-│   ├── ai/         # AI provider factory and streaming
-│   ├── db/         # Database schema and migrations
-│   ├── index.ts    # Main entry point
-│   ├── logger.ts   # Logging configuration
-│   └── ...
-├── preload/        # Preload scripts for secure IPC
+├── main/           # Electron main process entry point
+├── backend/        # Backend business logic (separate from main)
+│   ├── ai/         # AI provider factory, streaming, session management
+│   ├── db/         # Database schema, migrations, connection
+│   ├── settings/   # Application settings management
+│   ├── paths/      # Path configuration utilities
+│   ├── logger.ts   # Backend logging configuration
+│   └── server.ts   # AI streaming server setup
+├── preload/        # Secure IPC bridge scripts
 ├── renderer/       # React frontend application
 │   └── src/
-│       ├── components/ # React components
-│       │   ├── ui/     # Shadcn/ui components
+│       ├── components/     # React components
+│       │   ├── ui/         # Shadcn/ui components
 │       │   └── assistant-ui/ # AI chat components
-│       ├── lib/        # Utility functions and AI chat logic
-│       └── assets/     # Global styles
-├── types/          # Shared TypeScript types
-└── ...
+│       ├── lib/            # Utilities and AI streaming logic
+│       └── assets/         # Global CSS with Tailwind + Assistant UI styles
+├── common/         # Shared TypeScript types and utilities
+└── resources/      # Build resources (migrations, icons, etc.)
 ```
+
+This project uses a custom three-process architecture with a separate backend process for business logic, which differs from Electron's standard two-process model.
 
 ### Key Configuration Files
 
 - `electron.vite.config.ts` - Main build configuration with path aliases and Tailwind
-- `components.json` - Shadcn/ui configuration (New York style)
+- `components.json` - Shadcn/ui configuration (New York style, neutral base color)
 - `tsconfig.json` - Composite TypeScript configuration
-- `tsconfig.node.json` - Node.js (main/preload) TypeScript config
+- `tsconfig.node.json` - Node.js (main/preload/backend) TypeScript config
 - `tsconfig.web.json` - Web (renderer) TypeScript config
 - `drizzle.config.ts` - Database configuration and migration setup
 - `vitest.config.backend.ts` - Testing configuration for backend process
+- `electron-builder.yml` - Multi-platform packaging configuration
 
 ### Path Aliases
 
 The following aliases are configured in `electron.vite.config.ts`:
 
 - `@renderer` → `src/renderer/src`
-- `@` → `src/renderer/src`
-- `@/components` → `src/renderer/src/components`
-- `@/lib` → `src/renderer/src/lib`
-- `@/utils` → `src/renderer/src/lib/utils`
+- `@common` → `src/common`
+- `@main` → `src/main`
+- `@backend` → `src/backend`
+- `@resources` → `resources`
 
 ### Adding Shadcn Components
 
 Use the following command to add new Shadcn components:
 
 ```bash
-npm run shadcn [component-name]
+npm run shadcn add [component-name]
 ```
 
 The configuration uses New York style with Lucide icons and neutral base color.
@@ -105,44 +110,58 @@ The configuration uses New York style with Lucide icons and neutral base color.
 - **Development database**: `./tmp/db/app.db`
 - **Production database**: Electron's userData directory `/db/app.db`
 - **Schema**: Simple settings table for key-value configuration storage
-- **Migrations**: Located in `src/backend/db/migrations/`
+- **Migrations**: Located in `resources/db/migrations/` (included in build)
+- **Type-safe**: Full Drizzle ORM integration with TypeScript types
 - **Database commands**:
   - `npm run drizzle-kit` - Drizzle Kit operations (generate, migrate, push, studio)
   - `npm run db:reset` - Reset development database
 
 ### AI Integration
 
-- **AI SDK** with multi-provider support (Anthropic, OpenAI, Google)
-- **Assistant UI** components for chat interface
-- **Streaming**: Real-time AI response streaming with electron-vite bridge
+- **Multi-provider factory**: Support for OpenAI, Anthropic (Claude), and Google (Gemini)
+- **Streaming architecture**: Real-time text streaming with session management
+- **Provider configurations**: Model lists, API key management, connection testing
+- **Assistant UI components**: Pre-built chat interface with streaming support
 - **Configuration**: AI settings stored in database and configurable via UI
+- **Session management**: Persistent chat sessions with proper state handling
 
 ### Logging Configuration
 
-- **electron-log** for unified logging across main and renderer processes
-- **Development logs**: `MAIN_VITE_USER_DATA_PATH/logs/` (typically `./tmp/logs/`)
-- **Production logs**: Electron's userData directory `/logs/`
-- **Log files**:
-  - `main.log` - Main process logs (database, IPC, app lifecycle, AI)
+- **electron-log** for unified logging across all processes
+- **Environment-aware paths**: Development (`./tmp/logs/`) vs Production (userData/logs/)
+- **Separate log files**:
+  - `main.log` - Main process logs (app lifecycle, IPC)
+  - `backend.log` - Backend process logs (AI, database, settings)
+  - `preload.log` - Preload script logs
   - `renderer.log` - Renderer process logs (UI, React components)
 - **Features**: 
-  - Automatic error catching with optional dialog in development
-  - Event logging for app lifecycle events
   - File rotation (5MB limit)
-  - Separate console and file log levels
+  - Automatic error catching with optional dialogs in development
+  - Structured logging with different levels for console vs file output
+  - Process-specific loggers for better debugging
 - **Usage**:
-  - Main process: `import { mainLogger } from './logger'`
+  - Backend process: `import logger from './logger'` (within backend folder)
   - Renderer process: `import { logger } from '@/lib/logger'`
+
+### UI & Styling Architecture
+
+- **Tailwind CSS 4** with CSS variables for theming support
+- **Assistant UI styles** integrated via CSS layers for chat components
+- **Dark/light theme support** with CSS custom properties
+- **Component system**: Shadcn/ui + custom Assistant UI components
+- **Accessibility**: Built-in WCAG compliance patterns
 
 ## Development Notes
 
-- The application uses Electron's secure two-process architecture with IPC communication
+- The application uses a custom three-process architecture (main, backend, renderer) with IPC communication, extending Electron's standard two-process model
 - TypeScript is configured with separate configs for Node.js and web environments
 - Tailwind CSS 4 is used with CSS variables for theming support
 - The build process includes comprehensive TypeScript checking before bundling
-- Database migrations are handled through Drizzle Kit CLI
+- Database migrations are handled through Drizzle Kit CLI and included in build resources
 - AI chat functionality is built with streaming support and multiple provider options
 - Testing is set up for the backend process using Vitest with Electron runtime
+- The backend process is separated from main for better organization and testing
+- Assistant UI provides pre-built components for chat interfaces with streaming support
 
 ## Key Dependencies
 
