@@ -3,6 +3,7 @@ productName: electron-ai-starter
 directories:
   buildResources: build
 files:
+  - '!tmp/**'
   - '!**/.vscode/*'
   - '!src/*'
   - '!electron.vite.config.{js,ts,mjs,cjs}'
