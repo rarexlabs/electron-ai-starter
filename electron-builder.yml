@@ -1,5 +1,5 @@
 appId: com.electron.app
-productName: starter-template
+productName: electron-ai-starter
 directories:
   buildResources: build
 files:
@@ -12,7 +12,7 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: starter-template
+  executableName: electron-ai-starter
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
