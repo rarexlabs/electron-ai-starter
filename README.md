@@ -24,7 +24,7 @@ A modern, full-featured Electron application template with TypeScript, React, Dr
 - **[Vitest](https://github.com/vitest-dev/vitest)** - Fast unit testing with TypeScript support
 
 ### 🔄 Backend
-- **[Electron Utility Process](https://www.electronjs.org/docs/latest/tutorial/performance#3-blocking-the-main-process)** - Dedicated backend process that prevents CPU-bound operations from blocking the main process
+- **[Utility Process](https://www.electronjs.org/docs/latest/api/utility-process)** - Dedicated backend process that prevents heavy disk I/O and CPU-bound operations from [blocking the main process](https://www.electronjs.org/docs/latest/tutorial/performance#3-blocking-the-main-process)
 - **[libsql](https://github.com/tursodatabase/libsql) + [Drizzle ORM](https://github.com/drizzle-team/drizzle-orm)** - Type-safe database operations with auto-migrations and modern SQLite compatibility
 
 ### 🎨 UI & Design
