@@ -32,8 +32,9 @@ export class Server {
   connectRenderer(port: MessagePortMain): Connection {
     const connection = new Connection(port)
     this._rendererConnections.push(connection)
+
+    const handler = new Handler({ rendererConnetion: connection })
     connection.handleAll(async (channel: string, args: unknown[]) => {
-      const handler = new Handler({ rendererConnetion: connection })
       const channelHandler = handler[channel]
       const result = await channelHandler.apply(handler, args)
       return result

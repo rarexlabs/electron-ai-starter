@@ -19,7 +19,7 @@ function getLogFolder(): string {
   return path.join(userDataPath, 'logs')
 }
 
-export function initializeBackendLogging(): void {
+function initLogger(): void {
   const logFolder = getLogFolder()
 
   // Configure file transport to route to backend.log
@@ -41,6 +41,6 @@ export function initializeBackendLogging(): void {
   })
 }
 
-// Create scoped logger for backend process
-const logger = log.scope('backend')
+initLogger()
+export const logger = log.scope('backend')
 export default logger

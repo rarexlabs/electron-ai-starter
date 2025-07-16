@@ -17,7 +17,6 @@ interface MigrationStatus {
 
 export function connectDatabase(): ReturnType<typeof drizzle> {
   const dbPath = getDatabasePath()
-  logger.info(`Database: ${path.resolve(path.dirname(dbPath))}`)
 
   const dbDir = path.dirname(dbPath)
   if (!fs.existsSync(dbDir)) {

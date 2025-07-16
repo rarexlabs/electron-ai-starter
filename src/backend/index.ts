@@ -1,12 +1,8 @@
 import { Server } from './server'
-import logger, { initializeBackendLogging } from './logger'
-
-// Initialize logging first
-initializeBackendLogging()
-
-logger.info('Backend process started')
+import logger from './logger'
 
 async function main(): Promise<void> {
+  logger.info('Backend process started')
   const server = new Server(process.parentPort)
 
   process.parentPort.on('message', (e) => {
